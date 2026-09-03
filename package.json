@@ -1,0 +1,6 @@
+{
+  "name": "productframe",
+  "private": true,
+  "scripts": {"dev:web": "pnpm --filter @productframe/web dev", "build:web": "pnpm --filter @productframe/web build", "typecheck:web": "pnpm --filter @productframe/web exec tsc --noEmit"},
+  "packageManager": "pnpm@9.15.0"
+}
