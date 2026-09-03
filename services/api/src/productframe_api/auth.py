@@ -29,6 +29,7 @@ def current_user(
             issuer=settings.clerk_issuer,
             audience=settings.clerk_audience if settings.clerk_audience else None,
             options=options,
+            leeway=30,
         )
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication token") from exc

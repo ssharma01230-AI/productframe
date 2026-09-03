@@ -1,0 +1,2 @@
+[console_scripts]
+productframe-analyze = productframe_api.analyze_cli:main
