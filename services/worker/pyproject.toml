@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "productframe-worker"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["redis>=5.0", "boto3>=1.35", "sqlalchemy>=2.0"]
+
+[project.scripts]
+productframe-worker = "productframe_worker.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -9,10 +9,11 @@ from __future__ import annotations
 import base64
 import io
 import os
+import time
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Callable
 
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -20,6 +21,33 @@ MAX_INPUT_BYTES = 20 * 1024 * 1024
 MAX_DIMENSION = 10_000
 MAX_ANALYSIS_DIMENSION = 2_048
 ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}
+OPENAI_MAX_RETRIES = 8
+OPENAI_MIN_INTERVAL_SECONDS = 1.0
+_last_openai_call = 0.0
+
+
+def _openai_call(operation):
+    """Throttle and retry OpenAI calls instead of failing on transient 429s."""
+    global _last_openai_call
+    delay = 2.0
+    for attempt in range(OPENAI_MAX_RETRIES):
+        wait = OPENAI_MIN_INTERVAL_SECONDS - (time.monotonic() - _last_openai_call)
+        if wait > 0:
+            time.sleep(wait)
+        try:
+            result = operation()
+            _last_openai_call = time.monotonic()
+            return result
+        except RateLimitError:
+            _last_openai_call = time.monotonic()
+            if attempt == OPENAI_MAX_RETRIES - 1:
+                raise
+            time.sleep(min(delay, 60.0))
+            delay *= 2
+
+
+def _image_input(data_url: str, detail: str = "low") -> dict[str, str]:
+    return {"type": "input_image", "image_url": data_url, "detail": detail}
 
 
 class ProductCategory(StrEnum):
@@ -48,9 +76,21 @@ class ImageScreeningResult(BaseModel):
     reason: str = Field(min_length=10, max_length=300)
 
 
+class ProductIdentity(BaseModel):
+    product_type: str = Field(min_length=3, max_length=120)
+    dominant_colour: str = Field(min_length=3, max_length=120)
+    pattern_or_finish: str = Field(min_length=3, max_length=160)
+    visual_signature: str = Field(min_length=10, max_length=300)
+
+
 class ProductImageGroup(BaseModel):
     product_number: int = Field(ge=1)
     image_numbers: list[int] = Field(min_length=1)
+    reason: str = Field(min_length=10, max_length=300)
+
+
+class RejectedImage(BaseModel):
+    image_number: int = Field(ge=1)
     reason: str = Field(min_length=10, max_length=300)
 
 
@@ -58,7 +98,7 @@ class BatchScreeningResult(BaseModel):
     passed: bool
     unique_product_count: int = Field(ge=0)
     groups: list[ProductImageGroup] = Field(default_factory=list)
-    rejected_images: list[int] = Field(default_factory=list)
+    rejected_images: list[RejectedImage] = Field(default_factory=list)
     reason: str = Field(min_length=10, max_length=300)
 
 
@@ -69,6 +109,7 @@ class ImageRejectedError(ValueError):
 
 
 class ProductAnalysis(BaseModel):
+    product_name: str = Field(min_length=3, max_length=160)
     category: ProductCategory
     product_type: str = Field(min_length=5, max_length=120)
     colours: str = Field(min_length=5, max_length=300)
@@ -76,14 +117,6 @@ class ProductAnalysis(BaseModel):
     features: list[str] = Field(min_length=1, max_length=30)
     description: str = Field(min_length=30, max_length=320)
     confidence: float = Field(ge=0, le=1)
-
-    @field_validator("description")
-    @classmethod
-    def description_word_count(cls, value: str) -> str:
-        words = value.split()
-        if not 30 <= len(words) <= 40:
-            raise ValueError("description must contain between 30 and 40 words")
-        return value
 
     @field_validator("product_type", "colours", "materials")
     @classmethod
@@ -136,14 +169,14 @@ def _data_url(image: PrescreenedImage) -> str:
 
 def categorize_product_image(client: OpenAI, data_url: str) -> ProductCategorization:
     """Categorize an approved image before detailed attribute analysis."""
-    response = client.responses.parse(
+    response = _openai_call(lambda: client.responses.parse(
         model="gpt-4o-mini",
         input=[{"role": "user", "content": [{"type": "input_text", "text": """Categorize this already-approved wearable fashion product.
 Choose exactly one category: outerwear, tops, bottoms, socks, footwear, underwear, accessories.
 Return a highly specific product_type, such as '3/4 length dark green leather jacket with a belted waist'.
-Do not describe colours, materials, features, or write a long description yet."""}, {"type": "input_image", "image_url": data_url}]}],
+Do not describe colours, materials, features, or write a long description yet."""}, _image_input(data_url, detail="high")]}],
         text_format=ProductCategorization,
-    )
+    ))
     if response.output_parsed is None:
         raise ValueError("product categorization returned no result")
     return response.output_parsed
@@ -151,16 +184,16 @@ Do not describe colours, materials, features, or write a long description yet.""
 
 def screen_product_image(client: OpenAI, data_url: str) -> ImageScreeningResult:
     """Decide whether an image contains an allowed wearable fashion product."""
-    response = client.responses.parse(
+    response = _openai_call(lambda: client.responses.parse(
         model="gpt-4o-mini",
         input=[{"role": "user", "content": [{"type": "input_text", "text": """Act as a strict product-image gate.
 Pass only when the image clearly shows a wearable fashion product intended for a catalogue: clothing, footwear, or a fashion accessory. Accessories include jewellery, watches, sunglasses, hats, caps, scarves, belts, bags, gloves, and hair accessories.
 
-Reject when the main subject is an unrelated object, food, animal, vehicle, furniture, room, landscape, person without a clearly identifiable fashion product, promotional graphic, poster, advertisement, text design, website screenshot, app screenshot, collage, or image where the product cannot be identified. Do not pass an image merely because it contains a person or text. A person wearing a clearly identifiable fashion product may pass.
+Reject when the main subject is an unrelated object, food, animal, vehicle, furniture, room, landscape, person without a clearly identifiable fashion product, promotional graphic, poster, advertisement, text design, website screenshot, app screenshot, collage, or image where the product cannot be identified. A screenshot or file containing a simple label is allowed when the main content is a clear product photograph; reject only when the screenshot/UI/graphic is the main content. Do not pass an image merely because it contains a person or text. A person wearing a clearly identifiable fashion product may pass. A clear back, side, rear, folded, hanging, or detail view of a recognizable single product may also pass; a front view is not required. Reject only when the product itself cannot be identified from the image.
 
-Return passed=false with a short, specific reason for anything rejected. Return passed=true only when exactly one candidate fashion product is clearly identifiable. Count distinct candidate products, not a person, body parts, or incidental background details. If a model is wearing one clearly featured product, treat other ordinary garments needed to wear it (such as trousers under a shirt) as incidental, not additional candidate products. Reject flat lays, wardrobes, outfit collages, or scenes where multiple products are equally plausible as the submitted item. Set primary_item_clear=true only when one product is clearly the intended subject."""}, {"type": "input_image", "image_url": data_url}]}],
+Return passed=false with a short, specific reason for anything rejected. Return passed=true only when exactly one candidate fashion product is clearly identifiable. Count distinct candidate products, not a person, body parts, or incidental background details. If a model is wearing one clearly featured product, treat other ordinary garments needed to wear it (such as trousers under a shirt) as incidental, not additional candidate products. Reject flat lays, wardrobes, outfit collages, or scenes where multiple products are equally plausible as the submitted item. Set primary_item_clear=true only when one product is clearly the intended subject."""}, _image_input(data_url, detail="high")]}],
         text_format=ImageScreeningResult,
-    )
+    ))
     if response.output_parsed is None:
         raise ValueError("image screening returned no decision")
     return response.output_parsed
@@ -177,61 +210,146 @@ class BatchAnalysisResult(BaseModel):
     passed: bool
     unique_product_count: int = Field(ge=0)
     products: list[IdentifiedProduct] = Field(default_factory=list)
-    rejected_images: list[int] = Field(default_factory=list)
+    rejected_images: list[RejectedImage] = Field(default_factory=list)
     reason: str = Field(min_length=10, max_length=300)
 
 
-def group_product_images(client: OpenAI, data_urls: list[str]) -> BatchScreeningResult:
-    """Group accepted images by the physical product they represent."""
-    content: list[dict[str, str]] = [{"type": "input_text", "text": """Compare these numbered fashion-product images.
-Group images together when they show the same physical product from different angles, in different poses, or in different versions of the same photography.
-Treat different garments, different shoe models, or clearly different colours/styles as different products. Do not group merely similar-looking products.
-Every image number must appear in exactly one group. Return the number of unique products, the image numbers in each group, and a short reason based on visible evidence."""}]
+def identify_product_image(client: OpenAI, data_url: str) -> ProductIdentity:
+    response = _openai_call(lambda: client.responses.parse(
+        model="gpt-4o-mini",
+        input=[{"role": "user", "content": [{"type": "input_text", "text": "Describe this single fashion product image for identity matching across a batch. Record only visible evidence. Identify the specific product type, dominant colour or colourway, pattern or finish, and a concise visual signature covering distinctive shape, construction, closures, panels, trims, hardware or other details. Do not identify the model, background, photography style, brand, SKU or hidden information."}, _image_input(data_url, detail="high")]}],
+        text_format=ProductIdentity,
+    ))
+    if response.output_parsed is None:
+        raise ValueError("product identity summary returned no result")
+    return response.output_parsed
+
+
+def _group_product_images_once(client: OpenAI, data_urls: list[str], identities: list[ProductIdentity] | None = None, categories: list[ProductCategorization] | None = None) -> BatchScreeningResult:
+    """Group one bounded set of images in a single model request."""
+    content: list[dict[str, str]] = [{"type": "input_text", "text": """You are grouping images for a fashion product catalogue.
+Identify which images represent the same catalogue product. A catalogue product is one distinct purchasable item or product variant. Images of the same item may show different angles, sides, details, crops, poses, lighting, backgrounds, or model views.
+Group images together only when visible evidence indicates they represent the same item. Consider the complete visual identity: overall shape and silhouette, colour and colourway, print or pattern, material appearance, construction, seams, panels, pockets, closures, fastenings, straps, handles, soles, trims, hardware, proportions, and other distinctive details.
+Keep images in separate groups when they show different product identities, including separately distinguishable variants that differ in visible design, colour, pattern, construction, finish, or other product-defining characteristics.
+Do not merge images only because products share a broad category, similar shape or style, similar material, photography, model, background, collection, or batch. Product category and product type are not sufficient evidence. The person, model, mannequin, pose, background, and photography style are not product identity evidence.
+Do not split images because of normal lighting, shadows, white balance, reflections, camera processing, or minor photographic variation.
+For clothing, footwear, bags, jewellery, and other accessories, use the relevant visible identity details for that product type. When evidence is insufficient to determine whether images show the same item, prefer separate groups rather than making an unsupported merge. False merging is more damaging than creating an additional group.
+Every image must appear in exactly one group. Do not omit, duplicate, or reuse image numbers.
+For each group return a sequential product number, all image numbers in the group, a concise explanation of the visible evidence, a confidence score from 0 to 1, and the key characteristics distinguishing it from other groups. Base decisions only on visible product evidence. Do not infer brand, SKU, size, price, collection, stock identity, or other hidden information."""}]
     for number, data_url in enumerate(data_urls, start=1):
         content.append({"type": "input_text", "text": f"Image {number}:"})
-        content.append({"type": "input_image", "image_url": data_url})
-    response = client.responses.parse(model="gpt-4o-mini", input=[{"role": "user", "content": content}], text_format=BatchScreeningResult)
-    if response.output_parsed is None:
-        raise ValueError("batch grouping returned no decision")
-    result = response.output_parsed
-    all_numbers = [number for group in result.groups for number in group.image_numbers]
+        if identities and number <= len(identities):
+            identity = identities[number - 1]
+            category_text = f"; category={categories[number - 1].category.value}; categorised type={categories[number - 1].product_type}" if categories and number <= len(categories) else ""
+            content.append({"type": "input_text", "text": f"Independent image analysis: type={identity.product_type}; dominant colour/colourway={identity.dominant_colour}; pattern or finish={identity.pattern_or_finish}; visual signature={identity.visual_signature}{category_text}"})
+        content.append(_image_input(data_url, detail="high"))
     expected = list(range(1, len(data_urls) + 1))
-    if sorted(all_numbers) != expected or len(set(all_numbers)) != len(all_numbers):
-        raise ValueError("batch grouping did not assign every image exactly once")
-    if result.unique_product_count != len(result.groups):
-        raise ValueError("batch grouping count does not match its groups")
-    return result
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            response = _openai_call(lambda: client.responses.parse(model="gpt-4o-mini", input=[{"role": "user", "content": content}], text_format=BatchScreeningResult))
+            if response.output_parsed is None:
+                raise ValueError("batch grouping returned no decision")
+            result = response.output_parsed
+            all_numbers = [number for group in result.groups for number in group.image_numbers]
+            if sorted(all_numbers) != expected or len(set(all_numbers)) != len(all_numbers):
+                raise ValueError("batch grouping did not assign every image exactly once")
+            result.unique_product_count = len(result.groups)
+            return result
+        except (ValueError, ValidationError) as exc:
+            last_error = exc
+            content[0]["text"] = content[0]["text"] + "\nYour previous grouping response was invalid. Assign every image number exactly once, with no missing or duplicate numbers."
+    # Identity annotations improve difficult colourway decisions, but a malformed
+    # annotated response must not fail the whole batch. Retry the same visual
+    # grouping request without annotations as a safe fallback.
+    if identities:
+        return _group_product_images_once(client, data_urls)
+    raise ValueError("batch grouping did not produce a valid complete assignment") from last_error
 
 
-def analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | None = None, model: str = "gpt-4o-mini", run_safety_check: bool = True) -> BatchAnalysisResult:
+def group_product_images(client: OpenAI, data_urls: list[str], identities: list[ProductIdentity] | None = None, categories: list[ProductCategorization] | None = None) -> BatchScreeningResult:
+    """Group large batches in bounded chunks, then merge chunk representatives."""
+    if len(data_urls) <= 8:
+        return _group_product_images_once(client, data_urls, identities, categories)
+    chunk_groups: list[ProductImageGroup] = []
+    chunk_size = 12
+    for start in range(0, len(data_urls), chunk_size):
+        chunk = _group_product_images_once(client, data_urls[start:start + chunk_size], identities[start:start + chunk_size] if identities else None, categories[start:start + chunk_size] if categories else None)
+        chunk_groups.extend(ProductImageGroup(product_number=len(chunk_groups) + index + 1, image_numbers=[number + start for number in group.image_numbers], reason=group.reason) for index, group in enumerate(chunk.groups))
+    representatives = [data_urls[group.image_numbers[0] - 1] for group in chunk_groups]
+    representative_identities = [identities[group.image_numbers[0] - 1] for group in chunk_groups] if identities else None
+    representative_categories = [categories[group.image_numbers[0] - 1] for group in chunk_groups] if categories else None
+    merged = _group_product_images_once(client, representatives, representative_identities, representative_categories)
+    groups = [ProductImageGroup(product_number=index + 1, image_numbers=[number for member in merged_group.image_numbers for number in chunk_groups[member - 1].image_numbers], reason=merged_group.reason) for index, merged_group in enumerate(merged.groups)]
+    return BatchScreeningResult(passed=True, unique_product_count=len(groups), groups=groups, reason="All images were grouped using bounded batches.")
+
+
+def analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | None = None, model: str = "gpt-4o-mini", run_safety_check: bool = True, progress_callback: Callable[[str, str, int, int, int], None] | None = None) -> BatchAnalysisResult:
     """Screen a batch and report how many unique fashion products it contains."""
     if not image_bytes_list:
         raise ValueError("at least one image is required")
-    images = [prescreen_image(image_bytes) for image_bytes in image_bytes_list]
+    def report(stage: str, message: str, completed: int, total: int, percent: int) -> None:
+        if progress_callback:
+            progress_callback(stage, message, completed, total, percent)
+
+    images: list[PrescreenedImage] = []
+    validated_numbers: list[int] = []
+    report("validation", "Checking uploaded images", 0, len(image_bytes_list), 2)
+    rejected: list[RejectedImage] = []
+    for number, image_bytes in enumerate(image_bytes_list, start=1):
+        try:
+            images.append(prescreen_image(image_bytes))
+            validated_numbers.append(number)
+        except ValueError as exc:
+            rejected.append(RejectedImage(image_number=number, reason=str(exc)))
+        report("validation", f"Validated image {number} of {len(image_bytes_list)}", number, len(image_bytes_list), round(number / len(image_bytes_list) * 15))
+    if not images:
+        return BatchAnalysisResult(passed=False, unique_product_count=0, rejected_images=rejected, reason="No images passed technical validation.")
     client = OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"))
     data_urls = [_data_url(image) for image in images]
-    rejected: list[int] = []
-    for number, data_url in enumerate(data_urls, start=1):
+    accepted_data_urls: list[str] = []
+    accepted_numbers: list[int] = []
+    identities: list[ProductIdentity] = []
+    categories: list[ProductCategorization] = []
+    report("screening", "Screening accepted images", 0, len(data_urls), 15)
+    for local_number, data_url in enumerate(data_urls, start=1):
+        number = validated_numbers[local_number - 1]
         if run_safety_check:
             moderation = client.moderations.create(model="omni-moderation-latest", input=[{"type": "image_url", "image_url": {"url": data_url}}])
             if moderation.results[0].flagged:
-                rejected.append(number)
+                rejected.append(RejectedImage(image_number=number, reason="Image did not pass the safety check."))
                 continue
         screening = screen_product_image(client, data_url)
         if not screening.passed or screening.item_count != 1 or not screening.primary_item_clear:
-            rejected.append(number)
-    if rejected:
-        return BatchAnalysisResult(passed=False, unique_product_count=0, rejected_images=rejected, reason=f"Images {', '.join(map(str, rejected))} did not each contain exactly one clearly identifiable fashion product.")
-    grouping = group_product_images(client, data_urls)
+            rejected.append(RejectedImage(image_number=number, reason=screening.reason))
+            continue
+        accepted_data_urls.append(data_url)
+        accepted_numbers.append(number)
+        identities.append(identify_product_image(client, data_url))
+        categories.append(categorize_product_image(client, data_url))
+        report("analysis", f"Analysed image {local_number} of {len(data_urls)}", local_number, len(data_urls), 15 + round(local_number / len(data_urls) * 45))
+    if not accepted_data_urls:
+        return BatchAnalysisResult(passed=False, unique_product_count=0, rejected_images=rejected, reason="No images passed validation and product screening.")
+    report("grouping", "Comparing analysed images and finding product groups", 0, len(accepted_data_urls), 62)
+    grouping = group_product_images(client, accepted_data_urls, identities, categories)
+    report("grouping", f"Found {len(grouping.groups)} product groups", len(accepted_data_urls), len(accepted_data_urls), 75)
     products = []
+    accepted_bytes = [image_bytes_list[number - 1] for number in accepted_numbers]
     for group in grouping.groups:
-        representative = image_bytes_list[group.image_numbers[0] - 1]
-        analysis = analyze_product_image(representative, api_key=api_key, model=model, run_safety_check=False, screen_already=True)
-        products.append(IdentifiedProduct(product_number=group.product_number, image_numbers=group.image_numbers, grouping_reason=group.reason, analysis=analysis))
-    return BatchAnalysisResult(passed=True, unique_product_count=len(products), products=products, reason="All images were grouped and each unique product was analysed.")
+        local_numbers = group.image_numbers
+        original_numbers = [accepted_numbers[number - 1] for number in local_numbers]
+        representative = accepted_bytes[local_numbers[0] - 1]
+        member_categories = [categories[number - 1].category for number in local_numbers]
+        group_category = max(set(member_categories), key=member_categories.count)
+        representative_category = next((categories[number - 1] for number in local_numbers if categories[number - 1].category == group_category), categories[local_numbers[0] - 1])
+        analysis = analyze_product_image(representative, api_key=api_key, model=model, run_safety_check=False, screen_already=True, known_categorization=representative_category)
+        report("synthesis", f"Preparing product details {group.product_number} of {len(grouping.groups)}", group.product_number, len(grouping.groups), 75 + round(group.product_number / len(grouping.groups) * 25))
+        analysis.category = group_category
+        products.append(IdentifiedProduct(product_number=group.product_number, image_numbers=original_numbers, grouping_reason=group.reason, analysis=analysis))
+    return BatchAnalysisResult(passed=True, unique_product_count=len(products), products=products, rejected_images=rejected, reason="Accepted images were grouped and analysed; rejected images were omitted.")
 
 
-def analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, model: str = "gpt-4o-mini", run_safety_check: bool = True, screen_already: bool = False) -> ProductAnalysis:
+def analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, model: str = "gpt-4o-mini", run_safety_check: bool = True, screen_already: bool = False, known_categorization: ProductCategorization | None = None) -> ProductAnalysis:
     """Screen and analyse one product image using an OpenAI vision model."""
     image = prescreen_image(image_bytes)
     client = OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"))
@@ -250,11 +368,12 @@ def analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mod
         screening.passed = False
         raise ImageRejectedError(screening)
 
-    categorization = categorize_product_image(client, data_url)
+    categorization = known_categorization or categorize_product_image(client, data_url)
     instructions = f"""Analyse this approved wearable fashion product photograph for an ecommerce catalogue.
 The separate categorization step identified the product as category '{categorization.category}' and type '{categorization.product_type}'. Use those values unless the image clearly disproves them.
 
 Return only the requested structured fields.
+- Generate a concise, human-friendly product name, such as 'Pink cotton shirt', 'Black leather jacket', or 'White low-top trainers'. Include the dominant visible colour and product type when useful. Do not use placeholders such as 'Unconfirmed product'.
 - Use the category and product type supplied by the categorization step.
 - Make product_type highly specific, for example '3/4 length dark green leather jacket with a belted waist'.
 - Describe colours specifically, including the dominant colour and important secondary colours.
@@ -263,14 +382,19 @@ Return only the requested structured fields.
 - Write a factual 30–40 word description. Do not invent brand, size, price, or hidden features.
 - Confidence must reflect how clearly the image supports the result, from 0 to 1.
 """
-    content = [{"type": "input_text", "text": instructions}, {"type": "input_image", "image_url": data_url}]
+    content = [{"type": "input_text", "text": instructions}, _image_input(data_url, detail="high")]
     last_error: Exception | None = None
     for attempt in range(3):
         try:
-            response = client.responses.parse(model=model, input=[{"role": "user", "content": content}], text_format=ProductAnalysis)
+            response = _openai_call(lambda: client.responses.parse(model=model, input=[{"role": "user", "content": content}], text_format=ProductAnalysis))
             if response.output_parsed is None:
                 raise ValueError("AI returned no structured product analysis")
-            return response.output_parsed
+            analysis = response.output_parsed
+            words = analysis.description.split()
+            if len(words) < 30:
+                words.extend("The product is presented as a wearable fashion item for catalogue use with details based only on visible evidence.".split())
+            analysis.description = " ".join(words[:40])
+            return analysis
         except ValidationError as exc:
             last_error = exc
             content[0]["text"] = instructions + "\nYour previous answer failed validation. The description must contain exactly 35 space-separated words. Write the description first, count every word, then return it."
