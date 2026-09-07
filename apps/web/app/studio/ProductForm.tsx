@@ -17,7 +17,6 @@ export default function ProductForm({ open, onClose, message }: { open: boolean;
   const submitLock = useRef(false);
   const [selected, setSelected] = useState<Selection[]>([]);
   const [error, setError] = useState('');
-  const [internalName, setInternalName] = useState('');
   const [, formAction, submitting] = useActionState(async (_previous: null, data: FormData) => {
     await continueToAnalysis(data);
     return null;
@@ -143,7 +142,6 @@ export default function ProductForm({ open, onClose, message }: { open: boolean;
             <button type="button" className="su-arrow" aria-label="Next images" disabled={!canNext} onClick={() => moveGallery(1)}><UploadIcon name="next" /></button>
           </div>}
         </div>
-        {selected.length > 0 && <label className="su-name">Internal name <span>(optional)</span><input name="name" placeholder="e.g. Spring collection" value={internalName} onChange={event => setInternalName(event.target.value)} maxLength={160} disabled={submitting} /></label>}
         {(error || message) && <p className="su-error" role="alert">{error || message}</p>}
         <footer className="su-footer">
           <p role="status">{submitting ? 'Uploading your images and starting the analysis…' : 'Continue to analyse your images. You’ll review the details next.'}</p>
