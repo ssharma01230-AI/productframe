@@ -64,7 +64,7 @@ Implemented behaviour includes:
 - Product folders with refresh-safe URLs, associated uploads, full-image previews, private folder links, and upload ZIP downloads.
 - A Gallery view reserved for approved generated outputs. Uploads remain inside product folders. Generated assets are persisted separately from source assets and can be stored in product folders and Gallery.
 - A Create view inside Studio based on the prototype, with new-product upload and existing-catalogue paths. Its typography, stacked sections, card borders, and responsive layout have been browser-verified. `/studio?view=create` opens this view directly.
-- Catalogue cards support selecting one or multiple products, then Choose outputs opens `/studio?view=create&step=outputs&product=<id>` (repeat `product` for multiple selections). Choices are resolved independently from each product's category. Outerwear uses ten leather-jacket Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/outerwear/`, with Over-the-Shoulder (No Face) replacing Front Far / Full Length in position 03 and the later sleeve-first image excluded. Footwear uses ten white-trainer Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/footwear/`. Socks uses the eight user-approved cream ribbed crew-sock Ecommerce previews from `apps/web/public/output-examples/socks/`, in attachment order. The selection includes four worn views, the original Heel Detail close-up, Flat Lay, Knit Texture and Folded Product; Side Profile, Cuff Detail and both Toe Detail versions are excluded. Exact approved attachments and checksums are recorded in `output/imagegen/socks-cream-crew/approved-selection.json`. The active order, replacements and archived originals are documented in [`output/imagegen/socks-cream-crew/README.md`](output/imagegen/socks-cream-crew/README.md). These three categories retain the prototype's 24 Lifestyle and Campaign choices, giving Socks 32 choices in total; all remaining product categories retain all 36 default choices. The socks revisions leave the Outerwear and Footwear sets unchanged. Reference previews are illustrative catalogue examples, not generated assets posted to a product's library. Review selection opens a centred popup with the same selected output thumbnails grouped by product; Back, Close, Escape and the backdrop dismiss it without losing choices. Product selections survive navigation in the URL; output choices remain in the current page session. Frontend output submission remains an integration task; backend generation jobs, previews, review and final asset persistence are implemented.
+- Catalogue cards support selecting one or multiple products, then Choose outputs opens `/studio?view=create&step=outputs&product=<id>` (repeat `product` for multiple selections). Choices are resolved independently from each product's category. Outerwear uses ten leather-jacket Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/outerwear/`, with the approved no-face model labels. Footwear uses ten white-trainer Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/footwear/`. Socks uses the eight user-approved cream ribbed crew-sock Ecommerce previews from `apps/web/public/output-examples/socks/`, in attachment order. Bottoms uses nine approved Ecommerce templates and local references, including the model-worn waist-down views, folded flat lay and construction details; the unapproved Fabric Surface Detail draft is excluded. Tops, Outerwear, Footwear, Socks and Bottoms all mirror their backend-owned Ecommerce IDs and names, while other categories retain the default catalogue choices. Reference previews are illustrative catalogue examples, not generated assets posted to a product's library. Review selection opens a centred popup with the same selected output thumbnails grouped by product; Back, Close, Escape and the backdrop dismiss it without losing choices. Product selections survive navigation in the URL; output choices remain in the current page session. For the current rollout, Continue submits one selected product/template with an idempotency key, polls the durable job, displays the signed preview URL for human review, and submits approval or rejection to the worker.
 - The Outerwear, Footwear and Socks Ecommerce example images have the same conservative deterministic finishing profile applied in place: `1.055x` contrast, `1.075x` colour and an unsharp mask with radius `1.15`, strength `72%` and threshold `4`. All remain `1122x1402` PNGs. This is a presentation treatment for static template examples and does not make them generated product assets.
 
 ### Product categories and subtype routing
@@ -86,9 +86,8 @@ The persisted image workflow is:
 ```text
 load generation job
   -> build and persist the provider-neutral prompt
-  -> generate image with the configured image model
-  -> restore bounded source artwork when the template requires it
-  -> validate that the visible result is the same sellable product
+  -> generate a 1024x1024 image with the configured image model at medium quality
+  -> optionally restore bounded source artwork and validate product fidelity
   -> apply conservative deterministic finishing
   -> store preview and pause for human review
   -> on approval, copy the reviewed preview to final storage
@@ -96,13 +95,13 @@ load generation job
 
 `services/api/src/productframe_api/generation_prompts.py` assembles product context, references, template instructions, negative constraints, source rotation and artwork policy. `services/api/src/productframe_api/generation_templates.py` defines category-compatible templates and whether source artwork should be fully, partially, conditionally or never visible.
 
-`services/worker/src/productframe_worker/fidelity_validator.py` has three separate responsibilities that must remain ordered:
+`services/worker/src/productframe_worker/fidelity_validator.py` has three separate responsibilities that must remain ordered when fidelity validation is enabled:
 
 1. `restore()` attempts masked source-pixel restoration only for confident, bounded artwork regions. It fails closed when a usable mask or destination garment surface cannot be established.
 2. `validate()` uses a vision model to reject a materially different sellable product. A rejected output is stored under a `rejected/` object key and is never exposed as the review preview.
 3. `finish_generated_image()` performs presentation-only pixel processing after validation: `1.055x` contrast, `1.075x` colour and a small-radius unsharp mask (`1.15`, `72%`, threshold `4`). It preserves dimensions, supported image format, alpha and generation metadata. It does not crop, segment, inpaint, regenerate or move product details. Finishing is fail-open: if it cannot decode or save an unexpected provider format, the already validated image is stored unchanged.
 
-The order is deliberate. Recognition, prompt construction, generation, restoration and the fidelity decision receive no sharpened or saturation-adjusted input. The human reviewer sees the finished preview, and the approved final is the same reviewed image.
+The order is deliberate. Recognition, prompt construction and generation receive no sharpened or saturation-adjusted input. Fidelity validation is disabled by default to avoid the extra vision-model request; set `OPENAI_IMAGE_FIDELITY_VALIDATION=true` to re-enable restoration and validation. The human reviewer sees the finished preview, and the approved final is the same reviewed image.
 
 The current image model is `gpt-image-2-2026-04-21`. Local tests showed strong reproduction for a printed navy T-shirt and an all-over patterned tunic. A difficult octopus graphic test exposed a limitation in the current colour-distance artwork mask: it correctly failed closed rather than publishing a contaminated rectangular source crop. Improve general artwork segmentation before treating that case as solved; do not add product-specific or octopus-specific schemas, prompts or scripts.
 
@@ -233,7 +232,7 @@ OpenAI analysis defaults to **GPT-4.1-mini**. Adding `GEMINI_API_KEY` enables hy
 
 The default concurrency is **3** across providers; the current local worker is configured with **6**. Each image still runs moderation → product screening → identity analysis → categorisation in order. Local file validation happens first. Grouping waits for all checks, always uses OpenAI, and sends the full set in one request when it fits the token budget; otherwise it uses bounded comparisons. Product details then run concurrently. Original image/product ordering is preserved, and progress/database writes stay on the coordinator thread.
 
-The worker reads `services/worker/.env`; the standalone analyser reads the `.env` in its working directory. Image generation currently uses `OPENAI_IMAGE_MODEL=gpt-image-2-2026-04-21` when configured. Both service example files include these settings with blank credentials:
+The worker reads `services/worker/.env`; the standalone analyser reads the `.env` in its working directory. Image generation currently uses `OPENAI_IMAGE_MODEL=gpt-image-2-2026-04-21` when configured, requests `1024x1024` output at medium quality, and allows up to `OPENAI_IMAGE_TIMEOUT_SECONDS=300` seconds for the provider response. Fidelity validation is off by default via `OPENAI_IMAGE_FIDELITY_VALIDATION=false`. The worker example file includes these generation settings with blank credentials:
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
@@ -251,6 +250,9 @@ The worker reads `services/worker/.env`; the standalone analyser reads the `.env
 | `GEMINI_REQUESTS_PER_DAY` | `18` | Gemini daily request-attempt allowance. |
 | `ANALYSIS_QUOTA_DB` | `<repository>/.cache/analysis-quotas.sqlite3` | Optional override for the persisted Gemini daily ledger. |
 | `OPENAI_IMAGE_MODEL` | `gpt-image-2-2026-04-21` | OpenAI image-generation model used by the worker. |
+| `OPENAI_IMAGE_TIMEOUT_SECONDS` | `300` | Per-request timeout for the OpenAI image provider. |
+| `OPENAI_IMAGE_FIDELITY_VALIDATION` | `false` | Optional extra restoration and vision-model fidelity check for generated images. |
+| `GENERATION_RECOVERY_LEASE_SECONDS` | `600` | Age before an abandoned generating job/message can be recovered. |
 | `GENERATION_MAX_ATTEMPTS` | `3` | Maximum bounded generation attempts. |
 
 These are application budgets, not account allowances. Gemini's defaults leave headroom below the locally verified allowance of **5 requests/minute, 250000 tokens/minute, and 20 requests/day**; check the actual limits when using another account or model. Every retry reserves capacity again. Token/request admission and temporary cooldowns are shared across tasks on the same route; OpenAI moderation has its own request bucket. Estimates include model-specific image tokens, prompt/schema overhead, and output space. A request that cannot fit the configured capacity fails explicitly.
@@ -310,13 +312,13 @@ Product Library reads preserve the existing product approval/visibility rules. P
 
 ## Current known issues and cautions
 
-1. **Output selection does not yet submit generation work.** Existing catalogue products can be selected and category-adaptive templates can be chosen and reviewed, but Continue is not connected to generation-run creation, polling and approval UI.
+1. **Generation rollout is currently single-product.** The frontend selection, provider call, preview delivery and review loop are connected and verified; multi-product/template fan-out is still deferred.
 2. **Analysis throughput remains capacity-limited.** OpenAI/Gemini routing overlaps independent image and product-detail tasks, while each image's gates retain their order. Token/request budgets, Gemini's daily allowance, retries, and large sets of distinct products can still make a run slow. Active-job crash/requeue recovery remains unfinished.
 3. **Grouping is probabilistic.** It is safer to create an extra group than to merge visibly different products. More difficult fixture coverage is needed for colourways, patterns, footwear, lighting, folded/back/detail views, and near-identical garments.
 4. **Run history is not yet a dedicated UI.** Jobs are durable in the database and a run can be reopened through a job ID, but there is no finished Run History screen/navigation.
 5. **Subtype and category routing needs hardening.** Canonical subtype aliases and category-level fallbacks still need to be fully wired into recognition and template selection. Bags remain intentionally unsupported.
 6. **Catalogue/output identity needs hardening.** Output selection must use durable run-scoped product IDs and should not depend on array position or transient client state.
-7. **Frontend output generation is not connected.** The backend generation contract, queueing, storage, durable graph review state and review API are implemented. The frontend still needs to submit selected recipes, poll jobs, display previews and submit approval decisions.
+7. **Generation observability can be expanded.** Provider request IDs and bounded retry messages are persisted, while a dedicated run-history screen and richer stage telemetry remain future work.
 8. **The current repository has uncommitted changes.** Preserve the work; inspect `git diff` and avoid broad cleanup until the new agent understands the implementation.
 9. **Bounded artwork restoration is intentionally conservative.** The colour-distance mask works for isolated artwork on sufficiently distinct fabric, but rejects uncertain or contaminated crops. Keep the failure closed until a general segmentation approach is validated across varied products.
 
@@ -331,8 +333,7 @@ Prioritize work in this order:
 5. Reduce AI latency by combining compatible analysis/categorisation calls, batching where reliable, caching, and preserving retry/backoff behaviour.
 6. Improve persisted failure/retry messaging and progress granularity so the UI explains which stage failed and whether a retry is active.
 7. Make catalogue and output selections use durable Product IDs and run-scoped identity consistently.
-8. Connect Continue in output selection to the generation contract, including selected recipe submission, job polling, preview display and review actions.
-9. Add generation fan-out for multiple products/templates in one run.
+8. Add generation fan-out for multiple products/templates in one run.
 10. Replace Server Action uploads with direct browser-to-MinIO multipart uploads for large batches, while retaining validation and workspace authorization.
 11. Once stable, remove accidental generated files from the change set, review secrets, create a clean commit, and update this handover.
 

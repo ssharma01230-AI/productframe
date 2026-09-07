@@ -22,6 +22,59 @@ def test_tops_definition_has_required_fields_and_rules():
     assert any("V-neck" in rule for rule in tops.prompt_rules)
 
 
+def test_bottoms_definition_captures_all_ecommerce_template_identity_fields():
+    bottoms = get_category_definition("BOTTOMS")
+
+    for field in (
+        "category_details.waist_height",
+        "category_details.fly_or_closure",
+        "category_details.leg_width",
+        "category_details.garment_length",
+        "category_details.hem_details",
+        "category_details.fit_and_silhouette",
+    ):
+        assert field in bottoms.required_analysis_fields
+    for field in (
+        "category_details.pocket_details",
+        "category_details.belt_loops",
+        "category_details.panel_or_seam_details",
+    ):
+        assert field in bottoms.optional_analysis_fields
+    assert any("lower midsection" in rule for rule in bottoms.prompt_rules)
+
+
+def test_underwear_definition_and_details_cover_identity_fields():
+    underwear = get_category_definition("underwear")
+    for field in (
+        "category_details.coverage",
+        "category_details.fit_and_silhouette",
+    ):
+        assert field in underwear.required_analysis_fields
+    for field in (
+        "category_details.support_details",
+        "category_details.cup_shape",
+    ):
+        assert field in underwear.optional_analysis_fields
+
+    details = validate_category_details("underwear", {
+        "subtype": "boxers",
+        "coverage": "mid-thigh coverage",
+        "waist_height": "mid-rise",
+        "rise": "standard rise",
+        "strap_type": "not applicable",
+        "strap_width": "not applicable",
+        "support_details": "pouch construction visible; support level uncertain",
+        "cup_shape": "not applicable",
+        "elastic_details": "covered elastic waistband",
+        "closure_details": [],
+        "seam_details": ["front centre seam", "side seams"],
+        "fabric_appearance": "soft grey stretch jersey",
+        "fit_and_silhouette": "close-fitting boxer brief silhouette",
+        "visible_uncertainties": [],
+    })
+    assert details["subtype"] == "boxers"
+
+
 def test_category_details_are_validated_against_the_category_schema():
     details = validate_category_details("socks", {
         "subtype": "crew",

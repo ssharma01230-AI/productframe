@@ -76,6 +76,12 @@
 .pl-asset-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .pl-gallery-grid .pl-asset-image { height: 210px; }
 .pl-asset-badge { position: absolute; top: 9px; left: 9px; max-width: calc(100% - 18px); padding: 5px 7px; border-radius: 5px; background: #171817c7; color: #fff; font-size: 8px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-asset-delete-button { position: absolute; right: 9px; bottom: 9px; z-index: 2; display: grid; width: 20px; height: 20px; place-items: center; padding: 0; border: 0; background: transparent; color: #a34f43; }
+.pl-asset-delete-button:hover { color: #7f3028; }
+.pl-asset-delete-button .sh-icon { width: 16px; height: 16px; }
+.pl-asset-select-check { position: absolute; top: 9px; right: 9px; display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid #ffffffc7; border-radius: 50%; background: #ffffffd9; color: #4b642d; font-size: 13px; font-weight: 700; }
+.pl-asset-card.is-selected .pl-asset-select-check { border-color: var(--sh-accent); background: var(--sh-accent); color: #263218; }
+.pl-asset-image > .pl-asset-delete { display: none; }
 .pl-asset-copy { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 12px; }
 .pl-asset-copy > div { min-width: 0; }
 .pl-asset-copy b, .pl-asset-copy small { display: block; overflow-wrap: anywhere; }

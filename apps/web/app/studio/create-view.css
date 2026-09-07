@@ -57,7 +57,7 @@
 .pf-create-product-info b { display: block; font-size: 11px; font-weight: 600; overflow-wrap: anywhere; }
 .pf-create-product-info small { display: block; margin-top: 6px; color: var(--sh-muted); font-size: 10px; }
 .pf-create-empty { grid-column: 1 / -1; padding: 40px 20px; border: 1px dashed #b8bbb0; border-radius: 11px; color: var(--sh-muted); font-size: 12px; text-align: center; background: #fafaf7; }
-.pf-create-selection-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 16px 18px; border: 1px solid #d4dfc1; border-radius: 10px; background: #f0f5e6; }
+.pf-create-selection-actions { position: fixed; z-index: 30; right: 0; bottom: 0; left: 232px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 42px; border-top: 1px solid #d4dfc1; background: #f0f5e6f5; box-shadow: 0 -8px 24px #26351c0d; backdrop-filter: blur(12px); }
 .pf-create-selection-copy, .pf-create-selection-buttons { display: flex; align-items: center; gap: 12px; }
 .pf-create-selection-copy { color: #4e642f; font-size: 13px; }
 .sh-shell .pf-create-clear-selection { padding: 10px 5px; background: transparent; color: var(--sh-muted); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
@@ -65,14 +65,18 @@
 .sh-shell .pf-create-continue:hover { background: #acf32c; }
 
 @media (max-width: 1000px) {
+  .pf-create-selection-actions { left: 190px; padding-inline: 32px; }
   .sh-content.sh-create-content { padding: 32px; }
 }
 @media (max-width: 950px) {
   .pf-create-path-heading { margin: 12px 0; }
   .pf-create-catalogue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@media (max-width: 760px) {
+  .pf-create-selection-actions { left: 0; }
+}
 @media (max-width: 600px) {
-  .sh-content.sh-create-content { padding: 32px 18px; }
+  .sh-content.sh-create-content { padding: 32px 18px 110px; }
   .pf-create-intro h1 { font-size: 40px; overflow-wrap: anywhere; }
   .pf-create-subtitle { line-height: 1.5; }
   .sh-shell .pf-create-upload-card { height: 390px; display: flex; flex-direction: column; }

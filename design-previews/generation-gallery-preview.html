@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>ProductFrame — Generation gallery direction</title>
+  <style>
+    @font-face {
+      font-family: "PF Sans";
+      src: url("ecommerce-selection-assets/dm-sans.woff2") format("woff2");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "PF Display";
+      src: url("ecommerce-selection-assets/playfair.woff2") format("woff2");
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: light;
+      --bg: #f5f5f0;
+      --paper: #fff;
+      --ink: #171817;
+      --muted: #70746c;
+      --line: #e1e3dc;
+      --soft-line: #eaebe5;
+      --soft: #eef0e9;
+      --accent: #b9ff3d;
+      --accent-ink: #34431e;
+      --green: #5d783d;
+      --warm: #f8f2ea;
+      --warm-line: #dfcdbb;
+      --shadow: 0 16px 32px #1d25170d;
+      --ease: cubic-bezier(.2, .8, .2, 1);
+      font-family: "PF Sans", "DM Sans", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      font-size: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--bg); }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 2px solid #526c2c; outline-offset: 4px; }
+    [hidden] { display: none !important; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 218px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      padding: 29px 18px 24px;
+      border-right: 1px solid var(--line);
+      background: #f8f8f4;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 9px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -.045em;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      background: var(--ink);
+      color: var(--accent);
+      font-size: 16px;
+    }
+
+    .main-nav {
+      display: grid;
+      gap: 6px;
+      margin-top: 62px;
+    }
+
+    .main-nav a {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 12px 11px;
+      border-radius: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration: none;
+    }
+
+    .main-nav a::before {
+      width: 6px;
+      height: 6px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      content: "";
+      opacity: .7;
+    }
+
+    .main-nav a[aria-current="page"] { background: #e9ece3; color: var(--ink); font-weight: 600; }
+    .main-nav a[aria-current="page"]::before { border-color: var(--accent-ink); background: var(--accent); opacity: 1; }
+
+    .workspace { min-width: 0; }
+
+    .topbar {
+      display: flex;
+      height: 76px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 42px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .topbar b { color: var(--ink); font-weight: 600; }
+
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid #d9ddd2;
+      border-radius: 50%;
+      background: #e9ebe4;
+      color: #62685e;
+      font-size: 10px;
+    }
+
+    .page {
+      width: min(1240px, calc(100% - 84px));
+      margin: 0 auto;
+      padding: 55px 0 155px;
+    }
+
+    .eyebrow,
+    .card-kicker,
+    .template-phase,
+    .toolbar-label,
+    .product-meta {
+      letter-spacing: .085em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 30px;
+    }
+
+    .page-heading h1 {
+      max-width: 690px;
+      margin: 14px 0 13px;
+      font-family: "PF Display", Georgia, serif;
+      font-size: clamp(38px, 5vw, 64px);
+      font-weight: 500;
+      line-height: 1.02;
+      letter-spacing: -.06em;
+    }
+
+    .page-heading p {
+      max-width: 650px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .run-summary {
+      display: grid;
+      grid-template-columns: minmax(230px, 1fr) repeat(3, minmax(125px, .32fr));
+      gap: 0;
+      margin-top: 39px;
+      border: 1px solid #30362c;
+      border-radius: 10px;
+      background: #22261f;
+      color: #f7f8f2;
+      box-shadow: var(--shadow);
+    }
+
+    .summary-total,
+    .summary-stat { min-height: 96px; padding: 18px 20px; }
+    .summary-total { border-right: 1px solid #4b5144; }
+    .summary-total-line { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; }
+    .summary-label { color: #bdc7b6; font-size: 9px; letter-spacing: .085em; text-transform: uppercase; }
+    .summary-total strong { font-size: 20px; font-weight: 500; letter-spacing: -.04em; }
+    .summary-progress { height: 5px; margin-top: 17px; overflow: hidden; border-radius: 8px; background: #485043; }
+    .summary-progress span { display: block; height: 100%; width: 29%; border-radius: inherit; background: var(--accent); transition: width .45s var(--ease); }
+    .summary-progress-meta { display: flex; justify-content: space-between; gap: 10px; margin-top: 7px; color: #abb5a4; font-size: 10px; }
+    .summary-stat { border-right: 1px solid #4b5144; }
+    .summary-stat:last-child { border-right: 0; }
+    .summary-stat strong { display: block; margin-top: 13px; color: #fff; font-size: 23px; font-weight: 500; letter-spacing: -.04em; }
+    .summary-stat span:last-child { display: block; margin-top: 3px; color: #abb5a4; font-size: 10px; }
+
+    .gallery-toolbar {
+      margin-top: 42px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .toolbar-label { color: var(--muted); font-size: 10px; }
+
+    .product-group { margin-top: 39px; }
+
+    .product-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .product-identity { display: flex; min-width: 0; align-items: center; gap: 13px; }
+
+    .product-thumb {
+      position: relative;
+      display: block;
+      width: 49px;
+      height: 58px;
+      flex: 0 0 49px;
+      overflow: hidden;
+      border: 1px solid #dcded6;
+      border-radius: 6px;
+      background: #e7e6df;
+    }
+
+    .product-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .product-meta { color: var(--muted); font-size: 9px; }
+    .product-identity h2 { margin: 4px 0 2px; font-size: 17px; font-weight: 600; letter-spacing: -.035em; }
+    .product-identity p { margin: 0; color: var(--muted); font-size: 11px; }
+
+    .product-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .product-status::before { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); content: ""; }
+
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 11px;
+    }
+
+    .output-card {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--paper);
+      box-shadow: 0 2px 4px #26351c04;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+    }
+
+    .output-card:hover { border-color: #c1ccaf; box-shadow: 0 10px 22px #26351c0d; transform: translateY(-2px); }
+
+    .output-media {
+      position: relative;
+      display: grid;
+      place-items: center;
+      aspect-ratio: 4 / 4.7;
+      overflow: hidden;
+      background: #e9e9e2;
+    }
+
+    .output-media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+    .output-card.is-ready .output-media { background: #e6e4df; }
+    .output-card.is-ready .output-media::after { position: absolute; inset: 0; border: 1px solid #fff7; content: ""; pointer-events: none; }
+
+    .output-card.is-generating .output-media {
+      background-color: #eef1e9;
+      background-image: linear-gradient(90deg, #dfe7d733 1px, transparent 1px), linear-gradient(0deg, #dfe7d733 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    .media-number {
+      position: absolute;
+      z-index: 2;
+      top: 10px;
+      left: 10px;
+      display: grid;
+      place-items: center;
+      width: 25px;
+      height: 25px;
+      border: 1px solid #ffffffb8;
+      border-radius: 50%;
+      background: #ffffffc7;
+      color: #5c6456;
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .template-phase {
+      position: absolute;
+      z-index: 2;
+      right: 10px;
+      bottom: 10px;
+      padding: 5px 6px;
+      border-radius: 4px;
+      background: #ffffffc9;
+      color: #6e7669;
+      font-size: 8px;
+    }
+
+    .loading-state {
+      position: relative;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      gap: 9px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .loading-state strong { font-size: 12px; font-weight: 600; }
+    .loading-state span:last-child { max-width: 125px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+
+    .progress-orb {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid #c0ceb6;
+      border-top-color: #7f9c51;
+      border-radius: 50%;
+      color: #6e8944;
+      animation: spin 1.8s linear infinite;
+    }
+
+    .progress-orb::after { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); content: ""; }
+    .output-card-footer {
+      display: flex;
+      min-height: 65px;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 9px;
+      padding: 12px 12px 13px;
+    }
+
+    .output-card-footer > div { min-width: 0; }
+    .card-kicker { color: var(--muted); font-size: 8px; }
+    .output-card h3 { margin: 5px 0 0; font-size: 12px; font-weight: 600; line-height: 1.3; }
+
+    .review-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      padding: 0 12px 12px;
+    }
+
+    .review-button {
+      display: inline-flex;
+      min-height: 35px;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 10px;
+      font-weight: 600;
+      transition: background .18s, border-color .18s, transform .18s;
+    }
+
+    .review-button:hover { border-color: #b8c3ac; background: #f2f4ed; }
+    .review-button:active { transform: translateY(1px); }
+    .review-button.approve { border-color: var(--accent); background: var(--accent); }
+    .review-button.approve:hover { border-color: #a9ef2d; background: #a9ef2d; }
+
+    .decision-result {
+      display: flex;
+      min-height: 35px;
+      align-items: center;
+      gap: 7px;
+      margin: 0 12px 12px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .decision-result::before {
+      display: grid;
+      place-items: center;
+      width: 17px;
+      height: 17px;
+      flex: 0 0 17px;
+      border-radius: 50%;
+      font-size: 10px;
+      content: "";
+    }
+
+    .decision-result.approved { border-color: #d3e5b7; background: #f4f9eb; color: #536c35; }
+    .decision-result.approved::before { background: var(--accent); color: var(--accent-ink); content: "✓"; }
+    .decision-result.rejected { border-color: #e3d8cd; background: #faf6f1; color: #806d5f; }
+    .decision-result.rejected::before { background: #e9ded4; color: #755e4e; content: "×"; }
+
+    .output-card.is-approved { border-color: #bdd591; }
+    .output-card.is-approved .template-phase { background: var(--accent); color: var(--accent-ink); }
+    .output-card.is-rejected { border-color: #ded1c5; }
+    .output-card.is-rejected .output-media img { filter: grayscale(.45); opacity: .58; }
+    .output-card.is-rejected .template-phase { background: #f3ece5; color: #796657; }
+
+    .decision-toast {
+      position: fixed;
+      z-index: 10;
+      right: 24px;
+      bottom: 105px;
+      max-width: min(330px, calc(100vw - 32px));
+      padding: 12px 15px;
+      border: 1px solid #c8dcaa;
+      border-radius: 7px;
+      background: #f8fbf2;
+      box-shadow: 0 16px 36px #1f2b171f;
+      color: #49612f;
+      font-size: 11px;
+      font-weight: 600;
+      animation: toast-in .28s var(--ease) both;
+    }
+
+    .review-bar {
+      position: fixed;
+      z-index: 8;
+      right: 0;
+      bottom: 0;
+      left: 218px;
+      border-top: 1px solid #d9ddd2;
+      background: #fafbf7eb;
+      box-shadow: 0 -12px 30px #1d25170d;
+      backdrop-filter: blur(14px);
+    }
+
+    .review-bar-inner {
+      display: flex;
+      width: min(1240px, calc(100% - 84px));
+      min-height: 80px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin: 0 auto;
+      padding: 13px 0;
+    }
+
+    .review-bar-copy {
+      display: grid;
+      grid-template-columns: auto auto;
+      align-items: baseline;
+      column-gap: 11px;
+      row-gap: 3px;
+    }
+
+    .review-bar-kicker {
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: .085em;
+      text-transform: uppercase;
+    }
+
+    .review-bar-copy strong { font-size: 13px; font-weight: 600; }
+    .review-bar-copy > span:last-child { grid-column: 1 / -1; color: var(--muted); font-size: 10px; }
+
+    .library-button {
+      display: inline-flex;
+      min-height: 43px;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      padding: 10px 16px;
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      background: var(--accent);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: background .18s, border-color .18s, opacity .18s, transform .18s;
+    }
+
+    .library-button:hover:not(:disabled) { border-color: #a9ef2d; background: #a9ef2d; }
+    .library-button:active:not(:disabled) { transform: translateY(1px); }
+    .library-button:disabled { border-color: #dfe2da; background: #e8eae4; color: #979c92; cursor: default; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 950px) {
+      .app-shell { grid-template-columns: 75px minmax(0, 1fr); }
+      .sidebar { align-items: center; padding-right: 10px; padding-left: 10px; }
+      .brand { padding: 0; }
+      .brand > span:last-child, .main-nav a { font-size: 0; }
+      .main-nav a { justify-content: center; width: 42px; height: 42px; padding: 0; }
+      .main-nav a::before { width: 9px; height: 9px; }
+      .topbar { padding: 0 27px; }
+      .page { width: min(100% - 54px, 760px); }
+      .run-summary { grid-template-columns: minmax(210px, 1fr) repeat(3, minmax(105px, .32fr)); }
+      .review-bar { left: 75px; }
+      .review-bar-inner { width: min(100% - 54px, 760px); }
+    }
+
+    @media (max-width: 700px) {
+      .topbar { height: 62px; padding: 0 16px; }
+      .page { width: calc(100% - 30px); padding-top: 36px; }
+      .page-heading { flex-direction: column; gap: 20px; }
+      .page-heading h1 { font-size: 46px; }
+      .run-summary { grid-template-columns: repeat(3, 1fr); }
+      .summary-total { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid #4b5144; }
+      .summary-stat { min-height: 78px; padding: 14px; }
+      .summary-stat strong { margin-top: 9px; font-size: 19px; }
+      .output-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .review-bar-inner { gap: 14px; }
+    }
+
+    @media (max-width: 450px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .output-grid { grid-template-columns: minmax(0, 1fr); }
+      .product-heading { align-items: flex-start; flex-direction: column; gap: 9px; }
+      .page { padding-bottom: 190px; }
+      .review-bar { left: 0; }
+      .review-bar-inner { width: calc(100% - 30px); min-height: 0; align-items: stretch; flex-direction: column; gap: 10px; padding: 12px 0; }
+      .library-button { width: 100%; }
+      .decision-toast { right: 15px; bottom: 156px; left: 15px; max-width: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">P</span><span>productframe</span></div>
+      <nav class="main-nav" aria-label="Workspace navigation">
+        <a href="#">Home</a>
+        <a href="#" aria-current="page">Create</a>
+        <a href="#">Products</a>
+        <a href="#">Explore</a>
+        <a href="#">Settings</a>
+      </nav>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar"><span>Studio / <b>Generating outputs</b></span><span class="avatar">SS</span></header>
+
+      <div class="page">
+        <header class="page-heading">
+          <div>
+            <div class="eyebrow">OUTPUT STUDIO / IN PROGRESS</div>
+            <h1>Your images are taking shape.</h1>
+            <p>Every selected moment has its own frame. Ready images stay visible while the rest remain in progress. Approve the images you want to keep in your Product Library.</p>
+          </div>
+        </header>
+
+        <section class="run-summary" aria-label="Generation summary">
+          <div class="summary-total">
+            <div class="summary-total-line"><span class="summary-label">Progress</span><strong id="total-progress-label">2 of 7 ready</strong></div>
+            <div class="summary-progress" role="progressbar" aria-label="Image set progress" aria-valuemin="0" aria-valuemax="7" aria-valuenow="2"><span id="total-progress-fill" style="width: 29%"></span></div>
+            <div class="summary-progress-meta"><span id="summary-message">5 images in progress</span><span id="summary-percent">29% complete</span></div>
+          </div>
+          <div class="summary-stat"><span class="summary-label">Across</span><strong id="product-count">2</strong><span>products</span></div>
+          <div class="summary-stat"><span class="summary-label">Generated</span><strong id="ready-count">2</strong><span>images ready</span></div>
+          <div class="summary-stat"><span class="summary-label">Reviewed</span><strong id="reviewed-count">0 of 2</strong><span id="reviewed-meta">Choose approve or reject</span></div>
+        </section>
+
+        <div class="gallery-toolbar">
+          <span class="toolbar-label">Your images organised by product</span>
+        </div>
+
+        <div id="product-groups"></div>
+      </div>
+      <div class="decision-toast" id="decision-toast" role="status" aria-live="polite" hidden></div>
+      <footer class="review-bar" aria-label="Image review progress">
+        <div class="review-bar-inner">
+          <div class="review-bar-copy"><span class="review-bar-kicker">Review</span><strong id="review-bar-title">0 of 7 images reviewed</strong><span id="review-bar-note">5 images are still in progress</span></div>
+          <button class="library-button" id="library-button" type="button" disabled>Proceed to Product Library <span aria-hidden="true">→</span></button>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const imagePaths = {
+        tee: "ecommerce-selection-assets/top-source.png",
+        scarf: "ecommerce-selection-assets/scarf-source.png"
+      };
+
+      const run = {
+        total: 7,
+        groups: [
+          { id: "tee", meta: "PRODUCT 01 · TOPS", name: "Light blue cotton tee", outputs: [
+            { phase: "ready", decision: null, name: "Front medium", type: "Ecommerce" },
+            { phase: "ready", decision: null, name: "Close-up detail", type: "Ecommerce" },
+            { phase: "generating", name: "Back with model", type: "Ecommerce" },
+            { phase: "generating", name: "Folded product", type: "Ecommerce" }
+          ] },
+          { id: "scarf", meta: "PRODUCT 02 · ACCESSORIES", name: "Printed silk scarf", outputs: [
+            { phase: "generating", name: "Flat lay", type: "Ecommerce" },
+            { phase: "generating", name: "On model", type: "Ecommerce" },
+            { phase: "generating", name: "Fabric detail", type: "Ecommerce" }
+          ] }
+        ]
+      };
+
+      const copy = {
+        generating: "In progress",
+        ready: "Ready to review"
+      };
+
+      if (new URLSearchParams(window.location.search).get("review") === "complete") {
+        run.groups.flatMap(group => group.outputs).forEach((output, index) => {
+          output.phase = "ready";
+          output.decision = index === 6 ? "rejected" : "approved";
+        });
+      }
+
+      const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
+      const groupStatus = outputs => {
+        const ready = outputs.filter(output => output.phase === "ready").length;
+        const active = outputs.filter(output => output.phase !== "ready").length;
+        return ready && active ? `${ready} ready · ${active} in progress` : ready ? `${ready} ready` : `${active} in progress`;
+      };
+
+      function renderCard(output, index, product) {
+        const image = output.phase === "ready" ? `<img src="${imagePaths[product.id]}" alt="${escapeHtml(product.name)} — ${escapeHtml(output.name)}">` : `<div class="loading-state"><span class="progress-orb" aria-hidden="true"></span><strong>${escapeHtml(copy[output.phase])}</strong><span>Your image is currently being generated</span></div>`;
+        const decisionClass = output.decision ? ` is-${output.decision}` : "";
+        const tag = output.decision === "approved" ? "Approved" : output.decision === "rejected" ? "Rejected" : output.phase === "ready" ? "Ready" : "In progress";
+        const decisionControls = output.phase !== "ready" ? "" : output.decision === "approved"
+          ? `<div class="decision-result approved">Added to Product Library</div>`
+          : output.decision === "rejected"
+            ? `<div class="decision-result rejected">Not added to Product Library</div>`
+            : `<div class="review-actions"><button class="review-button reject" type="button" data-decision="rejected" data-product="${product.id}" data-output="${index}" aria-label="Reject ${escapeHtml(output.name)}">Reject</button><button class="review-button approve" type="button" data-decision="approved" data-product="${product.id}" data-output="${index}" aria-label="Approve ${escapeHtml(output.name)} and add it to Product Library">Approve</button></div>`;
+        return `<article class="output-card is-${output.phase}${decisionClass}">
+          <div class="output-media">${image}<span class="media-number">${String(index + 1).padStart(2, "0")}</span><span class="template-phase">${escapeHtml(tag)}</span></div>
+          <div class="output-card-footer"><div><span class="card-kicker">${escapeHtml(output.type)}</span><h3>${escapeHtml(output.name)}</h3></div></div>
+          ${decisionControls}
+        </article>`;
+      }
+
+      function renderGroup(product) {
+        return `<section class="product-group" aria-labelledby="product-${product.id}-title">
+          <header class="product-heading">
+            <div class="product-identity"><span class="product-thumb"><img src="${imagePaths[product.id]}" alt=""></span><div><div class="product-meta">${escapeHtml(product.meta)}</div><h2 id="product-${product.id}-title">${escapeHtml(product.name)}</h2><p>${product.outputs.length} ${product.outputs.length === 1 ? "output" : "outputs"}</p></div></div>
+            <span class="product-status">${escapeHtml(groupStatus(product.outputs))}</span>
+          </header>
+          <div class="output-grid">${product.outputs.map((output, index) => renderCard(output, index, product)).join("")}</div>
+        </section>`;
+      }
+
+      function render() {
+        const outputs = run.groups.flatMap(group => group.outputs);
+        const ready = outputs.filter(output => output.phase === "ready").length;
+        const active = run.total - ready;
+        const approved = outputs.filter(output => output.decision === "approved").length;
+        const rejected = outputs.filter(output => output.decision === "rejected").length;
+        const reviewed = approved + rejected;
+        const percent = Math.round(ready / run.total * 100);
+        document.getElementById("product-groups").innerHTML = run.groups.map(renderGroup).join("");
+        document.getElementById("total-progress-label").textContent = `${ready} of ${run.total} ready`;
+        document.getElementById("total-progress-fill").style.width = `${percent}%`;
+        document.getElementById("total-progress-fill").parentElement.setAttribute("aria-valuemax", String(run.total));
+        document.getElementById("total-progress-fill").parentElement.setAttribute("aria-valuenow", String(ready));
+        document.getElementById("summary-message").textContent = `${active} ${active === 1 ? "image" : "images"} in progress`;
+        document.getElementById("summary-percent").textContent = `${percent}% complete`;
+        document.getElementById("product-count").textContent = String(run.groups.length);
+        document.getElementById("ready-count").textContent = String(ready);
+        document.getElementById("reviewed-count").textContent = `${reviewed} of ${ready}`;
+        document.getElementById("reviewed-meta").textContent = reviewed ? `${approved} approved · ${rejected} rejected` : "Choose approve or reject";
+        document.getElementById("review-bar-title").textContent = `${reviewed} of ${run.total} ${run.total === 1 ? "image" : "images"} reviewed`;
+        document.getElementById("review-bar-note").textContent = active
+          ? `${active} ${active === 1 ? "image is" : "images are"} still in progress`
+          : reviewed < ready
+            ? `${ready - reviewed} ${ready - reviewed === 1 ? "image is" : "images are"} ready for your decision`
+            : `${approved} approved · ${rejected} rejected`;
+        document.getElementById("library-button").disabled = active > 0 || reviewed < run.total;
+      }
+
+      let toastTimer;
+      function showToast(message) {
+        const toast = document.getElementById("decision-toast");
+        window.clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.hidden = false;
+        toastTimer = window.setTimeout(() => { toast.hidden = true; }, 3000);
+      }
+
+      document.getElementById("product-groups").addEventListener("click", event => {
+        const button = event.target.closest("[data-decision]");
+        if (!button) return;
+        const product = run.groups.find(group => group.id === button.dataset.product);
+        const output = product?.outputs[Number(button.dataset.output)];
+        if (!output || output.phase !== "ready" || output.decision) return;
+        output.decision = button.dataset.decision;
+        render();
+        showToast(output.decision === "approved" ? `${output.name} was added to Product Library.` : `${output.name} was rejected and not added to Product Library.`);
+      });
+
+      document.getElementById("library-button").addEventListener("click", event => {
+        if (event.currentTarget.disabled) return;
+        const approved = run.groups.flatMap(group => group.outputs).filter(output => output.decision === "approved").length;
+        showToast(`Opening Product Library with ${approved} approved ${approved === 1 ? "image" : "images"}.`);
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

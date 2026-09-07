@@ -13,6 +13,10 @@ type SortOrder = 'newest' | 'oldest' | 'az' | 'za';
 type PreviewAsset = { id: string; name: string; image_url: string; kind: string; product_name: string; product_id: string; created_at: string; filename: string };
 type Props = { initial: ProductSummary[]; userId: string | null; mode: LibraryMode; selectedId?: string; detail: ProductDetail | null; gallery: GalleryAsset[]; loadError: string; detailError: string };
 
+function responseError(payload: unknown, fallback: string) {
+  return payload && typeof payload === 'object' && 'detail' in payload && typeof payload.detail === 'string' ? payload.detail : fallback;
+}
+
 export default function ProductLibrary({ initial, userId, mode, selectedId, detail, gallery, loadError, detailError }: Props) {
   const router = useRouter();
   const { getToken } = useAuth();
@@ -22,6 +26,10 @@ export default function ProductLibrary({ initial, userId, mode, selectedId, deta
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleted, setDeleted] = useState<Set<string>>(new Set());
   const [confirmProducts, setConfirmProducts] = useState<ProductSummary[]>([]);
+  const [confirmAsset, setConfirmAsset] = useState<PreviewAsset | null>(null);
+  const [confirmAssets, setConfirmAssets] = useState<PreviewAsset[]>([]);
+  const [gallerySelectionMode, setGallerySelectionMode] = useState(false);
+  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState('');
@@ -55,6 +63,21 @@ export default function ProductLibrary({ initial, userId, mode, selectedId, deta
       await navigator.clipboard.writeText(new URL(`/products?product=${encodeURIComponent(id)}`, window.location.origin).href);
       setNotice('Folder link copied. Workspace sign-in is required to open it.');
     } catch { setError('The link could not be copied. You can copy this folder’s address from your browser.'); }
+  }
+
+  async function downloadGeneratedAssets(assets: PreviewAsset[]) {
+    if (downloading || !assets.length) return;
+    setDownloading(true);
+    setError('');
+    try {
+      for (const asset of assets) {
+        const response = await fetch(asset.image_url);
+        if (!response.ok) throw new Error(`“${asset.name}” could not be downloaded.`);
+        saveBlob(await response.blob(), safeFilename(asset.name || 'generated-output') + '.png');
+      }
+      setNotice(`${countLabel(assets.length, 'output')} ready to download.`);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'The outputs could not be downloaded.'); }
+    finally { setDownloading(false); }
   }
 
   async function downloadUploads(product: { id: string; name: string }) {
@@ -97,6 +120,50 @@ export default function ProductLibrary({ initial, userId, mode, selectedId, deta
     }
   }
 
+  function toggleAsset(asset: PreviewAsset) {
+    setSelectedAssets(current => { const next = new Set(current); if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id); return next; });
+  }
+
+  async function removeAssets() {
+    if (!confirmAssets.length || deleting) return;
+    setDeleting(true);
+    setError('');
+    const removed: string[] = [];
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Sign in again to delete outputs.');
+      for (const asset of confirmAssets) {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/generation-jobs/${encodeURIComponent(asset.id)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        const result = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(responseError(result, `“${asset.name}” could not be deleted.`));
+        removed.push(asset.id);
+      }
+      setNotice(`${countLabel(removed.length, 'output')} deleted.`);
+      setConfirmAssets([]);
+      setSelectedAssets(current => new Set([...current].filter(id => !removed.includes(id))));
+      router.refresh();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'The outputs could not be deleted.'); }
+    finally { setDeleting(false); }
+  }
+
+  async function removeAsset() {
+    if (!confirmAsset || deleting) return;
+    setDeleting(true);
+    setError('');
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Sign in again to delete this output.');
+      const endpoint = confirmAsset.kind === 'Upload' ? `/products/${encodeURIComponent(confirmAsset.product_id)}/source-assets/${encodeURIComponent(confirmAsset.id)}` : `/generation-jobs/${encodeURIComponent(confirmAsset.id)}`;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}${endpoint}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(responseError(result, 'The output could not be deleted.'));
+      setNotice(`${confirmAsset.name} was deleted.`);
+      setConfirmAsset(null);
+      router.refresh();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'The output could not be deleted.'); }
+    finally { setDeleting(false); }
+  }
+
   function modeKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
@@ -117,10 +184,9 @@ export default function ProductLibrary({ initial, userId, mode, selectedId, deta
         <button type="button" className="pl-back" onClick={() => navigate('/products')}><LibraryIcon name="back"/>Back to catalogue</button>
         {folder ? <>
           <header className="pl-header">
-            <div><p className="pl-eyebrow">PRODUCT FOLDER</p><h1 className="pl-title">{folder.name}</h1><p className="pl-detail-meta">{folder.category && `${folder.category} · `}{formatDate(folder.created_at)} · {countLabel(folder.uploads.length, 'upload')} · {countLabel(folder.generated_assets.length, 'generation')}</p></div>
+            <div><p className="pl-eyebrow">PRODUCT FOLDER</p><h1 className="pl-title">{folder.name}</h1><p className="pl-detail-meta">{folder.category && `${formatCategory(folder.category)} · `}{countLabel(folder.uploads.length, 'upload')} · {countLabel(folder.generated_assets.length, 'generation')}</p></div>
             <div className="pl-detail-actions">
-              <button className="pl-icon-button" type="button" title="Copy private folder link" aria-label="Copy folder link" onClick={() => copyFolderLink(folder.id)}><LibraryIcon name="link"/></button>
-              <button className="pl-secondary" type="button" onClick={() => downloadUploads(folder)} disabled={downloading || !folder.uploads.length}><LibraryIcon name="download"/>{downloading ? 'Preparing…' : 'Download uploads'}</button>
+              <button className="pl-secondary" type="button" onClick={() => downloadUploads(folder)} disabled={downloading || !folder.uploads.length}><LibraryIcon name="download"/>{downloading ? 'Preparing…' : 'Download all'}</button>
               <button className="pl-icon-button danger" type="button" aria-label="Delete product" title="Delete product" disabled={!initial.some(product => product.id === folder.id)} onClick={() => setConfirmProducts(initial.filter(product => product.id === folder.id))}><LibraryIcon name="delete"/></button>
             </div>
           </header>
@@ -140,12 +206,15 @@ export default function ProductLibrary({ initial, userId, mode, selectedId, deta
         </header>
         <div className="pl-toolbar">
           <label className="pl-sort">Sort by <select aria-label="Sort library" value={sort} onChange={event => setSort(event.target.value as SortOrder)}><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="az">A–Z</option><option value="za">Z–A</option></select></label>
+          {mode === 'gallery' && <div className="pl-selection-controls">
+            {gallerySelectionMode && <div className="pl-bulk-actions"><span aria-live="polite">{selectedAssets.size} selected</span><button className="pl-icon-button" type="button" aria-label={selectedAssets.size === approvedGallery.length ? 'Deselect all outputs' : 'Select all outputs'} title="Select all outputs" onClick={() => setSelectedAssets(selectedAssets.size === approvedGallery.length ? new Set() : new Set(approvedGallery.map(asset => asset.id)))}><LibraryIcon name="select"/></button><button className="pl-icon-button" type="button" aria-label="Download selected outputs" title="Download selected outputs" disabled={!selectedAssets.size || downloading} onClick={() => void downloadGeneratedAssets(approvedGallery.filter(asset => selectedAssets.has(asset.id)).map(asset => generationPreview(asset, { id: asset.product_id, name: asset.product_name })))}><LibraryIcon name="download"/></button><button className="pl-icon-button danger" type="button" aria-label="Delete selected outputs" title="Delete selected outputs" disabled={!selectedAssets.size || deleting} onClick={() => setConfirmAssets(approvedGallery.filter(asset => selectedAssets.has(asset.id)).map(asset => generationPreview(asset, { id: asset.product_id, name: asset.product_name })))}><LibraryIcon name="delete"/></button></div>}
+            <button className="pl-secondary" type="button" disabled={!approvedGallery.length} aria-pressed={gallerySelectionMode} onClick={() => { setGallerySelectionMode(!gallerySelectionMode); setSelectedAssets(new Set()); }}>{gallerySelectionMode ? 'Cancel' : 'Select'}</button>
+          </div>}
           {mode === 'catalogue' && <div className="pl-selection-controls">
             {selectionMode && <div className="pl-bulk-actions">
               <span aria-live="polite">{selection.length} selected</span>
               <button className="pl-icon-button" type="button" aria-label={selection.length === products.length ? 'Deselect all folders' : 'Select all folders'} title="Select all folders" onClick={() => setSelected(selection.length === products.length ? new Set() : new Set(products.map(product => product.id)))}><LibraryIcon name="select"/></button>
-              <button className="pl-icon-button" type="button" aria-label="Download selected folder uploads" title={selection.length !== 1 ? 'Select one folder to download its uploads' : 'Download uploads'} disabled={selection.length !== 1 || downloading || !selection[0]?.upload_count} onClick={() => downloadUploads(selection[0])}><LibraryIcon name="download"/></button>
-              <button className="pl-icon-button" type="button" aria-label="Copy selected folder link" title={selection.length !== 1 ? 'Select one folder to copy its link' : 'Copy private folder link'} disabled={selection.length !== 1} onClick={() => copyFolderLink(selection[0].id)}><LibraryIcon name="link"/></button>
+              <button className="pl-icon-button" type="button" aria-label="Download selected folder uploads" title={selection.length !== 1 ? 'Select one folder to download all' : 'Download all'} disabled={selection.length !== 1 || downloading || !selection[0]?.upload_count} onClick={() => downloadUploads(selection[0])}><LibraryIcon name="download"/></button>
               <button className="pl-icon-button danger" type="button" aria-label="Delete selected products" title="Delete selected products" disabled={!selection.length} onClick={() => setConfirmProducts(selection)}><LibraryIcon name="delete"/></button>
             </div>}
             <button className="pl-secondary" type="button" disabled={!products.length} aria-pressed={selectionMode} onClick={() => { setSelectionMode(!selectionMode); setSelected(new Set()); }}>{selectionMode ? 'Cancel' : 'Select'}</button>
@@ -155,7 +224,7 @@ export default function ProductLibrary({ initial, userId, mode, selectedId, deta
           const images = product.preview_images?.length ? product.preview_images : product.image_url ? [{ id: product.id, image_url: product.image_url, filename: product.name }] : [];
           return <article className={`pl-folder${selected.has(product.id) ? ' is-selected' : ''}`} key={product.id}>
             <button type="button" className="pl-folder-open" aria-label={`${selectionMode ? 'Select' : 'Open'} ${product.name}`} aria-pressed={selectionMode ? selected.has(product.id) : undefined} onClick={() => selectionMode ? toggleProduct(product.id) : navigate(`/products?product=${encodeURIComponent(product.id)}`)}>
-              <div className="pl-folder-top"><LibraryIcon name="folder"/><span>{product.category || 'Product'}</span></div>
+              <div className="pl-folder-top"><LibraryIcon name="folder"/><span>{product.category ? formatCategory(product.category) : 'Product'}</span></div>
               <div className="pl-folder-preview" style={{ gridTemplateColumns: `repeat(${Math.max(1, images.length)}, minmax(0, 1fr))` }}>
                 {images.length ? images.map(image => <div className="pl-folder-thumbnail" key={image.id}><Image src={image.image_url} alt="" fill sizes="(max-width: 700px) 85vw, 300px" unoptimized/></div>) : <div className="pl-preview-placeholder"><LibraryIcon name="folder"/><span>No uploads yet</span></div>}
               </div>
@@ -164,7 +233,7 @@ export default function ProductLibrary({ initial, userId, mode, selectedId, deta
             </button>
           </article>;
         })}</div> : !loadError && <EmptyState icon="folder" title="A home for every product" text="Upload and approve a product to create its folder. Its source images and generations will stay together here."><Link className="pl-primary" href="/studio?view=create">Create your first product<LibraryIcon name="plus"/></Link></EmptyState>
-          : approvedGallery.length ? <div className="pl-gallery-grid">{approvedGallery.map(asset => <AssetCard key={asset.id} asset={generationPreview(asset, { id: asset.product_id, name: asset.product_name })} status="approved" showProduct onOpen={setPreviewAsset}/>)}</div>
+          : approvedGallery.length ? <div className="pl-gallery-grid">{approvedGallery.map(asset => { const preview = generationPreview(asset, { id: asset.product_id, name: asset.product_name }); return <AssetCard key={asset.id} asset={preview} status="approved" showProduct selected={selectedAssets.has(asset.id)} selectable={gallerySelectionMode} onOpen={gallerySelectionMode ? toggleAsset : setPreviewAsset}/>; })}</div>
           : !loadError && <EmptyState icon="image" title="Your approved work, all together" text="Approved generated outputs will appear here. You can find original uploads inside each product’s catalogue folder."><button className="pl-secondary" type="button" onClick={() => navigate('/products')}>Browse catalogue<LibraryIcon name="back"/></button></EmptyState>}
       </>}
     </div>
@@ -176,18 +245,26 @@ export default function ProductLibrary({ initial, userId, mode, selectedId, deta
       <footer className="pl-dialog-actions"><button className="pl-secondary" type="button" disabled={deleting} onClick={() => setConfirmProducts([])}>Cancel</button><button className="pl-primary danger" type="button" disabled={deleting} onClick={removeProducts}>{deleting ? 'Deleting…' : 'Delete permanently'}</button></footer>
     </LibraryDialog>
 
+    <LibraryDialog open={Boolean(confirmAsset)} onClose={() => { if (!deleting) setConfirmAsset(null); }} label="pl-asset-delete-title">
+      {confirmAsset && <><header className="pl-dialog-head"><div><p className="pl-eyebrow">REMOVE OUTPUT</p><h2 id="pl-asset-delete-title">Delete this output?</h2></div><button className="pl-dialog-close" type="button" aria-label="Close delete confirmation" disabled={deleting} onClick={() => setConfirmAsset(null)}><LibraryIcon name="close"/></button></header><p><strong>{confirmAsset.name}</strong> will be permanently deleted from your product folder{confirmAsset.kind === 'Generation' ? ' and Gallery' : ''}. This cannot be undone.</p><footer className="pl-dialog-actions"><button className="pl-secondary" type="button" disabled={deleting} onClick={() => setConfirmAsset(null)}>Cancel</button><button className="pl-primary danger" type="button" disabled={deleting} onClick={() => void removeAsset()}>{deleting ? 'Deleting…' : 'Delete output'}</button></footer></>}
+    </LibraryDialog>
+
+    <LibraryDialog open={confirmAssets.length > 0} onClose={() => { if (!deleting) setConfirmAssets([]); }} label="pl-assets-delete-title">
+      <header className="pl-dialog-head"><div><p className="pl-eyebrow">REMOVE OUTPUTS</p><h2 id="pl-assets-delete-title">Delete {countLabel(confirmAssets.length, 'output')}?</h2></div><button className="pl-dialog-close" type="button" aria-label="Close delete confirmation" disabled={deleting} onClick={() => setConfirmAssets([])}><LibraryIcon name="close"/></button></header><p>These outputs will be removed from the Gallery and Product Library. This cannot be undone.</p><ul className="pl-confirm-list">{confirmAssets.map(asset => <li key={asset.id}>{asset.name}</li>)}</ul><footer className="pl-dialog-actions"><button className="pl-secondary" type="button" disabled={deleting} onClick={() => setConfirmAssets([])}>Cancel</button><button className="pl-primary danger" type="button" disabled={deleting} onClick={() => void removeAssets()}>{deleting ? 'Deleting…' : 'Delete outputs'}</button></footer>
+    </LibraryDialog>
+
     <LibraryDialog open={Boolean(previewAsset)} onClose={() => setPreviewAsset(null)} label="pl-preview-title" preview>
       {previewAsset && <>
-        <header className="pl-dialog-head"><div><p className="pl-eyebrow">{previewAsset.kind}</p><h2 id="pl-preview-title">{previewAsset.name}</h2><p>{previewAsset.product_name} · {formatDate(previewAsset.created_at)}</p></div><button className="pl-dialog-close" type="button" aria-label="Close image preview" onClick={() => setPreviewAsset(null)}><LibraryIcon name="close"/></button></header>
+        <header className="pl-dialog-head"><div><p className="pl-eyebrow">{previewAsset.kind === 'Generation' ? 'Ecommerce' : previewAsset.kind}</p><h2 id="pl-preview-title">{previewAsset.name}</h2><p>{previewAsset.product_name} · {formatDate(previewAsset.created_at)}</p></div><button className="pl-dialog-close" type="button" aria-label="Close image preview" onClick={() => setPreviewAsset(null)}><LibraryIcon name="close"/></button></header>
         <div className="pl-preview-image"><Image src={previewAsset.image_url} alt={previewAsset.name} width={1200} height={1000} unoptimized/></div>
-        <footer className="pl-dialog-footer"><span>{previewAsset.kind === 'Upload' ? 'Original product image' : 'Generated product content'}</span><a className="pl-secondary" href={previewAsset.image_url} target="_blank" rel="noreferrer">Open full image<LibraryIcon name="external"/></a></footer>
+        <footer className="pl-dialog-footer">{previewAsset.kind === 'Generation' ? <><span></span><div className="pl-dialog-actions"><button className="pl-secondary" type="button" disabled={downloading} onClick={() => void downloadGeneratedAssets([previewAsset])}><LibraryIcon name="download"/>{downloading ? 'Downloading…' : 'Download'}</button><button className="pl-primary danger" type="button" disabled={deleting} onClick={() => { setPreviewAsset(null); setConfirmAsset(previewAsset); }}><LibraryIcon name="delete"/>Delete</button></div></> : <><span>Original product image</span><div className="pl-dialog-actions"><button className="pl-secondary" type="button" disabled={downloading} onClick={() => void downloadGeneratedAssets([previewAsset])}><LibraryIcon name="download"/>{downloading ? 'Downloading…' : 'Download'}</button><button className="pl-primary danger" type="button" disabled={deleting} onClick={() => { setPreviewAsset(null); setConfirmAsset(previewAsset); }}><LibraryIcon name="delete"/>Delete</button></div></>}</footer>
       </>}
     </LibraryDialog>
   </LibraryShell>;
 }
 
-function AssetCard({ asset, status, showProduct, onOpen }: { asset: PreviewAsset; status?: GeneratedAsset['status']; showProduct?: boolean; onOpen: (asset: PreviewAsset) => void }) {
-  return <article className="pl-asset-card"><button type="button" className="pl-asset-open" onClick={() => onOpen(asset)} aria-label={`Preview ${asset.name}`}><div className="pl-asset-image"><Image src={asset.image_url} alt={asset.name} fill sizes="(max-width: 700px) 85vw, 300px" unoptimized/><span className="pl-asset-badge">{showProduct ? asset.product_name : asset.kind}</span></div><div className="pl-asset-copy"><div><b title={asset.name}>{asset.name}</b><small>{formatDate(asset.created_at)}</small></div><span className={`pl-status ${status || ''}`}>{status ? statusLabel(status) : 'Original'}</span></div></button></article>;
+function AssetCard({ asset, status, showProduct, onOpen, selectable, selected }: { asset: PreviewAsset; status?: GeneratedAsset['status']; showProduct?: boolean; onOpen: (asset: PreviewAsset) => void; selectable?: boolean; selected?: boolean }) {
+  return <article className={`pl-asset-card${selected ? ' is-selected' : ''}`}><button type="button" className="pl-asset-open" onClick={() => onOpen(asset)} aria-label={`${selectable ? 'Select' : 'Preview'} ${asset.name}`} aria-pressed={selectable ? selected : undefined}><div className="pl-asset-image"><Image src={asset.image_url} alt={asset.name} fill sizes="(max-width: 700px) 85vw, 300px" unoptimized/><span className="pl-asset-badge">{showProduct ? 'Ecommerce' : asset.kind}</span>{selectable && <span className="pl-asset-select-check" aria-hidden="true">{selected ? '✓' : ''}</span>}</div><div className="pl-asset-copy"><div><b title={asset.name}>{asset.name}</b><small>{formatDate(asset.created_at)}</small></div></div></button></article>;
 }
 
 function EmptyState({ icon, title, text, children }: { icon: 'folder' | 'image'; title: string; text: string; children?: ReactNode }) {
@@ -223,6 +300,7 @@ function sorted<T extends { name: string; created_at: string }>(items: T[], sort
 
 function sortedUploads(uploads: SourceUpload[]) { return [...uploads].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)); }
 function countLabel(count: number, word: string) { return `${count} ${word}${count === 1 ? '' : 's'}`; }
+function formatCategory(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(); }
 function formatDate(value: string) {
   if (!value || !Number.isFinite(Date.parse(value))) return 'Date unavailable';
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(value));

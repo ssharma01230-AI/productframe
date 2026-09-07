@@ -168,6 +168,10 @@ class ProductIdentity(BaseModel):
     dominant_colour: str = Field(min_length=3, max_length=120)
     pattern_or_finish: str = Field(min_length=3, max_length=160)
     visual_signature: str = Field(min_length=10, max_length=300)
+    # Media coverage is deliberately separate from product identity. Defaults
+    # preserve compatibility with older provider responses and fixtures.
+    media_views: list[Literal["front_view", "rear_view", "top_view", "side_view", "sole_or_underside", "flat_lay", "detail", "worn", "unknown"]] = Field(default_factory=list, max_length=8)
+    visible_evidence: list[str] = Field(default_factory=list, max_length=30)
 
 
 class ProductImageGroup(BaseModel):
@@ -355,6 +359,14 @@ class TopGarmentDetails(BaseModel):
 class ProductAnalysis(BaseModel):
     product_name: str = Field(min_length=3, max_length=160)
     category: ProductCategory
+
+    @field_validator("product_name")
+    @classmethod
+    def product_name_max_five_words(cls, value: str) -> str:
+        # Keep the assigned display name concise even if the model returns a
+        # longer descriptive phrase.
+        return " ".join(value.split()[:5])
+
     product_type: str = Field(min_length=5, max_length=120)
     colours: str = Field(min_length=5, max_length=300)
     colour_details: ColourDescription | None = None
@@ -464,13 +476,16 @@ class BatchAnalysisResult(BaseModel):
     unique_product_count: int = Field(ge=0)
     products: list[IdentifiedProduct] = Field(default_factory=list)
     rejected_images: list[RejectedImage] = Field(default_factory=list)
+    # Original image number -> model-derived media coverage. Keeping this at
+    # image level lets readiness explain exactly which upload supports a card.
+    image_evidence: dict[str, dict[str, object]] = Field(default_factory=dict)
     reason: str = Field(min_length=10, max_length=300)
 
 
 def identify_product_image(client: OpenAI, data_url: str) -> ProductIdentity:
     response = _parse_response(client,
         model=_vision_model(),
-        input=[{"role": "user", "content": [{"type": "input_text", "text": "Describe this single fashion product image for identity matching across a batch. Record only visible evidence. Identify the specific product type, dominant colour or colourway, pattern or finish, and a concise visual signature covering distinctive shape, construction, closures, panels, trims, hardware or other details. Do not identify the model, background, photography style, brand, SKU or hidden information."}, _image_input(data_url, detail="high")]}],
+        input=[{"role": "user", "content": [{"type": "input_text", "text": "Describe this single fashion product image for identity matching across a batch. Record only visible evidence. Identify the specific product type, dominant colour or colourway, pattern or finish, and a concise visual signature covering distinctive shape, construction, closures, panels, trims, hardware or other details. Also classify every clearly visible media view using only: front_view, rear_view, top_view, side_view, sole_or_underside, flat_lay, detail, worn, unknown. Record concrete visible evidence relevant to template readiness, such as rear_pockets, waistband, outsole_tread, heel, cuff, print, pattern, toe_shape, or fabric_texture. Do not claim a view or detail that is hidden, obstructed or not visible. Do not identify the model, background, photography style, brand, SKU or hidden information."}, _image_input(data_url, detail="high")]}],
         text_format=ProductIdentity,
     )
     if response.output_parsed is None:
@@ -756,7 +771,14 @@ def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | Non
                     future.cancel()
                 raise
         products = [synthesized[index] for index in range(len(grouping.groups))]
-        return BatchAnalysisResult(passed=True, unique_product_count=len(products), products=products, rejected_images=rejected, reason="Accepted images were grouped and analysed; rejected images were omitted.")
+        image_evidence = {
+            str(number): {
+                "views": identity.media_views,
+                "evidence": identity.visible_evidence,
+            }
+            for number, identity in zip(accepted_numbers, identities)
+        }
+        return BatchAnalysisResult(passed=True, unique_product_count=len(products), products=products, rejected_images=rejected, image_evidence=image_evidence, reason="Accepted images were grouped and analysed; rejected images were omitted.")
 
 
 def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, model: str | None = None, run_safety_check: bool = True, screen_already: bool = False, known_categorization: ProductCategorization | None = None) -> ProductAnalysis:
@@ -790,7 +812,7 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
     The separate categorization step identified the product as category '{categorization.category}' and type '{categorization.product_type}'. Use those values unless the image clearly disproves them.
 
     Return only the requested structured fields.
-    - Generate a concise, human-friendly product name, such as 'Pink cotton shirt', 'Black leather jacket', or 'White low-top trainers'. Include the dominant visible colour and product type when useful. Do not use placeholders such as 'Unconfirmed product'.
+    - Generate a concise, human-friendly product name of no more than 5 words, such as 'Pink cotton shirt', 'Black leather jacket', or 'White low-top trainers'. Include the dominant visible colour and product type when useful. Do not use placeholders such as 'Unconfirmed product'.
     - Use the category and product type supplied by the categorization step.
     - Make product_type highly specific, for example '3/4 length dark green leather jacket with a belted waist'.
     - Populate colour_details with the primary colour, every visible secondary colour, pattern, colour distribution, tonal variation, saturation, brightness, finish, wash/fade treatment and any colour uncertainties. Preserve observed colour wording; do not normalise it to a generic colour name.
@@ -838,6 +860,14 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
                 last_error = exc
                 content[0]["text"] = instructions + "\nYour previous answer failed validation. Include every colour_details field and, for tops, every tops_details field. The description must contain 45–60 factual words. Retry using only visible product evidence."
         raise ValueError("AI returned product details that did not meet the required format") from last_error
+
+
+def analyze_media_evidence(image_bytes: bytes, *, api_key: str | None = None, model: str | None = None) -> dict[str, object]:
+    """Extract source-media coverage without repeating full product analysis."""
+    image = prescreen_image(image_bytes)
+    with _analysis_session(api_key, model):
+        identity = identify_product_image(_analysis_client.get(), _data_url(image))
+    return {"views": identity.media_views, "evidence": identity.visible_evidence}
 
 
 def analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | None = None, model: str | None = None,

@@ -1,5 +1,7 @@
 import argparse
 import logging
+import multiprocessing
+import os
 import time
 
 from dotenv import load_dotenv
@@ -9,6 +11,19 @@ from productframe_api.config import get_settings
 from redis import Redis
 
 logger = logging.getLogger(__name__)
+
+
+def _worker_loop() -> None:
+    """Run one isolated Redis consumer in its own process."""
+    while True:
+        try:
+            run_once()
+        except Exception as exc:
+            # run_once records and acknowledges individual job failures.
+            # This catch is for infrastructure failures such as Redis or
+            # database outages; avoid logging raw provider responses.
+            logger.error("Worker loop failed (%s); continuing to listen for jobs.", type(exc).__name__)
+        time.sleep(1)
 
 
 def main() -> None:
@@ -21,7 +36,8 @@ def main() -> None:
     enqueue = subparsers.add_parser("enqueue")
     enqueue.add_argument("job_id")
     subparsers.add_parser("run-once")
-    subparsers.add_parser("run")
+    run = subparsers.add_parser("run")
+    run.add_argument("--workers", type=int, default=max(1, int(os.environ.get("GENERATION_WORKERS", "1"))))
     args = parser.parse_args()
     settings = get_settings()
     if args.command == "enqueue":
@@ -32,12 +48,22 @@ def main() -> None:
     elif args.command == "run-once":
         print("Processed a job." if run_once() else "No queued jobs.")
     else:
-        print("Worker listening for analysis jobs...")
-        while True:
-            try:
-                run_once()
-            except Exception as exc:
-                # process_job records the failure. Avoid logging raw provider
-                # exceptions, which may contain request data or credentials.
-                logger.error("Analysis job processing failed (%s); continuing to listen for jobs.", type(exc).__name__)
-            time.sleep(1)
+        if args.workers < 1:
+            parser.error("--workers must be at least 1")
+        print(f"Worker listening for analysis and generation jobs ({args.workers} consumer{'s' if args.workers != 1 else ''})...")
+        if args.workers == 1:
+            _worker_loop()
+        context = multiprocessing.get_context("spawn")
+        workers = [context.Process(target=_worker_loop, name=f"productframe-worker-{index + 1}") for index in range(args.workers)]
+        for worker in workers:
+            worker.start()
+        try:
+            for worker in workers:
+                worker.join()
+        except BaseException:
+            for worker in workers:
+                if worker.is_alive():
+                    worker.terminate()
+            for worker in workers:
+                worker.join()
+            raise

@@ -4,7 +4,7 @@ The frontend may display template choices, but generation behaviour must come fr
 this backend registry. Template IDs are stable because they are stored on
 generation jobs and generated assets.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Final
 
 
@@ -28,6 +28,10 @@ class GenerationTemplate:
     output_presentation: str = "product_only"
     artwork_visibility: str = "reference_dependent"
     artwork_surface_mode: str = "flat"
+    # Evidence groups describe the minimum visual coverage needed from the
+    # user's source media. An empty tuple intentionally means no additional
+    # media gate (currently used by Socks).
+    required_evidence: tuple[str, ...] = ()
 
 
 TOPS_CLEAN_PRODUCT_SHOT: Final = GenerationTemplate(
@@ -241,7 +245,7 @@ TOPS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     ),
 )
 
-# Category-specific ecommerce templates mirrored from the frontend recipe IDs.
+# Category-specific ecommerce templates mirrored by the frontend recipe choices.
 # Their text controls presentation only; product identity always comes from the
 # product reference images and category schema.
 def _support_template(category: str, template_id: str, name: str, description: str, instruction: str, subtypes: tuple[str, ...]) -> GenerationTemplate:
@@ -270,9 +274,10 @@ def _support_template(category: str, template_id: str, name: str, description: s
         output_presentation="product_only" if "model" not in template_id and "feet" not in template_id else "worn_product",
     )
 
-_OUTERWEAR_SUBTYPES = ("coat", "jacket", "blazer", "waistcoat", "parka", "gilet", "bomber", "trench coat", "raincoat", "puffer")
+_OUTERWEAR_SUBTYPES = ("coat", "jacket", "blazer", "waistcoat", "parka", "gilet", "bomber", "trench coat", "raincoat", "puffer", "hoodie", "sweatshirt", "fleece")
 _FOOTWEAR_SUBTYPES = ("heels", "trainers", "sandals", "crocs", "boots", "loafers", "flats", "sliders", "mules")
 _SOCKS_SUBTYPES = ("normal", "running", "ankle", "trainer", "crew", "knee-high", "stockings", "compression", "thermal")
+_BOTTOMS_SUBTYPES = ("shorts", "skirt", "leggings", "trousers", "jeans", "cargo trousers", "joggers", "chinos")
 
 OUTERWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = tuple(
     _support_template("outerwear", template_id, name, description, instruction, _OUTERWEAR_SUBTYPES)
@@ -309,7 +314,7 @@ FOOTWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = tuple(
 SOCKS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = tuple(
     _support_template("socks", template_id, name, description, instruction, _SOCKS_SUBTYPES)
     for template_id, name, description, instruction in (
-        ("ecommerce-socks-three-quarter-on-feet", "Three-Quarter on Feet", "Socks worn in a three-quarter stance.", "Show both socks worn by an adult in a three-quarter stance with no footwear and lower legs visible above the cuffs."),
+        ("ecommerce-socks-three-quarter-on-feet", "Three-Quarter on Feet", "Two socks worn side-by-side with both feet flat on the ground.", "Match the reference composition: show both socks worn by an adult standing with both feet fully flat on the ground, side-by-side and close together, toes pointing in the same direction. Keep the feet parallel and weight distributed across both feet; do not lift, cross, bend or float either foot. Show no footwear and lower legs visible above the cuffs."),
         ("ecommerce-socks-rear-on-feet", "Rear on Feet", "A rear sock view showing heel construction.", "Show the rear of the socks worn by an adult, preserving heel shape and cuff height with no footwear."),
         ("ecommerce-socks-folded-product", "Folded Product", "Socks neatly folded on a plain surface.", "Present the socks folded on a plain surface while keeping colour, pattern and distinctive construction visible."),
         ("ecommerce-socks-flat-lay", "Flat Lay", "Socks arranged flat and photographed from above.", "Arrange the socks naturally in a flat lay showing complete shape, length and pattern."),
@@ -320,10 +325,313 @@ SOCKS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = tuple(
     )
 )
 
+_BOTTOMS_REQUIRED_FIELDS = (
+    "product_type",
+    "colour_details",
+    "global_details.materials",
+    "global_details.construction",
+    "category_details",
+    "category_details.waistband_type",
+    "category_details.leg_shape",
+    "category_details.fit_and_silhouette",
+)
+_BOTTOMS_OPTIONAL_FIELDS = (
+    "category_details.waist_height",
+    "category_details.fly_or_closure",
+    "category_details.leg_width",
+    "category_details.garment_length",
+    "category_details.hem_details",
+    "category_details.pocket_details",
+    "category_details.pleats_or_darts",
+    "category_details.belt_loops",
+    "category_details.panel_or_seam_details",
+    "category_details.visible_uncertainties",
+)
+_BOTTOMS_RULES = (
+    "The product reference images are the primary authority for every visible feature.",
+    "Product identity data must be presented before presentation instructions.",
+    "Preserve the observed waistband, waist height, rise, leg shape, leg width, garment length, hem, pockets, closures, belt loops, pleats, darts, panels and seams.",
+    "Use the template only for composition and presentation, never for product identity.",
+    "Preserve visible graphics, logos, embroidery, appliques, patterns, washes and colour boundaries exactly as shown in the product references.",
+    "For model-worn templates, use a real model and keep the framing limited to the waist or lower midsection downward; do not turn the output into a face-led or full-body portrait.",
+    "For folded, flat-lay and construction-detail templates, show the product naturally supported by the specified surface rather than an invisible mannequin or floating garment.",
+    "If a detail is hidden, obstructed or not present on the product, leave it uncertain or omit it rather than inventing a conventional replacement.",
+)
+_BOTTOMS_NEGATIVE = (
+    "Do not change the product subtype, colour, material, rise, waistband, leg shape, leg width, length, fit, hem, pockets, closures, belt loops, pleats, darts, panels, seams or visible artwork. "
+    "Do not turn trousers into shorts, a skirt into trousers or otherwise regularise the product into another bottoms type. "
+    "Do not add extra products, competing garments, accessories, text, labels, watermarks or props. Do not invent hidden construction, duplicate the product or redraw visible artwork. "
+    "Do not use an invisible mannequin when the template calls for a real model, and do not show a person when the template calls for a product-only surface presentation."
+)
+
+
+def _bottoms_template(
+    *,
+    template_id: str,
+    name: str,
+    description: str,
+    instructions: str,
+    required: tuple[str, ...] = (),
+    artwork_visibility: str = "reference_dependent",
+    artwork_surface_mode: str = "flat",
+    output_presentation: str = "product_only",
+) -> GenerationTemplate:
+    return GenerationTemplate(
+        id=template_id,
+        channel="ecommerce",
+        category="bottoms",
+        name=name,
+        description=description,
+        prompt_instructions=instructions,
+        negative_prompt=_BOTTOMS_NEGATIVE,
+        aspect_ratio="1:1",
+        applicable_subtypes=_BOTTOMS_SUBTYPES,
+        required_product_fields=_BOTTOMS_REQUIRED_FIELDS + required,
+        optional_product_fields=_BOTTOMS_OPTIONAL_FIELDS,
+        prompt_format_rules=_BOTTOMS_RULES,
+        reference_mode="product_only",
+        output_presentation=output_presentation,
+        artwork_visibility=artwork_visibility,
+        artwork_surface_mode=artwork_surface_mode,
+    )
+
+
+BOTTOMS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _bottoms_template(
+        template_id="ecommerce-bottoms-front-view",
+        name="Front View",
+        description="A complete product-only front view showing the bottoms from waistband to hem.",
+        instructions="Create a straight-on ecommerce front view of the complete bottoms as a product-only studio presentation. Show the full silhouette from waistband to hem with the actual rise, leg shape, leg width, pockets, closures, pleats or darts and hem visible where supported by the references. Use a clean neutral background, soft even lighting and minimal surrounding space. Present the garment naturally without a model, mannequin, body or support.",
+        required=("category_details.waist_height", "category_details.leg_width", "category_details.garment_length", "category_details.hem_details"),
+        artwork_visibility="full",
+    ),
+    _bottoms_template(
+        template_id="ecommerce-bottoms-back-view",
+        name="Back View",
+        description="A complete product-only rear view showing the back silhouette, seat, seams and pockets.",
+        instructions="Create a complete product-only rear view of the bottoms from waistband to hem. Preserve the actual back rise, seat shape, rear pockets, yoke or panel construction, seams, leg shape, leg width and hem. Use a clean neutral studio background and do not invent details that are hidden from the product references. Do not show a person, mannequin or support.",
+        required=("category_details.waist_height", "category_details.leg_width", "category_details.garment_length", "category_details.hem_details"),
+        artwork_visibility="reference_dependent",
+        artwork_surface_mode="rear",
+    ),
+    _bottoms_template(
+        template_id="ecommerce-bottoms-side-angle-product",
+        name="Side / Three-Quarter Product",
+        description="A waist-down three-quarter view of the bottoms worn by a male model, showing front-side fit, rise, leg profile and full length.",
+        instructions="Show the complete bottoms worn by a real adult male model from a relaxed 30–45-degree side or three-quarter angle. Frame from the waist or lower midsection downward so the waistband, rise, fit, leg shape, garment length and hems remain clear; exclude the face, head, shoulders and chest. Keep styling neutral and secondary, and preserve the exact product construction.",
+        required=("category_details.waist_height", "category_details.leg_width", "category_details.garment_length", "category_details.fit_and_silhouette"),
+        artwork_visibility="partial",
+        artwork_surface_mode="angled",
+        output_presentation="worn_product",
+    ),
+    _bottoms_template(
+        template_id="ecommerce-bottoms-folded-product-flat-lay",
+        name="Folded Product Flat Lay",
+        description="The bottoms neatly folded on a clean neutral surface while keeping important visible details readable.",
+        instructions="Arrange the bottoms in a neat folded product flat lay photographed from directly above on a clean neutral surface. Choose a fold that keeps as much of the actual waistband, closure, pockets, fabric, seams, leg construction and distinctive visible details readable as the product allows. Make the garment visibly rest on the surface with natural folds and contact shadows. Preserve the product's colour, pattern, material appearance and construction. Do not add props, another product, styling items or invented details.",
+        required=("global_details.materials",),
+        artwork_visibility="partial",
+        artwork_surface_mode="folded",
+    ),
+    _bottoms_template(
+        template_id="ecommerce-bottoms-front-model",
+        name="Front Model",
+        description="A waist-down front view of the bottoms worn by a male model, showing fit, leg shape and full length without a face.",
+        instructions="Show the bottoms worn by a real adult male model in a simple straight-on front-facing ecommerce pose. Frame from the waist or lower midsection downward to below the hem; exclude the face, head, shoulders and chest. Keep styling neutral and secondary so the actual waistband, rise, fit, leg shape, length, pockets and hem remain clear. Do not add another pair of bottoms or obscure the product.",
+        required=("category_details.garment_length", "category_details.fit_and_silhouette"),
+        artwork_visibility="full",
+        artwork_surface_mode="worn",
+        output_presentation="worn_product",
+    ),
+    _bottoms_template(
+        template_id="ecommerce-bottoms-back-model",
+        name="Back Model",
+        description="A waist-down rear view of the bottoms worn by a male model, showing the seat, back pockets, drape and full length.",
+        instructions="Show the bottoms worn by a real adult male model from the rear in a restrained straight-on ecommerce pose. Frame from the waist or lower midsection downward to below the hem; exclude the face, head, shoulders and chest. Preserve the actual back rise, seat, pockets, seams, leg shape, drape and hem, with no competing lower-body garment or styling that obscures the product.",
+        required=("category_details.garment_length", "category_details.fit_and_silhouette"),
+        artwork_visibility="reference_dependent",
+        artwork_surface_mode="worn",
+        output_presentation="worn_product",
+    ),
+    _bottoms_template(
+        template_id="ecommerce-bottoms-waistband-closure-detail",
+        name="Waistband & Closure Detail",
+        description="A close model-worn waist-to-upper-thigh crop showing the waistband, closure, belt loops and upper pocket construction.",
+        instructions="Create a close ecommerce detail of the upper section of the bottoms worn by a real adult male model. Use a slight front-side angle similar to a premium construction reference and frame from the waist to the upper thigh, with no face, head, shoulders or chest. Show the actual waistband, waist height, rise, fly or closure, belt loops, drawcord, pleats or darts that are visible in the product references. Keep any plain neutral top edge and partial hand secondary; never obscure the product. If a listed feature is absent, focus on the other supported upper construction instead of inventing it.",
+        required=("category_details.waist_height", "category_details.fly_or_closure", "category_details.belt_loops"),
+        artwork_visibility="conditional",
+        artwork_surface_mode="detail",
+        output_presentation="worn_product",
+    ),
+    _bottoms_template(
+        template_id="ecommerce-bottoms-pocket-panel-detail",
+        name="Pocket Panel Detail",
+        description="A tight diagonal flat-lay macro showing the pocket panel, center closure, seams, rivets and stitching.",
+        instructions="Create a tight ecommerce construction macro with the bottoms laid completely flat on a clean neutral surface. Use a strong diagonal overhead angle. Make the most distinctive supported pocket or panel the clear subject while keeping the center front button, closed fly or zipper, central seam, adjacent belt loop and relevant stitching in view where present. Show natural flat-lay contact shadows and do not use a model, mannequin or support. If the product has no pocket, show another supported construction feature without inventing one.",
+        required=("global_details.construction", "category_details.pocket_details", "category_details.panel_or_seam_details"),
+        artwork_visibility="conditional",
+        artwork_surface_mode="detail",
+    ),
+    _bottoms_template(
+        template_id="ecommerce-bottoms-hem-leg-detail",
+        name="Hem & Leg Detail",
+        description="A diagonal flat-lay macro focused on the straight-leg seam, hem finish, leg opening and stitching.",
+        instructions="Create a close ecommerce detail of the lower leg and hem with the bottoms lying completely flat on a clean neutral surface. Use a diagonal overhead angle and show the actual garment length, leg opening, hem finish, cuff, slit, raw edge and stitching supported by the product references. Preserve the real leg shape and fabric behaviour with natural contact shadows; do not show a model, mannequin or support and do not add a cuff, slit or finishing treatment that is not visible.",
+        required=("category_details.garment_length", "category_details.leg_width", "category_details.hem_details"),
+        artwork_visibility="conditional",
+        artwork_surface_mode="detail",
+    ),
+)
+
+_UNDERWEAR_SUBTYPES = ("lingerie", "boxers", "briefs", "bikini briefs", "bra", "bralette", "vest", "undershirt")
+_UNDERWEAR_REQUIRED_FIELDS = (
+    "product_type",
+    "colour_details",
+    "global_details.materials",
+    "global_details.construction",
+    "category_details",
+    "category_details.coverage",
+    "category_details.waist_height",
+    "category_details.rise",
+    "category_details.elastic_details",
+    "category_details.fit_and_silhouette",
+)
+_UNDERWEAR_OPTIONAL_FIELDS = (
+    "global_details.branding",
+    "category_details.support_details",
+    "category_details.closure_details",
+    "category_details.seam_details",
+    "category_details.fabric_appearance",
+    "category_details.visible_uncertainties",
+)
+_UNDERWEAR_RULES = (
+    "The product reference images are the primary authority for every visible feature.",
+    "Product identity data must be presented before presentation instructions.",
+    "Preserve the observed coverage, waistband height, rise, pouch or cup construction, leg openings, seams, elastic and fabric behaviour.",
+    "Use the template only for composition and presentation, never for product identity.",
+    "Do not infer body measurements, size, comfort, performance or support level from appearance alone.",
+    "Keep the garment non-sexualised and catalogue-focused when a model is required.",
+    "If a detail is hidden or uncertain, preserve that uncertainty rather than inventing a conventional replacement.",
+)
+_UNDERWEAR_NEGATIVE = (
+    "Do not change the product subtype, colour, pattern, waistband, rise, coverage, pouch or cup shape, leg openings, seams, elastic, fabric appearance or fit. "
+    "Do not add a competing garment, extra product, branding, text, labels, watermarks or props. "
+    "Do not infer body measurements, size, support, comfort or unseen construction. "
+    "Do not sexualise the model, show a face or create a suggestive pose when the template calls for a product-focused crop."
+)
+
+
+def _underwear_template(
+    *, template_id: str, name: str, description: str, instructions: str,
+    required: tuple[str, ...] = (), artwork_visibility: str = "reference_dependent",
+    artwork_surface_mode: str = "flat", output_presentation: str = "product_only",
+) -> GenerationTemplate:
+    return GenerationTemplate(
+        id=template_id, channel="ecommerce", category="underwear", name=name,
+        description=description, prompt_instructions=instructions,
+        negative_prompt=_UNDERWEAR_NEGATIVE, aspect_ratio="1:1",
+        applicable_subtypes=_UNDERWEAR_SUBTYPES,
+        required_product_fields=_UNDERWEAR_REQUIRED_FIELDS + required,
+        optional_product_fields=_UNDERWEAR_OPTIONAL_FIELDS,
+        prompt_format_rules=_UNDERWEAR_RULES, reference_mode="product_only",
+        output_presentation=output_presentation,
+        artwork_visibility=artwork_visibility, artwork_surface_mode=artwork_surface_mode,
+    )
+
+
+UNDERWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _underwear_template(
+        template_id="ecommerce-underwear-front-model", name="Front with Model (No Face)",
+        description="A waist-down front view worn by an adult model, showing the underwear's fit, rise and leg length without a face.",
+        instructions="Show the underwear worn by an adult model in a restrained straight-on front-facing ecommerce pose. Frame from the lower abdomen to below the leg openings, exclude the face and keep the product clearly visible. Preserve the exact waistband, rise, pouch or cup construction, coverage, leg openings, seams and fabric appearance.",
+        required=("category_details.coverage", "category_details.rise", "category_details.fit_and_silhouette"),
+        artwork_visibility="full", artwork_surface_mode="worn", output_presentation="worn_product",
+    ),
+    _underwear_template(
+        template_id="ecommerce-underwear-front-flat-lay", name="Front Flat Lay",
+        description="A complete product-only front view of the underwear laid flat against a clean neutral surface.",
+        instructions="Present the complete underwear laid flat and front-facing on a clean neutral studio surface. Keep the waistband, rise, pouch or cup construction, leg openings, seams and proportions readable with natural contact shadows. Do not show a model, mannequin, body or support.",
+        required=("category_details.coverage", "category_details.rise"), artwork_visibility="full",
+    ),
+    _underwear_template(
+        template_id="ecommerce-underwear-back-flat-lay", name="Back Flat Lay",
+        description="A complete product-only rear view showing the underwear's back coverage, seams and leg openings.",
+        instructions="Present the complete underwear laid flat and rear-facing on a clean neutral studio surface. Show the actual back coverage, rise, seat shape, seams, waistband and leg openings supported by the product references. Do not invent hidden construction or show a model, mannequin, body or support.",
+        required=("category_details.coverage", "category_details.rise", "category_details.seam_details"),
+        artwork_visibility="reference_dependent", artwork_surface_mode="rear",
+    ),
+    _underwear_template(
+        template_id="ecommerce-underwear-rear-three-quarter", name="Rear Three-Quarter",
+        description="An angled product-only rear view showing the underwear's side profile, back coverage and silhouette.",
+        instructions="Show the underwear as a product-only rear three-quarter presentation on a clean neutral background. Make the side profile, back coverage, rise, waistband and leg openings clear while preserving the actual silhouette and fabric behaviour. Do not show a person, mannequin or invented support.",
+        required=("category_details.coverage", "category_details.fit_and_silhouette"),
+        artwork_visibility="reference_dependent", artwork_surface_mode="angled",
+    ),
+    _underwear_template(
+        template_id="ecommerce-underwear-front-product", name="Front Product",
+        description="A clean product-only front presentation showing the complete underwear silhouette and front construction.",
+        instructions="Create a clean front-facing ecommerce product photograph of the complete underwear against a simple neutral background. Show the full silhouette and preserve the exact waistband, pouch or cup construction, rise, seams, leg openings, colour and fabric appearance. Do not add a person, mannequin, extra garment or props.",
+        required=("category_details.coverage", "category_details.fit_and_silhouette"), artwork_visibility="full",
+    ),
+    _underwear_template(
+        template_id="ecommerce-underwear-side-profile", name="Side Profile",
+        description="A product-only side profile showing the underwear's depth, rise, coverage and leg silhouette.",
+        instructions="Show the underwear in a clean product-only side profile against a neutral background. Preserve the actual rise, side seam, coverage, leg opening, depth and silhouette without regularising proportions or inventing hidden construction. Do not show a person, mannequin or support.",
+        required=("category_details.coverage", "category_details.rise", "category_details.fit_and_silhouette"),
+        artwork_visibility="reference_dependent", artwork_surface_mode="angled",
+    ),
+    _underwear_template(
+        template_id="ecommerce-underwear-waistband-detail", name="Waistband & Fabric Detail",
+        description="A close-up of the waistband, elastic construction, stitching and fabric texture.",
+        instructions="Create a close ecommerce construction detail focused on the actual waistband, elastic, seam and fabric texture. Use a tight crop with soft even lighting and preserve the product's knit or jersey appearance, colour and stitching. Show only details supported by the product references; do not invent labels, branding or construction.",
+        required=("global_details.materials", "category_details.elastic_details", "category_details.seam_details", "category_details.fabric_appearance"),
+        artwork_visibility="conditional", artwork_surface_mode="detail",
+    ),
+)
+
+# Minimum source-media coverage for templates whose output depends on a
+# particular product surface. These are deliberately small capture groups,
+# not one rigid upload requirement per template.
+_FRONT_EVIDENCE = ("front_view",)
+_REAR_EVIDENCE = ("rear_view",)
+_FRONT_REAR_EVIDENCE = ("front_view", "rear_view")
+
+
+def _evidence_for_template(template: GenerationTemplate) -> tuple[str, ...]:
+    template_id = template.id
+    if template.category == "socks":
+        # A validated, correctly classified sock image is sufficient for every
+        # current Socks output. Do not introduce an angle gate here.
+        return ()
+    if template.category == "footwear":
+        if "sole" in template_id or "underside" in template_id:
+            return ("sole_or_underside",)
+        if "rear" in template_id:
+            return ("rear_view",)
+        return ("top_view",)
+    if template.category == "outerwear":
+        if "back" in template_id or "over-the-shoulder" in template_id:
+            return _REAR_EVIDENCE
+        return _FRONT_EVIDENCE
+    if template.category == "bottoms":
+        if "back" in template_id:
+            return _REAR_EVIDENCE
+        return _FRONT_EVIDENCE
+    if template.category == "underwear":
+        if "back" in template_id or "rear" in template_id:
+            return _REAR_EVIDENCE
+        return _FRONT_EVIDENCE
+    if template.category == "tops":
+        if "back" in template_id or "over-the-shoulder" in template_id:
+            return _REAR_EVIDENCE
+        return _FRONT_EVIDENCE
+    return ()
+
+
 # The old generic choice remains resolvable for existing saved selections.
 _TEMPLATES: Final[dict[str, GenerationTemplate]] = {
-    template.id: template
-    for template in TOPS_ECOMMERCE_TEMPLATES + OUTERWEAR_ECOMMERCE_TEMPLATES + FOOTWEAR_ECOMMERCE_TEMPLATES + SOCKS_ECOMMERCE_TEMPLATES
+    template.id: replace(template, required_evidence=_evidence_for_template(template))
+    for template in TOPS_ECOMMERCE_TEMPLATES + OUTERWEAR_ECOMMERCE_TEMPLATES + FOOTWEAR_ECOMMERCE_TEMPLATES + SOCKS_ECOMMERCE_TEMPLATES + BOTTOMS_ECOMMERCE_TEMPLATES + UNDERWEAR_ECOMMERCE_TEMPLATES
 }
 _LEGACY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {TOPS_CLEAN_PRODUCT_SHOT.id: TOPS_CLEAN_PRODUCT_SHOT}
 
@@ -342,16 +650,11 @@ def validate_generation_template(template_id: str, *, category: str, channel: st
         raise ValueError(f"Template {template_id} is not available for category {category}")
     if template.channel != channel.strip().lower():
         raise ValueError(f"Template {template_id} is not available for channel {channel}")
-    if subtype is not None and template.applicable_subtypes:
-        normalized_subtype = subtype.strip().lower()
-        # Recognition often preserves useful qualifiers (for example
-        # "short-sleeve V-neck T-shirt"). Match the canonical garment subtype
-        # without discarding those qualifiers from the prompt.
-        matches = normalized_subtype in template.applicable_subtypes or any(
-            allowed in normalized_subtype for allowed in template.applicable_subtypes
-        )
-        if not matches:
-            raise ValueError(f"Template {template_id} is not available for subtype {subtype}")
+    # applicable_subtypes documents the taxonomy examples a template was
+    # designed around; it is not a binary allow-list. Recognition strings are
+    # descriptive and may contain new or qualified product types. Category and
+    # channel remain the hard compatibility gates, while subtype is retained
+    # for prompt context and future non-blocking ranking.
     return template
 
 
@@ -362,7 +665,6 @@ def list_generation_templates(*, category: str | None = None, channel: str | Non
         templates = [template for template in templates if template.category == category.strip().lower()]
     if channel is not None:
         templates = [template for template in templates if template.channel == channel.strip().lower()]
-    if subtype is not None:
-        normalized_subtype = subtype.strip().lower()
-        templates = [template for template in templates if not template.applicable_subtypes or normalized_subtype in template.applicable_subtypes]
+    # subtype is intentionally not used to hide templates; it is descriptive
+    # context for prompt compilation and future ranking.
     return templates

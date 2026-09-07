@@ -2,18 +2,42 @@ from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import Mock
 
+from PIL import Image
+
 from productframe_api.models import (
     AnalysisImageStatus,
     AnalysisJob,
     AnalysisJobImage,
     AnalysisJobStatus,
+    ProductAnalysisRecord,
     SourceAsset,
 )
 from productframe_worker import worker
 
 
+def test_source_image_orientation_is_normalized_for_preview():
+    source = BytesIO()
+    image = Image.new("RGB", (40, 80), "red")
+    exif = Image.Exif()
+    exif[274] = 6
+    image.save(source, format="JPEG", exif=exif)
+    asset = SimpleNamespace(object_key="source.jpg", content_type="image/jpeg")
+    storage = Mock()
+    storage.get_object.return_value = {"Body": BytesIO(source.getvalue())}
+
+    normalized_bytes = worker._read_upright_source_image(storage, "bucket", asset)
+
+    storage.put_object.assert_called_once()
+    persisted = storage.put_object.call_args.kwargs["Body"]
+    assert persisted == normalized_bytes
+    assert asset.content_type == "image/jpeg"
+    with Image.open(BytesIO(persisted)) as normalized:
+        assert normalized.size == (80, 40)
+        assert normalized.getexif().get(274) is None
+
+
 def test_missing_middle_source_preserves_original_image_associations(monkeypatch):
-    job = SimpleNamespace(id="job", total_images=4)
+    job = SimpleNamespace(id="job", total_images=4, status=AnalysisJobStatus.PENDING.value)
     images = {
         number: SimpleNamespace(
             image_number=number,
@@ -44,7 +68,13 @@ def test_missing_middle_source_preserves_original_image_associations(monkeypatch
         return images.get(parameters["image_number_1"])
 
     db.get.side_effect = get_record
-    db.scalars.return_value.all.return_value = list(images.values())
+    def get_records(query):
+        result = Mock()
+        entity = query.column_descriptions[0]["entity"]
+        result.all.return_value = [] if entity is ProductAnalysisRecord else list(images.values())
+        return result
+
+    db.scalars.side_effect = get_records
     db.scalar.side_effect = get_image
     storage = Mock()
     storage.get_object.side_effect = lambda Bucket, Key: {"Body": BytesIO(Key.encode())}

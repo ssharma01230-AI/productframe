@@ -28,9 +28,10 @@ function loadComponent(name, { react = React, push = unexpected, history = { sta
     const requireFromComponent = createRequire(filename);
     vm.runInNewContext(compiled, {
       module, exports: module.exports, URLSearchParams, console,
-      process: { env: {} }, fetch: unexpected, window: { history },
+      process: { env: { NEXT_PUBLIC_ENABLE_GENERATION_SLICE: 'false' } }, fetch: unexpected, window: { history },
       require(dependency) {
         if (dependency === 'react') return react;
+        if (dependency === '@clerk/nextjs') return { useAuth: () => ({ getToken: async () => null }) };
         if (dependency.endsWith('.css')) return {};
         if (dependency === 'next/navigation') return { useRouter: () => ({ push }) };
         if (dependency === 'next/image') return { __esModule: true, default: ({ fill, unoptimized, priority, ...props }) => React.createElement('img', props) };
@@ -272,13 +273,19 @@ function outputUi(products, initialSelection = {}) {
   return { ui, rerender, selectProduct, chooseRecipe, selection: () => JSON.parse(JSON.stringify(selection)) };
 }
 
+function summaryDialog(ui) {
+  const dialog = ui.nodes(node => node.type === 'dialog' && node.props.id === 'output-selection-summary')[0];
+  assert.ok(dialog, 'Missing output review dialog');
+  return dialog;
+}
+
 test('output choices remain isolated per product when selecting, switching and deselecting', () => {
   const products = fixture().slice(0, 2);
   const initialSelection = {};
   const { ui, selectProduct, chooseRecipe, selection } = outputUi(products, initialSelection);
-  chooseRecipe('Clean Product Shot');
+  chooseRecipe('Folded View');
   chooseRecipe('Front View');
-  assert.equal(ui.button('Clean Product Shot').props['aria-pressed'], true);
+  assert.equal(ui.button('Folded View').props['aria-pressed'], true);
   assert.equal(ui.button('Front View').props['aria-pressed'], true);
 
   selectProduct(products[1]);
@@ -286,16 +293,16 @@ test('output choices remain isolated per product when selecting, switching and d
   assert.equal(ui.button('Front View').props['aria-pressed'], false);
   chooseRecipe('Clean Product Shot');
   assert.deepEqual(selection(), {
-    [products[0].id]: ['ecommerce-clean-product-shot', 'ecommerce-front-view'],
+    [products[0].id]: ['ecommerce-tops-folded-view', 'ecommerce-tops-front-view'],
     [products[1].id]: ['ecommerce-clean-product-shot'],
   });
 
   selectProduct(products[0]);
-  chooseRecipe('Clean Product Shot');
-  assert.equal(ui.button('Clean Product Shot').props['aria-pressed'], false);
+  chooseRecipe('Folded View');
+  assert.equal(ui.button('Folded View').props['aria-pressed'], false);
   assert.equal(ui.button('Front View').props['aria-pressed'], true);
   assert.deepEqual(selection(), {
-    [products[0].id]: ['ecommerce-front-view'],
+    [products[0].id]: ['ecommerce-tops-front-view'],
     [products[1].id]: ['ecommerce-clean-product-shot'],
   });
   assert.deepEqual(initialSelection, {}, 'Controlled input is never mutated');
@@ -310,7 +317,7 @@ test('review requires a known output for every current product and groups the co
   });
   assert.equal(ui.button('Review selection').props.disabled, true);
 
-  chooseRecipe('Clean Product Shot');
+  chooseRecipe('Folded View');
   assert.equal(ui.button('Review selection').props.disabled, false);
   ui.button('Review selection').props.onClick();
   rerender();
@@ -322,10 +329,10 @@ test('review requires a known output for every current product and groups the co
   assert.equal(dialog.props['aria-describedby'], 'output-summary-description');
   const shirt = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === products[0].name)[0];
   const bag = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === products[1].name)[0];
-  assert.match(textContent(shirt), /Clean Product Shot/);
+  assert.match(textContent(shirt), /Folded View/);
   assert.doesNotMatch(textContent(shirt), /Studio Model Shot/);
   assert.match(textContent(bag), /Studio Model Shot/);
-  assert.doesNotMatch(textContent(bag), /Clean Product Shot/);
+  assert.doesNotMatch(textContent(bag), /Folded View/);
 
   ui.button('Back to selection').props.onClick();
   rerender();
@@ -338,7 +345,7 @@ test('review requires a known output for every current product and groups the co
 test('review dismissal through Back, Close or Escape preserves every product output choice', () => {
   const products = fixture().slice(0, 2);
   const initialSelection = {
-    [products[0].id]: ['ecommerce-clean-product-shot', 'ecommerce-front-view'],
+    [products[0].id]: ['ecommerce-tops-folded-view', 'ecommerce-tops-front-view'],
     [products[1].id]: ['lifestyle-studio-model-shot'],
   };
   for (const dismissal of ['Back to selection', 'Close selection review', 'Escape']) {
@@ -348,7 +355,7 @@ test('review dismissal through Back, Close or Escape preserves every product out
     assert.equal(ui.button('Review selection').props['aria-expanded'], true);
     if (dismissal === 'Escape') {
       let prevented = false;
-      const dialog = ui.nodes(node => node.type === 'dialog')[0];
+      const dialog = summaryDialog(ui);
       dialog.props.onCancel({ preventDefault: () => { prevented = true; } });
       assert.equal(prevented, true, 'React state controls native Escape dismissal');
     } else ui.button(dismissal).props.onClick();
@@ -364,7 +371,7 @@ test('review dismissal through Back, Close or Escape preserves every product out
 
 test('review backdrop dismisses only direct clicks outside the dialog bounds', () => {
   const products = fixture().slice(0, 1);
-  const initialSelection = { [products[0].id]: ['ecommerce-clean-product-shot'] };
+  const initialSelection = { [products[0].id]: ['ecommerce-tops-folded-view'] };
   const { ui, rerender, selection } = outputUi(products, initialSelection);
   ui.button('Review selection').props.onClick();
   rerender();
@@ -373,11 +380,11 @@ test('review backdrop dismisses only direct clicks outside the dialog bounds', (
     { target: {}, currentTarget: element, clientX: 20, clientY: 20 },
     { target: element, currentTarget: element, clientX: 300, clientY: 300 },
   ]) {
-    ui.nodes(node => node.type === 'dialog')[0].props.onClick(event);
+    summaryDialog(ui).props.onClick(event);
     rerender();
     assert.equal(ui.button('Review selection').props['aria-expanded'], true, 'Content or in-bounds clicks leave review open');
   }
-  ui.nodes(node => node.type === 'dialog')[0].props.onClick({ target: element, currentTarget: element, clientX: 50, clientY: 300 });
+  summaryDialog(ui).props.onClick({ target: element, currentTarget: element, clientX: 50, clientY: 300 });
   rerender();
   assert.equal(ui.button('Review selection').props['aria-expanded'], false);
   assert.deepEqual(selection(), initialSelection);
@@ -386,14 +393,14 @@ test('review backdrop dismisses only direct clicks outside the dialog bounds', (
 test('review tiles show the selected recipe thumbnails and an unavailable Continue action', () => {
   const products = fixture().slice(0, 2);
   const { ui, rerender } = outputUi(products, {
-    [products[0].id]: ['ecommerce-clean-product-shot', 'ecommerce-front-view', 'ecommerce-front-view'],
+    [products[0].id]: ['ecommerce-tops-folded-view', 'ecommerce-tops-front-view', 'ecommerce-tops-front-view'],
     [products[1].id]: ['lifestyle-studio-model-shot'],
   });
   ui.button('Review selection').props.onClick();
   rerender();
-  const dialog = ui.nodes(node => node.type === 'dialog')[0];
+  const dialog = summaryDialog(ui);
   const expected = [
-    [products[0], ['Clean Product Shot', 'Front View']],
+    [products[0], ['Folded View', 'Front View']],
     [products[1], ['Studio Model Shot']],
   ];
   for (const [product, names] of expected) {
@@ -409,7 +416,7 @@ test('review tiles show the selected recipe thumbnails and an unavailable Contin
       assert.equal(thumbnail[0].props.src, recipeImages[0].props.src, 'The thumbnail matches the selected output example');
     }
   }
-  assert.equal(ui.button('Continue').props.disabled, true);
+  assert.equal(ui.button('Generation unavailable').props.disabled, true);
   assert.equal(textContent(ui.nodes(node => node.props.id === 'output-selection-total', dialog)[0]), '3 outputs selected');
   assert.doesNotMatch(textContent(dialog), /Edit selection/);
 });
@@ -419,7 +426,7 @@ test('empty output selection offers Back without output choices or an enabled re
   const ui = interactive('OutputSelection', { products: [], selection: { stale: ['ecommerce-clean-product-shot'] }, onBack: () => { backCalls++; }, onSelectionChange: unexpected });
   ui.button('Back to products').props.onClick();
   assert.equal(backCalls, 1);
-  assert.doesNotMatch(ui.text(), /Review selection|Clean Product Shot/);
+  assert.doesNotMatch(ui.text(), /Review selection|Folded View/);
   assert.equal(ui.nodes(node => node.type === 'button' && 'aria-pressed' in node.props).length, 0);
   const Component = loadComponent('OutputSelection');
   const html = renderToStaticMarkup(React.createElement(Component, { products: fixture().slice(0, 1), selection: {}, onBack: noop, onSelectionChange: unexpected }));
@@ -427,7 +434,7 @@ test('empty output selection offers Back without output choices or an enabled re
   assert.match(html, /Ecommerce/);
   assert.match(html, /Lifestyle/);
   assert.match(html, /Campaign/);
-  assert.match(html, /aria-label="Clean Product Shot" aria-pressed="false"/);
+  assert.match(html, /aria-label="Folded View" aria-pressed="false"/);
 });
 
 const outerwearExamples = [
@@ -485,23 +492,27 @@ test('outerwear uses exactly the ten ordered local examples while other categori
   const expectedFiles = outerwearExamples.map(([, filename]) => filename);
   cards.forEach((card, index) => {
     const images = ui.nodes(node => typeof node.props.src === 'string', card);
-    assert.equal(images.length, 1);
     const expectedPath = '/output-examples/outerwear/' + expectedFiles[index];
-    assert.equal(images[0].props.src, expectedPath, 'Correct example for ' + outerwearExamples[index][0]);
+    const primary = ui.nodes(node => node.props.className?.includes('pf-output-card-image-primary'), card);
+    assert.equal(primary.length, 1);
+    assert.equal(primary[0].props.src, expectedPath, 'Correct example for ' + outerwearExamples[index][0]);
+    assert.equal(images.length, 2, 'Each Outerwear card includes the leather example and product thumbnail');
+    assert.equal(ui.nodes(node => node.props.className === 'pf-output-card-product-thumb', card).length, 1);
+    assert.equal(ui.nodes(node => node.props.className?.includes('pf-output-card-image-hover'), card).length, 0);
     const asset = path.join(publicDirectory, expectedPath.slice(1));
     assert.ok(fs.statSync(asset).isFile(), 'Missing local example: ' + expectedPath);
     assert.ok(fs.statSync(asset).size > 0);
   });
   const publishedPngs = fs.readdirSync(path.join(publicDirectory, 'output-examples/outerwear')).filter(filename => filename.endsWith('.png'));
-  assert.deepEqual(publishedPngs.sort(), [...expectedFiles].sort(), 'Publish only the ten selected examples, excluding the eleventh sleeve image');
+  assert.deepEqual(publishedPngs.sort(), [...expectedFiles].sort(), 'Publish only the ten leather-jacket examples');
 
   selectProduct(products[1]);
-  assert.equal(outputCards(ui).length, 36);
-  assert.equal(outputCards(ui, categorySection(ui, 'Ecommerce')).length, 12);
-  assert.match(textContent(categorySection(ui, 'Ecommerce')), /12 templates/);
-  assert.equal(ui.button('Clean Product Shot').props['aria-pressed'], false);
+  assert.equal(outputCards(ui).length, 34);
+  assert.equal(outputCards(ui, categorySection(ui, 'Ecommerce')).length, 10);
+  assert.match(textContent(categorySection(ui, 'Ecommerce')), /10 templates/);
+  assert.equal(ui.button('Folded View').props['aria-pressed'], false);
   assert.deepEqual(['Lifestyle', 'Campaign'].map(category => outputCards(ui, categorySection(ui, category)).map(card => card.props['aria-label'])), sharedNames);
-  const defaultNames = outputCards(ui).map(card => card.props['aria-label']);
+  const defaultNames = outputCards(outputUi([{ ...products[1], category: null }]).ui).map(card => card.props['aria-label']);
   for (const category of [null, 'bags', 'unknown']) {
     const fallback = outputUi([{ ...products[1], category }]).ui;
     assert.deepEqual(outputCards(fallback).map(card => card.props['aria-label']), defaultNames);
@@ -523,7 +534,7 @@ test('mixed categories keep independent valid choices and show the matching popu
   assert.equal(textContent(ui.nodes(node => node.type === 'p', switched)[0]), 'Showing templates for tops');
   assert.equal(textContent(ui.nodes(node => node.type === 'strong', switched)[0]), 'tops');
   assert.equal(outputCards(ui).some(card => card.props['aria-label'] === 'Front Close'), false);
-  chooseRecipe('Clean Product Shot');
+  chooseRecipe('Folded View');
   chooseRecipe('Everyday Wear');
   selectProduct(products[0]);
   assert.equal(ui.button('Front Close').props['aria-pressed'], true);
@@ -531,18 +542,18 @@ test('mixed categories keep independent valid choices and show the matching popu
   assert.equal(ui.button('Everyday Wear').props['aria-pressed'], false, 'Shared output types are still selected separately per product');
   assert.deepEqual(selection(), {
     [products[0].id]: ['ecommerce-outerwear-front-close', 'ecommerce-outerwear-fabric'],
-    [products[1].id]: ['ecommerce-clean-product-shot', 'lifestyle-everyday-wear'],
+    [products[1].id]: ['ecommerce-tops-folded-view', 'lifestyle-everyday-wear'],
   });
   assert.equal(ui.button('Review selection').props.disabled, false);
   ui.button('Review selection').props.onClick();
   rerender();
-  const dialog = ui.nodes(node => node.type === 'dialog')[0];
+  const dialog = summaryDialog(ui);
   const coat = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === products[0].name, dialog)[0];
   const blouse = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === products[1].name, dialog)[0];
   assert.match(textContent(coat), /Front Close/);
   assert.match(textContent(coat), /Fabric Shot/);
-  assert.doesNotMatch(textContent(coat), /Clean Product Shot|Everyday Wear/);
-  assert.match(textContent(blouse), /Clean Product Shot/);
+  assert.doesNotMatch(textContent(coat), /Folded View|Everyday Wear/);
+  assert.match(textContent(blouse), /Folded View/);
   assert.match(textContent(blouse), /Everyday Wear/);
   assert.doesNotMatch(textContent(blouse), /Front Close|Fabric Shot/);
   assert.deepEqual(ui.nodes(node => typeof node.props.src === 'string', coat).map(node => node.props.src), [
@@ -564,16 +575,16 @@ test('stale ecommerce IDs from another product category cannot satisfy review or
   chooseRecipe('Front Close');
   assert.equal(ui.button('Review selection').props.disabled, true, 'The blouse still needs a valid choice');
   selectProduct(products[1]);
-  chooseRecipe('Clean Product Shot');
+  chooseRecipe('Folded View');
   assert.equal(ui.button('Review selection').props.disabled, false);
   ui.button('Review selection').props.onClick();
   rerender();
-  const dialog = ui.nodes(node => node.type === 'dialog')[0];
+  const dialog = summaryDialog(ui);
   const coat = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === products[0].name, dialog)[0];
   const blouse = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === products[1].name, dialog)[0];
   assert.equal(ui.nodes(node => node.type === 'li', coat).length, 1);
   assert.equal(ui.nodes(node => node.type === 'li', blouse).length, 1);
-  assert.doesNotMatch(textContent(coat), /Clean Product Shot/);
+  assert.doesNotMatch(textContent(coat), /Folded View/);
   assert.doesNotMatch(textContent(blouse), /Front Close/);
 });
 
@@ -637,8 +648,8 @@ test('footwear, outerwear and default products retain independent choices and co
   assert.equal(outputCards(ui).length, 34);
   chooseRecipe('Front Close');
   selectProduct(products[2]);
-  assert.equal(outputCards(ui).length, 36);
-  chooseRecipe('Clean Product Shot');
+  assert.equal(outputCards(ui).length, 34);
+  chooseRecipe('Folded View');
   selectProduct(products[0]);
   assert.equal(ui.button('Three-Quarter Product').props['aria-pressed'], true);
   assert.equal(ui.button('Sole View').props['aria-pressed'], true);
@@ -646,15 +657,15 @@ test('footwear, outerwear and default products retain independent choices and co
   assert.deepEqual(selection(), {
     [products[0].id]: ['ecommerce-footwear-three-quarter-product', 'ecommerce-footwear-sole-view'],
     [products[1].id]: ['ecommerce-outerwear-front-close'],
-    [products[2].id]: ['ecommerce-clean-product-shot'],
+    [products[2].id]: ['ecommerce-tops-folded-view'],
   });
   ui.button('Review selection').props.onClick();
   rerender();
-  const dialog = ui.nodes(node => node.type === 'dialog')[0];
+  const dialog = summaryDialog(ui);
   const expected = [
     [products[0], ['Three-Quarter Product', 'Sole View'], ['/output-examples/footwear/01-three-quarter-product.png', '/output-examples/footwear/07-sole-view.png']],
     [products[1], ['Front Close'], ['/output-examples/outerwear/01-front-close.png']],
-    [products[2], ['Clean Product Shot'], ['https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&q=85']],
+    [products[2], ['Folded View'], ['https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?w=600&q=85']],
   ];
   for (const [product, names, images] of expected) {
     const group = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === product.name, dialog)[0];
@@ -681,11 +692,11 @@ test('stale footwear choices never count for other categories or let a mixed rev
   chooseRecipe('Front Close');
   assert.equal(ui.button('Review selection').props.disabled, true);
   selectProduct(products[2]);
-  chooseRecipe('Clean Product Shot');
+  chooseRecipe('Folded View');
   assert.equal(ui.button('Review selection').props.disabled, false);
   ui.button('Review selection').props.onClick();
   rerender();
-  const dialog = ui.nodes(node => node.type === 'dialog')[0];
+  const dialog = summaryDialog(ui);
   assert.equal(ui.nodes(node => node.type === 'li', dialog).length, 3);
   assert.match(textContent(ui.nodes(node => node.props.id === 'output-summary-description')[0]), /3 outputs selected across 3 products/);
 });
@@ -769,7 +780,7 @@ test('socks, footwear and outerwear keep independent choices and category-specif
   assert.equal(ui.button('Review selection').props.disabled, false);
   ui.button('Review selection').props.onClick();
   rerender();
-  const dialog = ui.nodes(node => node.type === 'dialog')[0];
+  const dialog = summaryDialog(ui);
   const expected = [
     [products[0], ['Three-Quarter on Feet', 'Front on Feet'], ['/output-examples/socks/01-three-quarter-on-feet.png', '/output-examples/socks/09-front-on-feet.png']],
     [products[1], ['Front on Feet'], ['/output-examples/footwear/09-front-on-feet.png']],
@@ -782,4 +793,100 @@ test('socks, footwear and outerwear keep independent choices and category-specif
     assert.deepEqual(ui.nodes(node => typeof node.props.src === 'string', group).map(node => node.props.src), images);
   }
   assert.match(textContent(ui.nodes(node => node.props.id === 'output-summary-description')[0]), /4 outputs selected across 3 products/);
+});
+
+const bottomsExamples = [
+  ['Front View', '01-front-view.png'],
+  ['Back View', '02-back-view.png'],
+  ['Side / Three-Quarter Product', '03-side-angle-product.png'],
+  ['Folded Product Flat Lay', '04-folded-product-flat-lay.png'],
+  ['Front Model', '05-front-model.png'],
+  ['Back Model', '06-back-model.png'],
+  ['Waistband & Closure Detail', '07-waistband-closure-detail.png'],
+  ['Pocket Panel Detail', '08-pocket-panel-detail.png'],
+  ['Hem & Leg Detail', '09-hem-leg-detail.png'],
+];
+
+test('normalized bottoms categories use nine ordered local examples and preserve shared choices', () => {
+  const product = { id: 'catalogue-indigo-jeans', name: 'Dark indigo straight-leg jeans', category: ' Bottoms ', image_url: 'https://assets.example.test/jeans.jpg' };
+  const baseline = outputUi([fixture()[0]]).ui;
+  const sharedTemplates = ui => ['Lifestyle', 'Campaign'].map(category => outputCards(ui, categorySection(ui, category)).map(card => card.props['aria-label']));
+
+  for (const category of ['bottoms', '\t BoTtOmS \n']) {
+    const { ui } = outputUi([{ ...product, category }]);
+    const ecommerce = categorySection(ui, 'Ecommerce');
+    const cards = outputCards(ui, ecommerce);
+    assert.equal(outputCards(ui).length, 33);
+    assert.deepEqual(cards.map(card => card.props['aria-label']), bottomsExamples.map(([name]) => name));
+    assert.match(textContent(ecommerce), /9 templates/);
+    assert.deepEqual(sharedTemplates(ui), sharedTemplates(baseline));
+    for (const sharedCategory of ['Lifestyle', 'Campaign']) assert.equal(outputCards(ui, categorySection(ui, sharedCategory)).length, 12);
+    cards.forEach((card, index) => {
+      const [name, filename] = bottomsExamples[index];
+      const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+      assert.equal(card.props['aria-describedby'], 'output-description-ecommerce-bottoms-' + filename.slice(3, -4));
+      assert.equal(image.props.src, '/output-examples/bottoms/' + filename, name);
+      assert.match(card.props.className, /\bpf-output-card-portrait\b/, name);
+      assert.equal(image.props.unoptimized, false);
+      const asset = path.resolve(__dirname, '../public/output-examples/bottoms', filename);
+      assert.ok(fs.statSync(asset).isFile(), 'Missing local example: ' + filename);
+      assert.ok(fs.statSync(asset).size > 0);
+    });
+  }
+
+  const publicDirectory = path.resolve(__dirname, '../public/output-examples/bottoms');
+  const publishedPngs = fs.readdirSync(publicDirectory).filter(filename => filename.endsWith('.png'));
+  assert.deepEqual(publishedPngs.sort(), bottomsExamples.map(([, filename]) => filename).sort());
+});
+
+const underwearExamples = [
+  ['Front with Model (No Face)', '01-front-model.png'],
+  ['Front Flat Lay', '02-front-flat-lay.png'],
+  ['Back Flat Lay', '03-back-flat-lay.png'],
+  ['Rear Three-Quarter', '04-rear-three-quarter.png'],
+  ['Front Product', '05-front-product.png'],
+  ['Side Profile', '06-side-profile.png'],
+  ['Waistband & Fabric Detail', '07-waistband-detail.png'],
+];
+
+test('underwear uses seven ordered local Ecommerce examples and category-specific IDs', () => {
+  const product = { id: 'catalogue-grey-boxers', name: 'Grey cotton boxer briefs', category: ' Underwear ', image_url: 'https://assets.example.test/boxers.jpg' };
+  const { ui, chooseRecipe, selection } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.equal(cards.length, 7);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), underwearExamples.map(([name]) => name));
+  assert.match(textContent(ecommerce), /7 templates/);
+  cards.forEach((card, index) => {
+    const [name, filename] = underwearExamples[index];
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    assert.equal(image.props.src, '/output-examples/underwear/' + filename, name);
+    assert.equal(image.props.unoptimized, false);
+    const asset = path.resolve(__dirname, '../public/output-examples/underwear', filename);
+    assert.ok(fs.statSync(asset).isFile(), 'Missing local example: ' + filename);
+    assert.ok(fs.statSync(asset).size > 0);
+  });
+  chooseRecipe('Front Product');
+  chooseRecipe('Waistband & Fabric Detail');
+  assert.deepEqual(selection(), { [product.id]: ['ecommerce-underwear-front-product', 'ecommerce-underwear-waistband-detail'] });
+  assert.equal(outputCards(ui).length, 31);
+});
+
+test('bottoms selection uses category-specific IDs and approved detail thumbnails', () => {
+  const product = { id: 'catalogue-indigo-jeans-selection', name: 'Dark indigo jeans', category: 'bottoms', image_url: null };
+  const { ui, rerender, chooseRecipe, selection } = outputUi([product]);
+  chooseRecipe('Front View');
+  chooseRecipe('Pocket Panel Detail');
+
+  assert.deepEqual(selection(), {
+    [product.id]: ['ecommerce-bottoms-front-view', 'ecommerce-bottoms-pocket-panel-detail'],
+  });
+  assert.equal(ui.button('Review selection').props.disabled, false);
+  ui.button('Review selection').props.onClick();
+  rerender();
+  const dialog = summaryDialog(ui);
+  assert.deepEqual(ui.nodes(node => typeof node.props.src === 'string', dialog).map(node => node.props.src), [
+    '/output-examples/bottoms/01-front-view.png',
+    '/output-examples/bottoms/08-pocket-panel-detail.png',
+  ]);
 });

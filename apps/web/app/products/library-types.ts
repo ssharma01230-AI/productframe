@@ -1,9 +1,15 @@
+export type MediaEvidence = {
+  views?: string[];
+  evidence?: string[];
+};
+
 export type SourceUpload = {
   id: string;
   filename: string;
   content_type: string;
   image_url: string;
   created_at: string;
+  media_evidence?: MediaEvidence | null;
 };
 
 export type GeneratedAsset = {
@@ -24,7 +30,7 @@ export type ProductSummary = {
   created_at: string;
   upload_count: number;
   generated_count: number;
-  preview_images: { id: string; image_url: string; filename: string }[];
+  preview_images: { id: string; image_url: string; filename: string; media_evidence?: MediaEvidence | null }[];
 };
 
 export type ProductDetail = {

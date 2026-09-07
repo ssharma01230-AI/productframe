@@ -1,7 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+import logging
+import os
+import time
 from typing import Any
-
-from sqlalchemy import or_
 
 import boto3
 from redis import Redis
@@ -11,24 +12,75 @@ from sqlalchemy.orm import Session
 from productframe_api.config import get_settings
 from productframe_api.db import SessionLocal
 from productframe_api.description_utils import concise_product_description
-from productframe_api.generation_persistence import mark_generation_job_failed, reschedule_generation_job
-from productframe_api.image_recognition import analyze_product_images
+from productframe_api.generation_persistence import recalculate_generation_run, reschedule_generation_job
+from productframe_api.image_recognition import analyze_media_evidence, analyze_product_images
+from productframe_api.image_processing import normalize_image_orientation
 from productframe_api.models import AnalysisJob, AnalysisJobImage, AnalysisImageStatus, AnalysisJobStatus, GenerationJob, ProductAnalysisRecord, SourceAsset
 
 from .generation_graph import run_persisted_generation
 from .generation_storage import MinioGeneratedImageStorage
 from .fidelity_validator import OpenAIProductFidelityValidator
-from .openai_image_provider import OpenAIImageGenerationProvider
+from .openai_image_provider import OpenAIImageGenerationError, OpenAIImageGenerationProvider
 
 QUEUE = "productframe:analysis"
 GENERATION_QUEUE = "productframe:generation"
 CONSUMER_GROUP = "productframe-workers"
 MAX_GENERATION_ATTEMPTS = 3
+GENERATION_RECOVERY_LEASE_SECONDS = 600
 _RECOVERY_DONE = False
+logger = logging.getLogger(__name__)
 
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _read_upright_source_image(s3: Any, bucket: str, asset: SourceAsset) -> bytes:
+    """Return display-oriented pixels and persist them for recognition previews."""
+    stored = s3.get_object(Bucket=bucket, Key=asset.object_key)
+    body = stored["Body"]
+    try:
+        source = body.read()
+    finally:
+        body.close()
+    # Real uploaded assets always have an image content type. Keeping the
+    # fallback makes the analysis worker's small test doubles and malformed
+    # upload handling behave as before.
+    if not getattr(asset, "content_type", "").startswith("image/"):
+        return source
+    normalized = normalize_image_orientation(source)
+    s3.put_object(
+        Bucket=bucket,
+        Key=asset.object_key,
+        Body=normalized.content,
+        ContentType=normalized.content_type,
+    )
+    asset.content_type = normalized.content_type
+    return normalized.content
+
+
+def process_media_evidence(asset_id: str, db: Session | None = None) -> None:
+    own_session = db is None
+    db = db or SessionLocal()
+    settings = get_settings()
+    try:
+        asset = db.get(SourceAsset, asset_id)
+        if asset is None:
+            return
+        s3 = boto3.client("s3", endpoint_url=settings.minio_endpoint, aws_access_key_id=settings.minio_access_key, aws_secret_access_key=settings.minio_secret_key, region_name="us-east-1")
+        content = _read_upright_source_image(s3, settings.minio_bucket, asset)
+        asset.media_evidence = analyze_media_evidence(content)
+        db.commit()
+    finally:
+        if own_session:
+            db.close()
 
 
 def process_job(job_id: str, db: Session | None = None) -> None:
@@ -38,6 +90,18 @@ def process_job(job_id: str, db: Session | None = None) -> None:
     try:
         job = db.get(AnalysisJob, job_id)
         if job is None:
+            return
+        # A restarted worker can encounter the original stream entry after
+        # an operator or retry has requeued the same analysis. Do not repeat
+        # expensive provider calls or insert duplicate product records.
+        if job.status in {AnalysisJobStatus.AWAITING_CONFIRMATION.value, AnalysisJobStatus.COMPLETED.value}:
+            return
+        existing_records = db.scalars(select(ProductAnalysisRecord).where(ProductAnalysisRecord.job_id == job.id)).all()
+        if existing_records:
+            job.status = AnalysisJobStatus.AWAITING_CONFIRMATION.value
+            job.error_message = None
+            job.completed_at = job.completed_at or _now()
+            db.commit()
             return
         job.status = AnalysisJobStatus.SCREENING.value
         job.started_at = _now()
@@ -53,7 +117,7 @@ def process_job(job_id: str, db: Session | None = None) -> None:
                 item.passed = False
                 item.rejection_reason = "Source image record was not found."
                 continue
-            image_bytes.append(s3.get_object(Bucket=settings.minio_bucket, Key=asset.object_key)["Body"].read())
+            image_bytes.append(_read_upright_source_image(s3, settings.minio_bucket, asset))
             # The analyzer numbers its supplied images from one. Missing sources
             # must not shift those results onto different original uploads.
             submitted_image_numbers[len(image_bytes)] = item.image_number
@@ -81,6 +145,15 @@ def process_job(job_id: str, db: Session | None = None) -> None:
         job.progress_percent = 100
         job.processed_images = job.total_images
         job.unique_product_count = result.unique_product_count
+        for supplied_number, evidence in getattr(result, "image_evidence", {}).items():
+            image_number = submitted_image_numbers.get(int(supplied_number))
+            if image_number is None:
+                continue
+            item = db.scalar(select(AnalysisJobImage).where(AnalysisJobImage.job_id == job.id, AnalysisJobImage.image_number == image_number))
+            if item and item.source_asset_id:
+                asset = db.get(SourceAsset, item.source_asset_id)
+                if asset:
+                    asset.media_evidence = evidence
         for rejected in result.rejected_images:
             image_number = submitted_image_numbers.get(rejected.image_number)
             if image_number is None:
@@ -138,31 +211,77 @@ def process_generation_job(job_id: str, *, approved: bool | None = None, db: Ses
     own_session = db is None
     db = db or SessionLocal()
     try:
-        provider = OpenAIImageGenerationProvider()
-        fidelity_validator = OpenAIProductFidelityValidator()
-        try:
-            if approved is None:
-                run_persisted_generation(
-                    db,
-                    job_id,
-                    provider=provider,
-                    storage=MinioGeneratedImageStorage(),
-                    fidelity_validator=fidelity_validator,
-                )
-            else:
-                from .generation_graph import resume_persisted_generation
-                # Resume compiles against the durable PostgreSQL checkpoint and
-                # therefore works after a worker restart.
-                resume_persisted_generation(db, job_id, approved=approved, provider=provider, storage=MinioGeneratedImageStorage())
-        finally:
-            provider.close()
-            fidelity_validator.close()
-    except Exception as exc:
         job = db.get(GenerationJob, job_id)
-        retryable = not isinstance(exc, ValueError) and job is not None and job.attempt_count < MAX_GENERATION_ATTEMPTS
-        if retryable:
-            reschedule_generation_job(db, job_id, str(exc))
-        raise
+        if job is None:
+            raise ValueError("Generation job not found")
+
+        if approved is not None:
+            # Review messages are also at-least-once. A duplicate review after
+            # completion/cancellation is a harmless no-op. A validating job is
+            # resumable if the worker stopped after the approval was recorded.
+            if job.status in {"completed", "cancelled"}:
+                return
+            if job.status not in {"awaiting_review", "validating"}:
+                return
+            from .generation_graph import resume_persisted_generation
+            # Resume compiles against the durable PostgreSQL checkpoint and
+            # therefore works after a worker restart. The resume path reads the
+            # reviewed preview from MinIO and does not need another provider.
+            resume_persisted_generation(db, job_id, approved=approved, storage=MinioGeneratedImageStorage())
+            return
+
+        # The graph performs the database-locked claim. This early check avoids
+        # constructing SDK clients for duplicate messages that arrive while the
+        # first worker is still waiting on the image provider.
+        if job.status != "pending":
+            return
+
+        while True:
+            try:
+                provider = OpenAIImageGenerationProvider()
+                fidelity_validator = None
+                try:
+                    if _env_flag("OPENAI_IMAGE_FIDELITY_VALIDATION"):
+                        fidelity_validator = OpenAIProductFidelityValidator()
+                    run_persisted_generation(
+                        db,
+                        job_id,
+                        provider=provider,
+                        storage=MinioGeneratedImageStorage(),
+                        fidelity_validator=fidelity_validator,
+                    )
+                finally:
+                    provider.close()
+                    if fidelity_validator is not None:
+                        fidelity_validator.close()
+                return
+            except Exception as exc:
+                job = db.get(GenerationJob, job_id)
+                request_id = getattr(exc, "request_id", None)
+                if job is not None and request_id:
+                    job.provider_request_id = request_id
+                    db.commit()
+                retryable = (
+                    job is not None
+                    and job.attempt_count < MAX_GENERATION_ATTEMPTS
+                    and not isinstance(exc, ValueError)
+                    and getattr(exc, "retryable", True)
+                )
+                if not retryable:
+                    raise
+                retry = reschedule_generation_job(db, job_id, str(exc))
+                delay = 0.0
+                if retry.next_attempt_at is not None:
+                    next_attempt = retry.next_attempt_at
+                    if next_attempt.tzinfo is None:
+                        next_attempt = next_attempt.replace(tzinfo=timezone.utc)
+                    delay = max(0.0, (next_attempt - _now()).total_seconds())
+                logger.warning(
+                    "Generation attempt failed job_id=%s attempt=%s/%s error_type=%s; retrying in %.1fs",
+                    job_id, retry.attempt_count, MAX_GENERATION_ATTEMPTS, type(exc).__name__, delay,
+                )
+                if delay:
+                    time.sleep(delay)
     finally:
         if own_session:
             db.close()
@@ -181,11 +300,77 @@ def _recover_jobs(redis: Redis) -> None:
     global _RECOVERY_DONE
     if _RECOVERY_DONE:
         return
+    lease_seconds = _positive_int_env("GENERATION_RECOVERY_LEASE_SECONDS", GENERATION_RECOVERY_LEASE_SECONDS)
+    cutoff = _now() - timedelta(seconds=lease_seconds)
     with SessionLocal() as db:
-        jobs = db.scalars(select(GenerationJob).where(GenerationJob.status.in_(["pending", "generating", "validating"]))).all()
+        # Redis retains the original stream message. Only reset jobs that have
+        # been generating longer than the provider lease; blindly adding every
+        # pending/generating job here creates duplicate provider requests on
+        # every worker restart.
+        jobs = db.scalars(select(GenerationJob).where(
+            GenerationJob.status == "generating",
+            GenerationJob.started_at.is_not(None),
+            GenerationJob.started_at < cutoff,
+        )).all()
+        recovered_runs: set[str] = set()
         for job in jobs:
+            job.status = "pending"
+            job.next_attempt_at = None
+            job.error_message = "Recovered after a worker interruption; retrying generation."
+            recovered_runs.add(job.generation_run_id)
+        for run_id in recovered_runs:
+            recalculate_generation_run(db, run_id)
+        pending_jobs = db.scalars(select(GenerationJob).where(GenerationJob.status == "pending")).all()
+        for job in pending_jobs:
             redis.xadd(GENERATION_QUEUE, {"type": "generate", "job_id": job.id}, maxlen=10000, approximate=True)
+        if jobs or pending_jobs:
+            db.commit()
+            if jobs:
+                logger.warning("Recovered %d stale generation job(s) after a %ss lease.", len(jobs), lease_seconds)
+            if pending_jobs:
+                logger.info("Requeued %d pending generation job(s) during worker recovery.", len(pending_jobs))
     _RECOVERY_DONE = True
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    try:
+        value = int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+    return value if value > 0 else default
+
+
+def _claim_stale_message(redis: Redis, stream: str, consumer: str) -> tuple[str, list[tuple[str, dict[str, str]]]] | None:
+    """Claim one message abandoned by a worker that has gone away."""
+    idle_ms = _positive_int_env("GENERATION_RECOVERY_LEASE_SECONDS", GENERATION_RECOVERY_LEASE_SECONDS) * 1000
+    try:
+        result = redis.xautoclaim(
+            stream,
+            CONSUMER_GROUP,
+            consumer,
+            min_idle_time=idle_ms,
+            start_id="0-0",
+            count=1,
+        )
+    except Exception as exc:
+        logger.warning("Could not reclaim stale %s message (%s).", stream, type(exc).__name__)
+        return None
+    entries = result[1] if len(result) > 1 else []
+    if entries:
+        return stream, entries
+    return None
+
+
+def _next_message(redis: Redis, consumer: str) -> tuple[str, tuple[str, dict[str, str]]] | None:
+    for stream in (GENERATION_QUEUE, QUEUE):
+        reclaimed = _claim_stale_message(redis, stream, consumer)
+        if reclaimed is not None:
+            return reclaimed[0], reclaimed[1][0]
+    messages = redis.xreadgroup(CONSUMER_GROUP, consumer, {GENERATION_QUEUE: ">", QUEUE: ">"}, count=1, block=100)
+    if not messages:
+        return None
+    stream, entries = messages[0]
+    return stream, entries[0]
 
 
 def run_once() -> bool:
@@ -194,18 +379,27 @@ def run_once() -> bool:
     _ensure_groups(redis)
     _recover_jobs(redis)
     consumer = f"worker-{__import__('os').getpid()}"
-    messages = redis.xreadgroup(CONSUMER_GROUP, consumer, {GENERATION_QUEUE: ">", QUEUE: ">"}, count=1, block=100)
-    if not messages:
+    message = _next_message(redis, consumer)
+    if message is None:
         redis.close()
         return False
-    stream, entries = messages[0]
-    message_id, fields = entries[0]
+    stream, (message_id, fields) = message
     try:
         if stream == GENERATION_QUEUE:
             process_generation_job(fields["job_id"], approved=(fields.get("approved") == "1") if fields.get("type") == "review" else None)
+        elif fields.get("type") == "evidence":
+            process_media_evidence(fields["asset_id"])
         else:
             process_job(fields["job_id"])
-        redis.xack(stream, CONSUMER_GROUP, message_id)
+    except Exception as exc:
+        logger.error(
+            "Worker message failed stream=%s type=%s job_id=%s error_type=%s; acknowledging message.",
+            stream, fields.get("type"), fields.get("job_id") or fields.get("asset_id") or "unknown", type(exc).__name__,
+        )
     finally:
+        # A failed message has already been recorded in its database job. Ack
+        # it here so a stale stream delivery cannot trigger another provider
+        # call; explicit bounded retries are handled above.
+        redis.xack(stream, CONSUMER_GROUP, message_id)
         redis.close()
     return True

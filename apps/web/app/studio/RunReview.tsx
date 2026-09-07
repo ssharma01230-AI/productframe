@@ -7,7 +7,7 @@ import './run-review.css';
 import { useRouter } from 'next/navigation';
 
 type ImageResult = { id:string; image_number:number; filename:string|null; image_url:string|null; passed:boolean|null; product_number:number|null; rejection_reason:string|null; status:string };
-type Product = { id:string; final_product_id:string|null; product_number:number; product_name:string; category:string; product_type:string; colours:string; materials:string; features:string[]; description:string; confidence:number; confirmation_status:string };
+type Product = { id:string; final_product_id:string|null; product_number:number; product_name:string; category:string; product_type:string; colours:string; materials:string; features:string[]; description:string; confidence:number; confirmation_status:string; gender?:'male'|'female'|'unisex' };
 type Results = { id:string; status:string; total_images:number; processed_images:number; unique_product_count:number; progress?:{stage:string; message:string|null; completed:number; total:number; percent:number}; images:ImageResult[]; products:Product[] };
 type Draft = Product;
 type EditableField = 'product_name' | 'product_type' | 'colours' | 'materials' | 'features' | 'description';
@@ -65,8 +65,8 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
     try {
       const token = await getToken();
       if (!token) { setError('Your sign-in session has expired. Sign in again before saving your changes.'); return; }
-      const {product_name, product_type, colours, materials, features, description} = savedProduct;
-      const response = await fetch(`${api}/analysis-jobs/${jobId}/products/${product.product_number}`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body:JSON.stringify({ product_name, product_type, colours, materials, features, description, status }) });
+      const {product_name, product_type, colours, materials, features, description, gender} = savedProduct;
+      const response = await fetch(`${api}/analysis-jobs/${jobId}/products/${product.product_number}`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body:JSON.stringify({ product_name, product_type, colours, materials, features, description, gender, status }) });
       if (!response.ok) { setError(editingApproved ? 'We couldn’t save your changes. Your edits are still here—please try again.' : 'We could not save that decision. Please try again.'); return; }
       setDrafts(items => items.map(item => item.product_number === product.product_number ? savedProduct : item));
       if (editingApproved) setEditingDraft(null);
@@ -161,7 +161,7 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
         </header>
 
         {screen === 'summary' ? (
-          <Summary approved={approved} images={images} onBack={() => setScreen('review')} onProduce={() => router.push('/products?run_id=' + encodeURIComponent(jobId))} />
+          <Summary approved={approved} images={images} onBack={() => setScreen('review')} onProduce={() => router.push('/studio?view=create&step=outputs&' + approved.filter(product => product.final_product_id).map(product => 'product=' + encodeURIComponent(product.final_product_id as string)).join('&'))} onCatalogue={() => router.push('/products')} />
         ) : (
           <>
             <section className="pf-metrics" aria-label="Run summary">
@@ -255,11 +255,31 @@ const iconPaths = {
   layers: <path d="m3 7 9-4 9 4-9 4-9-4Zm0 5 9 4 9-4M3 17l9 4 9-4" />,
   warning: <><path d="m12 3 10 18H2L12 3Z" /><path d="M12 9v5m0 3v.1" /></>,
   lock: <><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2" /></>,
-  sparkle: <path d="m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3L12 3Z" />
+  sparkle: <path d="m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3L12 3Z" />,
+  garment: <><path d="m9 4-3 2-3 3 2 4 2-1v8h10v-8l2 1 2-4-3-3-3-2-2 3Z" /><path d="M9 4c.6 1.3 1.6 2 3 2s2.4-.7 3-2M12 6v14" /></>,
+  user: <><circle cx="12" cy="8" r="3.5" /><path d="M5 20v-1a7 7 0 0 1 14 0v1" /></>,
+  outerwear: <><path d="M8 4 5 6 3 11l4 2v7h10v-7l4-2-2-5-3-2-4 3Z" /><path d="M8 4c.5 1.4 1.8 2 4 2s3.5-.6 4-2M12 6v14" /></>,
+  bottoms: <><path d="M7 4h10l1 7-2 9h-4v-7l-2 7H6l2-9Z" /><path d="M7 4h10" /></>,
+  underwear: <><path d="M5 5h14v6l-3 9h-4l-1-6-1 6H6l-3-9 2-6Z" /><path d="M5 11h14" /></>,
+  socks: <path d="M8 4h7v9l5 3v4H8c-3 0-4-4-1-5l4-2V4" />,
+  footwear: <path d="M4 15c3 1 5 0 7-2l2-6 3 1 1 5 4 2v5H4c-1-2-1-4 0-5Z" />,
+  scarf: <path d="M7 3h4v11c0 2 2 3 4 3h2v4h-4c-4 0-7-3-7-7V3Zm6 0h4v9h-4" />,
+  gloves: <path d="M8 21c-2-2-3-5-2-8l1-7c0-2 3-2 3 0v4l1-8c0-2 3-2 3 0v8l1-6c0-2 3-2 3 0l-1 9c0 5-3 8-9 8Z" />,
+  hat: <><path d="M5 12c1-5 4-8 7-8s6 3 7 8" /><path d="M3 12h18v3H3Z" /></>,
+  ring: <><ellipse cx="12" cy="14" rx="7" ry="5" /><path d="M8 11 10 5h4l2 6" /></>,
+  bracelet: <><path d="M5 8c0 6 2 10 7 10s7-4 7-10" /><path d="M5 8c2-2 5-3 7-3s5 1 7 3" /></>,
+  earring: <><circle cx="12" cy="7" r="3" /><path d="M12 10v9m-3 0h6" /></>,
+  watch: <><path d="M9 3h6l1 4v10l-1 4H9l-1-4V7Z" /><circle cx="12" cy="12" r="3" /></>,
+  belt: <><path d="M3 9h18v6H3Z" /><rect x="9" y="8" width="6" height="8" rx="1" /></>,
+  tie: <path d="m9 3 3 2 3-2 1 5-3 3 2 10H9l2-10-3-3Z" />
 };
 type IconName = keyof typeof iconPaths;
 function Icon({ name }: { name: IconName }) {
   return <svg className="pf-icon" viewBox="0 0 24 24" aria-hidden="true">{iconPaths[name]}</svg>;
+}
+function categoryIcon(category: string): IconName {
+  const icons: Record<string, IconName> = { tops: 'garment', outerwear: 'outerwear', bottoms: 'bottoms', underwear: 'underwear', socks: 'socks', footwear: 'footwear', scarves: 'scarf', gloves: 'gloves', headwear: 'outerwear', rings: 'ring', bracelets: 'bracelet', earrings: 'earring', watches: 'watch', belts: 'belt', neckwear: 'tie' };
+  return icons[category.trim().toLowerCase()] ?? 'garment';
 }
 function Metric({ value, label, icon, warm = false }: { value: number | string; label: string; icon: IconName; warm?: boolean }) {
   return <div className={'pf-metric' + (warm ? ' warm' : '')}><Icon name={icon} /><strong>{value}</strong><span>{label}</span></div>;
@@ -399,16 +419,14 @@ function ProductEditor({ product, totalProducts, images, imageIndex, setImageInd
           <div className="pf-thumbnails" aria-label="Grouped product images">
             {images.map((item, index) => <button type="button" className="pf-thumbnail" aria-pressed={index === visibleIndex} aria-label={'View image ' + (index + 1) + ' of ' + product.product_name} key={item.id} onClick={() => setImageIndex(index)}><ProductPhoto src={item.image_url} alt="" sizes="80px" /></button>)}
           </div>
-          <section className="pf-category" aria-label="Read-only category"><dl><dt><span>Category</span><Icon name="lock" /></dt><dd>{product.category}</dd></dl><small>Read-only classification</small></section>
+          <section className="pf-category" aria-label="Product classification"><div className="pf-category-inline"><Icon name={categoryIcon(product.category)} /><span>Category</span><strong>{product.category}</strong><Icon name="lock" /></div><label className="pf-gender-setting"><span><Icon name="user" />Gender</span><select value={product.gender ?? 'unisex'} disabled={locked || saving} aria-label="Product gender" onChange={event => update(product.product_number, 'gender', event.target.value)}><option value="male">Male</option><option value="female">Female</option><option value="unisex">Unisex</option></select></label></section>
         </div>
         <form id="pf-product-form" className="pf-product-form" onSubmit={event => { event.preventDefault(); if (!locked && !saving && !cancelOpen) onApprove(); }}>
           <div className="pf-fields">
             {field('product_name', 'Product name')}
-            {field('product_type', 'Product type')}
-            {field('colours', 'Colours', false)}
-            {field('materials', 'Materials', false)}
-            {field('features', 'Features')}
-            {field('description', 'Description')}
+            {field('colours', 'Colours')}
+            {field('materials', 'Materials')}
+            <label className="pf-field pf-full pf-details-field" htmlFor="pf-field-product-details"><span>Description</span><textarea id="pf-field-product-details" rows={5} readOnly={locked || saving} required value={`${product.features.join(', ')}\n\n${product.description}`} onChange={event => update(product.product_number, 'description', event.target.value)} /></label>
           </div>
           <p className="pf-suggested"><Icon name="sparkle" />{editing ? 'Saved changes also update this product in your Product Library.' : 'Suggested details can be changed as you see fit.'}</p>
         </form>
@@ -436,7 +454,7 @@ function FeaturesInput({ id, features, locked, onChange }: { id:string; features
     onChange(event.target.value.split(','));
   }} />;
 }
-function Summary({ approved, images, onBack, onProduce }: { approved: Product[]; images: ImageResult[]; onBack: () => void; onProduce: () => void }) {
+function Summary({ approved, images, onBack, onProduce, onCatalogue }: { approved: Product[]; images: ImageResult[]; onBack: () => void; onProduce: () => void; onCatalogue: () => void }) {
   return (
     <>
       <section className="pf-summary" aria-label="Approved products">
@@ -452,7 +470,7 @@ function Summary({ approved, images, onBack, onProduce }: { approved: Product[];
       </section>
       <footer className="pf-footer pf-step-footer">
         <button type="button" className="pf-button pf-step-back" onClick={onBack}><Icon name="chevronLeft" />Back to review</button>
-        {approved.length > 0 && <button type="button" className="pf-button pf-primary" onClick={onProduce}>Produce outputs <Icon name="arrow" /></button>}
+        {approved.length > 0 && <div className="pf-summary-actions"><button type="button" className="pf-button pf-summary-catalogue" onClick={onCatalogue}>View catalogue</button><button type="button" className="pf-button pf-primary" onClick={onProduce}>Produce outputs <Icon name="arrow" /></button></div>}
       </footer>
     </>
   );

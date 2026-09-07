@@ -1,5 +1,13 @@
 # ProductFrame — design previews
 
+## Generation gallery
+
+Open [`generation-gallery-preview.html`](./generation-gallery-preview.html) directly in a browser. This is a standalone visual direction for generation as a full-page gallery rather than a popup: each requested output reserves one card, cards are grouped by product, and in-progress cards become ready in place. Ready cards offer only **Reject** and **Approve**; approving shows a simulated Product Library confirmation, while rejected cards remain visible as part of the run record. A fixed review bar keeps **Proceed to Product Library** disabled until every image has finished and received a decision. Open [`generation-gallery-preview.html?review=complete`](./generation-gallery-preview.html?review=complete) to inspect the enabled end state without adding demo controls to the interface. No production files, API calls or generation jobs are involved.
+
+## Generation visualizer
+
+Open [`generation-visualizer-preview.html`](./generation-visualizer-preview.html) directly in a browser while the local web preview is running. It is a standalone visual direction preview for the generation loading state and uses the existing local fonts and outerwear example image served by the local preview. The state controls switch between creating, ready and stopped views; **Cycle message** previews the brand copy rotation manually. No production files, API calls or generation jobs are involved.
+
 ## Ecommerce template selection
 
 Open [`ecommerce-template-selection.html`](./ecommerce-template-selection.html) directly in a browser, keeping the adjacent `ecommerce-selection-assets/` folder in place. It works offline with local images, fonts, and SVG composition guides. No application server or sign-in is needed.

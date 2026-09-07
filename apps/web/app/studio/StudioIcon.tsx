@@ -1,4 +1,4 @@
-export type IconName = 'home' | 'plus' | 'folder' | 'compass' | 'settings' | 'menu' | 'details' | 'arrow' | 'sparkle' | 'workspace' | 'shield' | 'user';
+export type IconName = 'home' | 'plus' | 'folder' | 'compass' | 'settings' | 'menu' | 'details' | 'arrow' | 'sparkle' | 'garment' | 'workspace' | 'shield' | 'user';
 
 export default function StudioIcon({ name }: { name: IconName }) {
   const paths = {
@@ -11,6 +11,7 @@ export default function StudioIcon({ name }: { name: IconName }) {
     details: <><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>,
     arrow: <path d="M4 12h16m-6-6 6 6-6 6"/>,
     sparkle: <path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z"/>,
+    garment: <><path d="m9 4-3 2-3 2 2 5 2-1v8h10v-8l2 1 2-5-3-2-3-2-2 3Z"/><path d="M9 4c.6 1.4 1.6 2 3 2s2.4-.6 3-2M12 6v14"/></>,
     workspace: <><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9h17M9 9v10.5"/></>,
     shield: <><path d="m12 3 8 3v5c0 5-4 8-8 10-4-2-8-5-8-10V6Z"/><path d="m8 12 3 3 5-6"/></>,
     user: <><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></>,

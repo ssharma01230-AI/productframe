@@ -2,11 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import GenerationGallery from './GenerationGallery';
 import OutputSelection, { type OutputProduct } from './OutputSelection';
 import StudioIcon from './StudioIcon';
 import './create-view.css';
 
-export default function CreateView({ products, onUpload, initialSelectedIds = [], initialOutputStep = false }: { products: OutputProduct[]; onUpload: () => void; initialSelectedIds?: string[]; initialOutputStep?: boolean }) {
+function formatCategory(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(); }
+
+export default function CreateView({ products, onUpload, initialSelectedIds = [], initialOutputStep = false, generationRunId }: { products: OutputProduct[]; onUpload: () => void; initialSelectedIds?: string[]; initialOutputStep?: boolean; generationRunId?: string }) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>(() => [...new Set(initialSelectedIds)]);
   const [outputSelection, setOutputSelection] = useState<Record<string, string[]>>({});
@@ -34,6 +37,7 @@ export default function CreateView({ products, onUpload, initialSelectedIds = []
     router.push(selectionUrl(true));
   };
 
+  if (generationRunId) return <GenerationGallery runId={generationRunId}/>;
   if (initialOutputStep) return <OutputSelection products={selectedProducts} onBack={() => router.push(selectionUrl(false))} selection={outputSelection} onSelectionChange={setOutputSelection} />;
 
   return <section className="pf-create-view" aria-labelledby="create-title">
@@ -87,7 +91,7 @@ export default function CreateView({ products, onUpload, initialSelectedIds = []
             </div>
             <span className="pf-create-product-info">
               <b>{product.name}</b>
-              <small>{selectedIds.includes(product.id) ? 'Selected for outputs' : 'Ready to create from'}</small>
+              <small>{selectedIds.includes(product.id) ? 'Selected for outputs' : (product.category ? formatCategory(product.category) : 'Product')}</small>
             </span>
           </button>) : <div className="pf-create-empty">Approved products will appear here after review.</div>}
         </div>

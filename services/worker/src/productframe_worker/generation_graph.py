@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from productframe_api.generation_persistence import (
-    mark_generation_job_generating,
+    claim_generation_job,
     save_generation_result,
     mark_generation_job_failed,
 )
@@ -107,15 +107,12 @@ def create_persisted_generation_graph(
     """Compile the one-job graph that writes its result to PostgreSQL and MinIO."""
 
     def load_job(state: PersistedGenerationState) -> dict[str, object]:
-        job = db.get(GenerationJob, state["job_id"])
-        if job is None:
-            raise ValueError("Generation job not found")
-        if job.generated_asset is not None:
-            return {"status": "completed"}
+        job, claimed = claim_generation_job(db, state["job_id"])
+        if not claimed:
+            return {"status": job.status}
         product = db.get(Product, job.product_id)
         if product is None or product.category is None:
             raise ValueError("Generation product is missing or has no category")
-        mark_generation_job_generating(db, job.id)
         assets = db.scalars(select(SourceAsset).where(SourceAsset.product_id == product.id).order_by(SourceAsset.created_at, SourceAsset.id)).all()
         request = GenerationRequest(
             template_id=job.template_id,
@@ -178,10 +175,16 @@ def create_persisted_generation_graph(
         storage.put(key, image)
         job.preview_object_key = key
         job.provider_request_id = image.request_id
-        job.status = "awaiting_review"
-        db.commit()
-        # Do not return image bytes: the checkpoint must contain metadata only.
-        return {"generated_image": None, "preview_object_key": key, "generated_filename": image.filename, "generated_content_type": image.content_type, "status": "awaiting_review"}
+        save_generation_result(
+            db,
+            job_id=job.id,
+            object_key=key,
+            filename=image.filename,
+            content_type=image.content_type,
+        )
+        # Generation now ends once the expensive output is durable. Human
+        # review is an API-owned asset decision, not a suspended graph step.
+        return {"generated_image": None, "preview_object_key": key, "generated_filename": image.filename, "generated_content_type": image.content_type, "status": "completed"}
 
     def store_preview(state: PersistedGenerationState) -> dict[str, object]:
         image = state["generated_image"]
@@ -230,7 +233,14 @@ def create_persisted_generation_graph(
         return {"object_key": object_key, "status": "stored"}
 
     def complete(state: PersistedGenerationState) -> dict[str, str]:
-        save_generation_result(db, job_id=state["job_id"], object_key=state["object_key"], filename=state["generated_filename"], content_type=state["generated_content_type"])
+        asset = save_generation_result(db, job_id=state["job_id"], object_key=state["object_key"], filename=state["generated_filename"], content_type=state["generated_content_type"])
+        # An asset enters the library only after the human review interrupt has
+        # been approved. Direct persistence helpers retain READY for previews.
+        asset.status = "approved"
+        job = db.get(GenerationJob, state["job_id"])
+        if job is not None:
+            job.error_message = None
+        db.commit()
         return {"status": "completed"}
 
     graph = StateGraph(PersistedGenerationState)
@@ -243,13 +253,15 @@ def create_persisted_generation_graph(
     graph.add_node("store_image", store)
     graph.add_node("complete", complete)
     def next_after_load(state: PersistedGenerationState) -> str:
-        return END if state.get("status") == "completed" else "build_prompt"
+        return "build_prompt" if state.get("status") == "running" else END
 
     graph.add_edge(START, "load_job")
     graph.add_conditional_edges("load_job", next_after_load)
     graph.add_edge("build_prompt", "save_prompt")
     graph.add_edge("save_prompt", "generate_image")
-    graph.add_edge("generate_image", "validate_image")
+    # New runs finish here. Keeping the legacy branch and node names lets an
+    # already-checkpointed awaiting-review job resume safely during rollout.
+    graph.add_conditional_edges("generate_image", lambda state: END if state.get("status") == "completed" else "validate_image")
     graph.add_conditional_edges("validate_image", lambda state: "store_image" if state.get("human_approved") else END)
     graph.add_edge("store_image", "complete")
     graph.add_edge("complete", END)

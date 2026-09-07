@@ -88,6 +88,19 @@
 .sh-flow-copy > span { font-size: 10px; color: #9a9d95; }
 .sh-flow-copy h3 { margin: 0; font-size: 14px; font-weight: 700; }
 .sh-flow-copy p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--sh-muted); }
+.sh-landing-stories { max-width: 1140px; margin: 88px auto 0; display: grid; gap: 28px; }
+.sh-landing-story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 390px; overflow: hidden; border: 1px solid var(--sh-line); border-radius: 12px; background: #fbfbf7; }
+.sh-landing-story-reverse .sh-landing-story-media { order: 2; }
+.sh-landing-story-media { position: relative; min-height: 300px; background: #e5e5de; }
+.sh-landing-story-media img { object-fit: cover; filter: saturate(.82); }
+.sh-landing-story-copy { display: flex; flex-direction: column; justify-content: center; padding: 45px clamp(26px, 5vw, 70px); }
+.sh-landing-story-brand { display: flex; align-items: center; gap: 8px; color: var(--sh-muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.sh-landing-story-mark { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 6px; background: var(--sh-ink); color: var(--sh-accent); font-size: 13px; font-weight: 700; }
+.sh-landing-story-copy h2 { max-width: 430px; margin: 24px 0 18px; font-family: var(--font-pf-display), Georgia, serif; font-size: clamp(26px, 3vw, 40px); font-weight: 500; line-height: 1.08; letter-spacing: -.05em; }
+.sh-landing-story-copy blockquote { max-width: 430px; margin: 0; color: var(--sh-muted); font-size: 13px; line-height: 1.7; }
+.sh-landing-story-attribution { margin: 22px 0 24px; color: #5c684f; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.sh-landing-story-link { display: inline-flex; align-items: center; gap: 8px; width: fit-content; color: var(--sh-ink); font-size: 11px; font-weight: 600; }
+.sh-landing-story-link .sh-icon { width: 14px; height: 14px; }
 .sh-landing-foot { max-width: 1140px; margin: 24px auto 0; display: flex; justify-content: space-between; gap: 20px; color: var(--sh-muted); font-size: 11px; line-height: 1.5; }
 .sh-landing-foot > span { display: flex; align-items: center; gap: 7px; }
 .sh-green-dot { width: 6px; height: 6px; flex-shrink: 0; background: #7eb522; border-radius: 50%; display: inline-block; }
@@ -99,6 +112,7 @@
   .sh-intro h1 { font-size: clamp(42px, 5.7vw, 58px); }
   .sh-lede { font-size: 15px; }
   .sh-how-board { padding: 22px; margin-top: 60px; }
+  .sh-landing-stories { margin-top: 68px; }
   .sh-flow { gap: 30px; }
   .sh-flow-step:not(:last-child)::after { right: -27px; font-size: 19px; top: 80px; }
   .sh-flow-visual { height: 180px; }
@@ -116,6 +130,10 @@
   .sh-eyebrow { font-size: 10px; }
   .sh-lede { font-size: 15px; max-width: 380px; margin: auto; }
   .sh-how-board { margin-top: 48px; }
+  .sh-landing-story { grid-template-columns: 1fr; }
+  .sh-landing-story-reverse .sh-landing-story-media { order: 0; }
+  .sh-landing-story-media { min-height: 260px; }
+  .sh-landing-story-copy { padding: 32px 26px 36px; }
   .sh-hero-actions { gap: 14px; }
   .sh-shell .sh-upload-button, .sh-shell .sh-text-button { font-size: 13px; }
 }

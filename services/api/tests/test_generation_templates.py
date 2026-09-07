@@ -46,12 +46,42 @@ def test_template_rejects_wrong_category_or_channel():
 def test_listing_filters_templates():
     templates = list_generation_templates(category="tops", channel="ecommerce")
     assert len(templates) == 10
-    assert next(template for template in templates if template.id == TOPS_FRONT_VIEW.id) == TOPS_FRONT_VIEW
+    listed_front = next(template for template in templates if template.id == TOPS_FRONT_VIEW.id)
+    assert listed_front.id == TOPS_FRONT_VIEW.id
+    assert listed_front.required_evidence == ("front_view",)
     assert len(list_generation_templates(category="outerwear", channel="ecommerce")) == 10
     assert len(list_generation_templates(category="footwear", channel="ecommerce")) == 10
     assert len(list_generation_templates(category="socks", channel="ecommerce")) == 8
+    assert len(list_generation_templates(category="bottoms", channel="ecommerce")) == 9
     assert get_generation_template("ecommerce-footwear-sole-view").category == "footwear"
     assert get_generation_template("ecommerce-socks-knit-texture").category == "socks"
+
+
+def test_underwear_templates_cover_the_seven_ecommerce_views():
+    templates = list_generation_templates(category="underwear", channel="ecommerce")
+    assert [template.id for template in templates] == [
+        "ecommerce-underwear-front-model",
+        "ecommerce-underwear-front-flat-lay",
+        "ecommerce-underwear-back-flat-lay",
+        "ecommerce-underwear-rear-three-quarter",
+        "ecommerce-underwear-front-product",
+        "ecommerce-underwear-side-profile",
+        "ecommerce-underwear-waistband-detail",
+    ]
+    assert templates[0].output_presentation == "worn_product"
+    assert templates[0].artwork_surface_mode == "worn"
+    assert templates[2].required_evidence == ("rear_view",)
+    assert templates[3].required_evidence == ("rear_view",)
+    assert templates[6].artwork_surface_mode == "detail"
+    assert "category_details.elastic_details" in templates[6].required_product_fields
+    assert "category_details.fabric_appearance" in templates[6].required_product_fields
+    for subtype in ("boxers", "briefs", "bra", "bralette"):
+        assert validate_generation_template(
+            "ecommerce-underwear-front-product",
+            category="underwear",
+            channel="ecommerce",
+            subtype=subtype,
+        ).category == "underwear"
 
 
 def test_tops_templates_define_artwork_visibility_and_surface_policy():
@@ -63,3 +93,39 @@ def test_tops_templates_define_artwork_visibility_and_surface_policy():
     assert templates["ecommerce-tops-back"].artwork_visibility == "none"
     assert templates["ecommerce-tops-back-model"].artwork_visibility == "none"
     assert templates["ecommerce-tops-fabric"].artwork_visibility == "conditional"
+
+
+def test_bottoms_templates_cover_all_subtypes_and_keep_folded_flat_lay_policy():
+    templates = list_generation_templates(category="bottoms", channel="ecommerce")
+    assert [template.name for template in templates] == [
+        "Front View",
+        "Back View",
+        "Side / Three-Quarter Product",
+        "Folded Product Flat Lay",
+        "Front Model",
+        "Back Model",
+        "Waistband & Closure Detail",
+        "Pocket Panel Detail",
+        "Hem & Leg Detail",
+    ]
+    assert templates[2].output_presentation == "worn_product"
+    assert templates[2].artwork_surface_mode == "angled"
+    assert templates[3].id == "ecommerce-bottoms-folded-product-flat-lay"
+    assert templates[3].artwork_surface_mode == "folded"
+    assert templates[3].output_presentation == "product_only"
+    assert templates[4].output_presentation == "worn_product"
+    assert templates[5].output_presentation == "worn_product"
+    assert templates[6].output_presentation == "worn_product"
+    assert "category_details.belt_loops" in templates[6].required_product_fields
+    assert templates[7].output_presentation == "product_only"
+    assert "category_details.panel_or_seam_details" in templates[7].required_product_fields
+    assert templates[8].artwork_surface_mode == "detail"
+    assert get_generation_template("ecommerce-bottoms-fabric-surface-detail") is None
+
+    for subtype in ("shorts", "skirt", "leggings", "trousers", "jeans", "cargo trousers", "joggers", "chinos"):
+        assert validate_generation_template(
+            "ecommerce-bottoms-front-view",
+            category="bottoms",
+            channel="ecommerce",
+            subtype=subtype,
+        ).category == "bottoms"

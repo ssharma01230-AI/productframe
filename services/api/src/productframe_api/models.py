@@ -154,6 +154,7 @@ class GenerationRun(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
     status: Mapped[str] = mapped_column(String(30), default=GenerationRunStatus.PENDING.value, index=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True, index=True)
     total_jobs: Mapped[int] = mapped_column(default=0)
     completed_jobs: Mapped[int] = mapped_column(default=0)
     failed_jobs: Mapped[int] = mapped_column(default=0)
@@ -173,6 +174,7 @@ class GenerationJob(Base):
     product_id: Mapped[str] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
     template_id: Mapped[str] = mapped_column(String(160))
     template_version: Mapped[int] = mapped_column(default=1)
+    job_index: Mapped[int] = mapped_column(default=0)
     graph_thread_id: Mapped[str] = mapped_column(String(120), unique=True)
     preview_object_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
     provider_request_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -183,6 +185,9 @@ class GenerationJob(Base):
     negative_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     aspect_ratio: Mapped[str | None] = mapped_column(String(20), nullable=True)
     error_message: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    review_decision: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_by_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -237,6 +242,9 @@ class SourceAsset(Base):
     object_key: Mapped[str] = mapped_column(String(500), unique=True)
     filename: Mapped[str] = mapped_column(String(255))
     content_type: Mapped[str] = mapped_column(String(100))
+    # Model-derived visual coverage for output-template readiness. This is
+    # source-media evidence, not product identity data.
+    media_evidence: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     product: Mapped[Product] = relationship(back_populates="source_assets")
 

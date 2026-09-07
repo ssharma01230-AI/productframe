@@ -4,7 +4,10 @@ const isProtectedRoute = createRouteMatcher(['/studio(.*)']);
 
 export default clerkMiddleware(async (auth, request) => {
   if (isProtectedRoute(request)) {
-    await auth.protect();
+    // Client-side navigations can be classified as non-document requests by
+    // Clerk. Without an explicit fallback, auth.protect() turns those signed-
+    // out requests into a 404 instead of returning the user to sign-in.
+    await auth.protect({ unauthenticatedUrl: new URL('/', request.url).toString() });
   }
 });
 

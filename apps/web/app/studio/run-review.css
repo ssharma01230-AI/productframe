@@ -107,7 +107,18 @@
 .pf-category dt { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--pf-muted); font-size: 13px; font-weight: 400; }
 .pf-category dt .pf-icon { width: 12px; height: 12px; color: #8a907f; }
 .pf-category dd { margin: 0; padding: 8px 0 0; font-size: 14px; color: #4f5745; font-weight: 400; line-height: 1.4; text-transform: capitalize; overflow-wrap: anywhere; }
+.pf-category-value { display: flex; align-items: center; gap: 7px; }
+.pf-category-value .pf-icon { width: 16px; height: 16px; color: #607c3a; }
+.pf-category-inline { display: flex; align-items: center; gap: 8px; min-height: 22px; color: var(--pf-muted); font-size: 11px; line-height: 1; }
+.pf-category-inline > .pf-icon:first-child { width: 14px; height: 14px; color: #607c3a; }
+.pf-category-inline strong { width: 92px; margin-left: auto; color: #4f5745; font-size: 11px; font-weight: 400; text-align: right; text-transform: capitalize; }
+.pf-category-inline > .pf-icon:last-child { width: 12px; height: 12px; margin-left: -2px; color: #8a907f; }
+.pf-gender-setting > span { display: inline-flex; align-items: center; gap: 6px; }
+.pf-gender-setting > span .pf-icon { width: 14px; height: 14px; color: #607c3a; }
 .pf-category > small { display: block; font-size: 10px; color: #8d9286; margin-top: 5px; }
+.pf-gender-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 22px; margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--pf-line); color: var(--pf-muted); font-size: 11px; line-height: 1; }
+.pf-gender-setting select { border: 1px solid var(--pf-line); border-radius: 6px; padding: 5px 22px 5px 7px; background: #fff; color: var(--pf-ink); font-size: 11px; cursor: pointer; }
+.pf-gender-setting select:focus-visible { outline: 2px solid #526c2c; outline-offset: 2px; }
 .pf-product-form { min-width: 0; margin: 0; }
 .pf-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 12px; align-items: start; }
 .pf-field { display: grid; align-content: start; gap: 5px; min-width: 0; }
@@ -116,6 +127,7 @@
 .pf-overlay .pf-field input, .pf-overlay .pf-field textarea { width: 100%; min-width: 0; color: #252a20; font-size: 14px; padding: 10px 11px; border: 1px solid #dde1d5; border-radius: 6px; background: #fff; line-height: 1.4; transition: border-color .2s, box-shadow .2s; }
 .pf-field textarea { resize: vertical; min-height: 60px; }
 .pf-field .pf-description-field { min-height: 111px; }
+.pf-details-field textarea { min-height: 175px; height: 175px; }
 .pf-overlay .pf-field input:hover, .pf-overlay .pf-field textarea:hover { border-color: #bfc7b1; }
 .pf-overlay .pf-field input:focus, .pf-overlay .pf-field textarea:focus { outline: none; border-color: #859767; box-shadow: 0 0 0 3px #9cc4631a; }
 .pf-overlay .pf-field input[aria-invalid="true"] { border-color: #b57765; }
@@ -135,6 +147,8 @@
 .pf-mini-progress { width: 100px; height: 3px; background: #e0e5d7; border-radius: 10px; overflow: hidden; }
 .pf-mini-progress span { display: block; height: 100%; background: #819b58; transition: width .3s ease; }
 .pf-footer-actions { display: flex; gap: 9px; align-items: center; }
+.pf-summary-actions { display: flex; align-items: center; gap: 9px; }
+.pf-overlay .pf-summary-catalogue { background: transparent; color: #626b57; }
 .pf-inline-confirm { position: absolute; z-index: 3; top: 57px; right: 24px; width: min(302px, calc(100% - 36px)); padding: 17px; border: 1px solid #d6dace; background: #fffefb; border-radius: 9px; box-shadow: 0 12px 32px #27301e22; color: var(--pf-ink); letter-spacing: normal; text-transform: none; animation: pf-notice-in .2s var(--pf-ease) both; }
 .pf-inline-confirm::before { content: ""; position: absolute; right: 13px; top: -5px; width: 8px; height: 8px; background: #fffefb; border-left: 1px solid #d6dace; border-top: 1px solid #d6dace; transform: rotate(45deg); }
 .pf-inline-confirm h3 { margin: 0; font-size: 15px; font-weight: 600; }
@@ -254,11 +268,13 @@
   .pf-thumbnails { gap: 4px; flex-wrap: wrap; }
   .pf-overlay .pf-thumbnail { width: calc((100% - 4px)/2); }
   .pf-category dt, .pf-category dd { font-size: 12px; }
+  .pf-details-field textarea { min-height: 150px; height: 150px; }
   .pf-footer { padding: 12px 15px; gap: 12px; flex-wrap: wrap; }
   .pf-review-progress-label { font-size: 11px; }
   .pf-progress-caption { font-size: 10px; }
   .pf-mini-progress { width: 55px; }
   .pf-footer-actions { gap: 6px; }
+  .pf-summary-actions { gap: 6px; }
   .pf-overlay .pf-footer-actions .pf-button { padding: 10px 12px; font-size: 12px; }
   .pf-summary { padding: 24px 20px; }
   .pf-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 14px; max-width: 440px; }

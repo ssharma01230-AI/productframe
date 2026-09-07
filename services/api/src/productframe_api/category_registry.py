@@ -97,9 +97,29 @@ CATEGORIES: Final[dict[str, CategoryDefinition]] = {
     "bottoms": CategoryDefinition(
         id="bottoms", name="Bottoms",
         subtypes=("shorts", "skirt", "leggings", "trousers", "jeans", "cargo trousers", "joggers", "chinos"),
-        required_analysis_fields=_COMMON_REQUIRED + ("category_details", "category_details.waistband_type", "category_details.leg_shape", "category_details.fit_and_silhouette"),
-        optional_analysis_fields=_COMMON_OPTIONAL + ("category_details.pocket_details", "category_details.pleats_or_darts"),
-        prompt_rules=("Preserve waistband, rise, leg shape, hem, pockets and fit.",),
+        required_analysis_fields=_COMMON_REQUIRED + (
+            "category_details",
+            "category_details.waistband_type",
+            "category_details.waist_height",
+            "category_details.fly_or_closure",
+            "category_details.leg_shape",
+            "category_details.leg_width",
+            "category_details.garment_length",
+            "category_details.hem_details",
+            "category_details.fit_and_silhouette",
+        ),
+        optional_analysis_fields=_COMMON_OPTIONAL + (
+            "category_details.pocket_details",
+            "category_details.pleats_or_darts",
+            "category_details.belt_loops",
+            "category_details.panel_or_seam_details",
+            "category_details.visible_uncertainties",
+        ),
+        prompt_rules=(
+            "Preserve waistband, waist height, rise, closure, leg shape, leg width, garment length, hem, pockets and fit.",
+            "For model-worn outputs, keep the framing from the waist or lower midsection downward and do not let styling obscure the bottoms.",
+            "For folded and construction-detail outputs, show the product naturally supported by the specified surface and do not invent hidden construction.",
+        ),
         supported_channels=tuple(CHANNELS),
     ),
     "underwear": CategoryDefinition(

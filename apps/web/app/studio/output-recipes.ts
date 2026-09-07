@@ -6,6 +6,8 @@ export type OutputRecipe = {
   name: string;
   description: string;
   exampleImage: string;
+  hoverExampleImage?: string;
+  showProductThumbnail?: boolean;
 };
 
 // Reference images illustrate output types; they are never generated product assets.
@@ -271,6 +273,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Front Close',
     description: 'A tight product-only crop of the upper front, showing the neckline, front construction and visible details.',
     exampleImage: '/output-examples/outerwear/01-front-close.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-front-medium',
@@ -278,6 +281,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Front Medium',
     description: 'The complete outerwear piece shown from the front, with sleeves and hem visible and little surrounding space.',
     exampleImage: '/output-examples/outerwear/02-front-medium.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-over-the-shoulder',
@@ -285,6 +289,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Over-the-Shoulder (No Face)',
     description: 'A close rear three-quarter view of the outerwear being worn, focusing on the shoulder, collar and upper-back construction with no face visible.',
     exampleImage: '/output-examples/outerwear/03-over-the-shoulder-no-face.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-full-body-model',
@@ -292,6 +297,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Full Body with Model (No Face)',
     description: 'The outerwear worn as part of a complete outfit, framed from the base of the neck to the feet with no face visible.',
     exampleImage: '/output-examples/outerwear/04-full-body-model-no-face.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-close-up',
@@ -299,6 +305,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Close-Up',
     description: 'A close crop highlighting a seam, fastening or other visible construction detail of the outerwear.',
     exampleImage: '/output-examples/outerwear/05-construction-close-up.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-back',
@@ -306,6 +313,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Back',
     description: 'A complete product-only rear view showing the outerwear’s back silhouette and construction.',
     exampleImage: '/output-examples/outerwear/06-back-product.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-front-model',
@@ -313,6 +321,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Front with Model (No Face)',
     description: 'A front view of the outerwear being worn, framed closely around the garment from the base of the neck with no face visible.',
     exampleImage: '/output-examples/outerwear/07-front-model-no-face.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-back-model',
@@ -320,6 +329,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Back with Model (No Face)',
     description: 'A rear view of the outerwear being worn, framed closely around the garment to show its fit and drape with no face visible.',
     exampleImage: '/output-examples/outerwear/08-back-model-no-face.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-side-angle-model',
@@ -327,6 +337,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Side / Angled with Model (No Face)',
     description: 'A side or three-quarter view of the outerwear being worn, showing its depth, silhouette and fit with no face visible.',
     exampleImage: '/output-examples/outerwear/09-side-angle-model-no-face.png',
+    showProductThumbnail: true,
   },
   {
     id: 'ecommerce-outerwear-fabric',
@@ -334,6 +345,7 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Fabric Shot',
     description: 'A macro view of the outerwear’s material texture and surface finish, keeping hardware and construction details out of focus.',
     exampleImage: '/output-examples/outerwear/10-fabric-leather-texture.png',
+    showProductThumbnail: true,
   },
 ];
 
@@ -415,7 +427,7 @@ export const SOCKS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     id: 'ecommerce-socks-three-quarter-on-feet',
     category: 'Ecommerce',
     name: 'Three-Quarter on Feet',
-    description: 'The socks worn by an adult in a natural three-quarter stance, showing both feet and visible lower legs above the cuffs, with no footwear and the frame cropped below the knees.',
+    description: 'Both socks worn side-by-side with both feet flat on the ground, toes aligned, and visible lower legs above the cuffs; no footwear.',
     exampleImage: '/output-examples/socks/01-three-quarter-on-feet.png',
   },
   {
@@ -469,6 +481,217 @@ export const SOCKS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
   },
 ];
 
+export const BOTTOMS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  {
+    id: 'ecommerce-bottoms-front-view',
+    category: 'Ecommerce',
+    name: 'Front View',
+    description: 'A complete product-only front view showing the bottoms from waistband to hem.',
+    exampleImage: '/output-examples/bottoms/01-front-view.png',
+  },
+  {
+    id: 'ecommerce-bottoms-back-view',
+    category: 'Ecommerce',
+    name: 'Back View',
+    description: 'A complete product-only rear view showing the back rise, seat, pockets, seams and hem.',
+    exampleImage: '/output-examples/bottoms/02-back-view.png',
+  },
+  {
+    id: 'ecommerce-bottoms-side-angle-product',
+    category: 'Ecommerce',
+    name: 'Side / Three-Quarter Product',
+    description: 'A waist-down three-quarter view worn by a male model, showing the front-side fit, rise and full leg silhouette.',
+    exampleImage: '/output-examples/bottoms/03-side-angle-product.png',
+  },
+  {
+    id: 'ecommerce-bottoms-folded-product-flat-lay',
+    category: 'Ecommerce',
+    name: 'Folded Product Flat Lay',
+    description: 'The bottoms neatly folded on a clean surface, keeping the waistband, pockets, fabric and construction readable.',
+    exampleImage: '/output-examples/bottoms/04-folded-product-flat-lay.png',
+  },
+  {
+    id: 'ecommerce-bottoms-front-model',
+    category: 'Ecommerce',
+    name: 'Front Model',
+    description: 'A waist-down front view of the bottoms worn by a male model, showing fit, leg shape and full length without a face.',
+    exampleImage: '/output-examples/bottoms/05-front-model.png',
+  },
+  {
+    id: 'ecommerce-bottoms-back-model',
+    category: 'Ecommerce',
+    name: 'Back Model',
+    description: 'A waist-down rear view of the bottoms worn by a male model, showing the seat, back pockets, drape and full length.',
+    exampleImage: '/output-examples/bottoms/06-back-model.png',
+  },
+  {
+    id: 'ecommerce-bottoms-waistband-closure-detail',
+    category: 'Ecommerce',
+    name: 'Waistband & Closure Detail',
+    description: 'A close male model-worn crop showing the waistband, rise, button, fly, belt loops and upper pocket construction.',
+    exampleImage: '/output-examples/bottoms/07-waistband-closure-detail.png',
+  },
+  {
+    id: 'ecommerce-bottoms-pocket-panel-detail',
+    category: 'Ecommerce',
+    name: 'Pocket Panel Detail',
+    description: 'A tight diagonal flat-lay macro showing the pocket panel, center closure, seams, rivets and stitching.',
+    exampleImage: '/output-examples/bottoms/08-pocket-panel-detail.png',
+  },
+  {
+    id: 'ecommerce-bottoms-hem-leg-detail',
+    category: 'Ecommerce',
+    name: 'Hem & Leg Detail',
+    description: 'A diagonal flat-lay macro focused on the straight-leg seam, hem finish, leg opening and stitching.',
+    exampleImage: '/output-examples/bottoms/09-hem-leg-detail.png',
+  },
+];
+
+
+export const UNDERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  {
+    id: 'ecommerce-underwear-front-model',
+    category: 'Ecommerce',
+    name: 'Front with Model (No Face)',
+    description: 'A waist-down front view worn by an adult model, showing the underwear’s fit, rise and leg length without a face.',
+    exampleImage: '/output-examples/underwear/01-front-model.png',
+    showProductThumbnail: true,
+  },
+  {
+    id: 'ecommerce-underwear-front-flat-lay',
+    category: 'Ecommerce',
+    name: 'Front Flat Lay',
+    description: 'A complete product-only front view of the underwear laid flat against a clean neutral surface.',
+    exampleImage: '/output-examples/underwear/02-front-flat-lay.png',
+    showProductThumbnail: true,
+  },
+  {
+    id: 'ecommerce-underwear-back-flat-lay',
+    category: 'Ecommerce',
+    name: 'Back Flat Lay',
+    description: 'A complete product-only rear view showing the underwear’s back coverage, seams and leg openings.',
+    exampleImage: '/output-examples/underwear/03-back-flat-lay.png',
+    showProductThumbnail: true,
+  },
+  {
+    id: 'ecommerce-underwear-rear-three-quarter',
+    category: 'Ecommerce',
+    name: 'Rear Three-Quarter',
+    description: 'An angled product-only rear view showing the underwear’s side profile, back coverage and silhouette.',
+    exampleImage: '/output-examples/underwear/04-rear-three-quarter.png',
+    showProductThumbnail: true,
+  },
+  {
+    id: 'ecommerce-underwear-front-product',
+    category: 'Ecommerce',
+    name: 'Front Product',
+    description: 'A clean product-only front presentation showing the complete underwear silhouette and front construction.',
+    exampleImage: '/output-examples/underwear/05-front-product.png',
+    showProductThumbnail: true,
+  },
+  {
+    id: 'ecommerce-underwear-side-profile',
+    category: 'Ecommerce',
+    name: 'Side Profile',
+    description: 'A product-only side profile showing the underwear’s depth, rise, coverage and leg silhouette.',
+    exampleImage: '/output-examples/underwear/06-side-profile.png',
+    showProductThumbnail: true,
+  },
+  {
+    id: 'ecommerce-underwear-waistband-detail',
+    category: 'Ecommerce',
+    name: 'Waistband & Fabric Detail',
+    description: 'A close-up of the waistband, elastic construction, stitching and fabric texture.',
+    exampleImage: '/output-examples/underwear/07-waistband-detail.png',
+    showProductThumbnail: true,
+  },
+];
+
+const bottomsOutputRecipes: readonly OutputRecipe[] = [
+  ...BOTTOMS_ECOMMERCE_RECIPES,
+  ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
+];
+const underwearOutputRecipes: readonly OutputRecipe[] = [
+  ...UNDERWEAR_ECOMMERCE_RECIPES,
+  ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
+];
+
+const TOPS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  {
+    id: 'ecommerce-tops-folded-view',
+    category: 'Ecommerce',
+    name: 'Folded View',
+    description: 'The top neatly folded on a clean studio surface, showing its colour, texture, thickness and distinctive visible details.',
+    exampleImage: OUTPUT_RECIPES[7].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-front-view',
+    category: 'Ecommerce',
+    name: 'Front View',
+    description: 'A straight-on view showing the complete front of the top.',
+    exampleImage: OUTPUT_RECIPES[2].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-over-the-shoulder',
+    category: 'Ecommerce',
+    name: 'Over-the-Shoulder (No Face)',
+    description: 'A close rear three-quarter view showing the shoulder, neckline, material and upper-back construction without a visible face.',
+    exampleImage: OUTPUT_RECIPES[5].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-full-body-model',
+    category: 'Ecommerce',
+    name: 'Full Body with Model (No Face)',
+    description: 'The top worn as part of a complete outfit, framed from the base of the neck to the feet to communicate fit and proportion.',
+    exampleImage: OUTPUT_RECIPES[0].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-close-up',
+    category: 'Ecommerce',
+    name: 'Close-Up',
+    description: 'A detailed crop of a distinctive neckline, seam, fastening, pocket, cuff or other visible construction feature.',
+    exampleImage: OUTPUT_RECIPES[9].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-back',
+    category: 'Ecommerce',
+    name: 'Back',
+    description: 'A complete product-only rear view showing the back silhouette, length, seams and construction.',
+    exampleImage: OUTPUT_RECIPES[3].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-front-model',
+    category: 'Ecommerce',
+    name: 'Front with Model (No Face)',
+    description: 'A closer front view of the top being worn, framed around the garment without showing the model’s face.',
+    exampleImage: OUTPUT_RECIPES[2].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-back-model',
+    category: 'Ecommerce',
+    name: 'Back with Model (No Face)',
+    description: 'A closer rear view of the top being worn, showing how the back, shoulders, sleeves and hem fit and drape.',
+    exampleImage: OUTPUT_RECIPES[3].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-side-angle-model',
+    category: 'Ecommerce',
+    name: 'Side / Angled with Model (No Face)',
+    description: 'A side or three-quarter view of the top being worn, showing depth, silhouette, structure and fit.',
+    exampleImage: OUTPUT_RECIPES[5].exampleImage,
+  },
+  {
+    id: 'ecommerce-tops-fabric',
+    category: 'Ecommerce',
+    name: 'Fabric Shot',
+    description: 'A macro view of the top’s material, highlighting texture, weave, surface finish and colour.',
+    exampleImage: OUTPUT_RECIPES[8].exampleImage,
+  },
+];
+const topsOutputRecipes: readonly OutputRecipe[] = [
+  ...TOPS_ECOMMERCE_RECIPES,
+  ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
+];
 const outerwearOutputRecipes: readonly OutputRecipe[] = [
   ...OUTERWEAR_ECOMMERCE_RECIPES,
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
@@ -486,8 +709,11 @@ const socksOutputRecipes: readonly OutputRecipe[] = [
 
 export function getOutputRecipes(productCategory?: string | null): readonly OutputRecipe[] {
   const category = productCategory?.trim().toLowerCase();
+  if (category === 'tops') return topsOutputRecipes;
+  if (category === 'bottoms') return bottomsOutputRecipes;
   if (category === 'outerwear') return outerwearOutputRecipes;
   if (category === 'footwear') return footwearOutputRecipes;
   if (category === 'socks') return socksOutputRecipes;
+  if (category === 'underwear') return underwearOutputRecipes;
   return OUTPUT_RECIPES;
 }

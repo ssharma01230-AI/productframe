@@ -3,8 +3,9 @@ import shutil
 import tempfile
 import uuid
 import zipfile
+from datetime import datetime, timezone
 from pathlib import PurePosixPath
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import boto3
 import httpx
@@ -22,10 +23,13 @@ from sqlalchemy.orm import Session, selectinload
 from .auth import current_user
 from .config import Settings, get_settings
 from .db import get_db
-from .generation_persistence import create_single_generation_run
-from .models import AnalysisJob, AnalysisJobImage, GenerationJob, MembershipRole, Product, ProductAnalysisRecord, SourceAsset, User, Workspace, WorkspaceMembership
+from .generation_persistence import create_generation_run as create_generation_run_persistence
+from .generation_templates import get_generation_template, list_generation_templates
+from .output_readiness import evaluate_template
+from .models import AnalysisJob, AnalysisJobImage, GeneratedAssetStatus, GenerationJob, GenerationRun, GenerationRunStatus, MembershipRole, Product, ProductAnalysisRecord, SourceAsset, User, Workspace, WorkspaceMembership
 
 app = FastAPI(title="ProductFrame API", version="0.1.0")
+ANALYSIS_QUEUE = "productframe:analysis"
 
 settings = get_settings()
 app.add_middleware(
@@ -36,6 +40,158 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],
 )
+
+
+_GENERATION_PROGRESS_STAGES: dict[str, tuple[int, str, str]] = {
+    "pending": (8, "in_progress", "Preparing your image"),
+    "generating": (58, "in_progress", "Creating the product image"),
+    "awaiting_review": (100, "ready", "Image ready for your review"),
+    "validating": (96, "in_progress", "Finalising your approved image"),
+    "completed": (100, "ready", "Image ready for your review"),
+    "failed": (100, "failed", "Generation stopped"),
+    "cancelled": (100, "cancelled", "Generation cancelled"),
+}
+
+
+def _generation_progress(jobs: list[GenerationJob]) -> dict[str, Any]:
+    """Return a run-level progress snapshot that also works for fan-out runs."""
+    if not jobs:
+        return {
+            "stage": "in_progress",
+            "message": "Preparing your image",
+            "completed": 0,
+            "total": 0,
+            "percent": 0,
+            "completed_jobs": 0,
+            "failed_jobs": 0,
+            "active_jobs": 0,
+        }
+
+    statuses = [job.status or "pending" for job in jobs]
+    stage_order = ("generating", "validating", "pending", "awaiting_review", "failed", "cancelled", "completed")
+    representative = next((status for status in stage_order if status in statuses), "pending")
+    percent = round(sum(_GENERATION_PROGRESS_STAGES.get(status, _GENERATION_PROGRESS_STAGES["pending"])[0] for status in statuses) / len(statuses))
+    completed_jobs = statuses.count("completed")
+    failed_jobs = statuses.count("failed")
+    active_jobs = len(statuses) - completed_jobs - failed_jobs - statuses.count("cancelled")
+    message = _GENERATION_PROGRESS_STAGES[representative][2]
+    if representative == "pending" and any(job.attempt_count > 1 for job in jobs if (job.status or "pending") == "pending"):
+        message = "Retrying the generation"
+    return {
+        "stage": _GENERATION_PROGRESS_STAGES[representative][1],
+        "message": message,
+        "completed": completed_jobs,
+        "total": len(jobs),
+        "percent": percent,
+        "completed_jobs": completed_jobs,
+        "failed_jobs": failed_jobs,
+        "active_jobs": active_jobs,
+    }
+
+
+def _signed_generation_url(client: Any, object_key: str | None) -> str | None:
+    if not object_key:
+        return None
+    return client.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": settings.minio_bucket, "Key": object_key},
+        ExpiresIn=900,
+    )
+
+
+def _generation_decision(job: GenerationJob) -> str | None:
+    if job.review_decision in {"approved", "rejected"}:
+        return job.review_decision
+    asset = job.generated_asset
+    if asset is not None and asset.status in {GeneratedAssetStatus.APPROVED.value, GeneratedAssetStatus.REJECTED.value}:
+        return asset.status
+    # The previous interrupt-based graph represented rejection by cancelling
+    # the job after a preview had been produced, without creating an asset.
+    if job.status == "cancelled" and job.preview_object_key:
+        return "rejected"
+    return None
+
+
+def _generation_run_payload(db: Session, run: GenerationRun) -> dict[str, Any]:
+    jobs = sorted(run.jobs, key=lambda item: (item.job_index, item.created_at, item.id))
+    product_ids = {job.product_id for job in jobs}
+    products = db.scalars(
+        select(Product)
+        .where(Product.id.in_(product_ids), Product.workspace_id == run.workspace_id)
+        .options(selectinload(Product.source_assets))
+    ).all() if product_ids else []
+    products_by_id = {product.id: product for product in products}
+    client = boto3.client(
+        "s3",
+        endpoint_url=settings.minio_endpoint,
+        aws_access_key_id=settings.minio_access_key,
+        aws_secret_access_key=settings.minio_secret_key,
+        region_name="us-east-1",
+    )
+    payload_jobs: list[dict[str, Any]] = []
+    ready = approved = rejected = failed = 0
+    for job in jobs:
+        product = products_by_id.get(job.product_id)
+        asset = job.generated_asset
+        decision = _generation_decision(job)
+        output_key = asset.object_key if asset is not None else job.preview_object_key
+        is_ready = bool(output_key) and job.status != "failed"
+        if is_ready:
+            ready += 1
+        if decision == "approved":
+            approved += 1
+        elif decision == "rejected":
+            rejected += 1
+        if job.status == "failed":
+            failed += 1
+        template = get_generation_template(job.template_id)
+        source = None
+        if product is not None and product.source_assets:
+            source = max(product.source_assets, key=lambda item: (item.created_at, item.id))
+        payload_jobs.append({
+            "id": job.id,
+            "run_id": job.generation_run_id,
+            "status": job.status,
+            "template_id": job.template_id,
+            "template_name": template.name if template is not None else job.template_id,
+            "template_channel": template.channel if template is not None else "ecommerce",
+            "attempt_count": job.attempt_count,
+            "preview_url": _signed_generation_url(client, output_key),
+            "error_message": job.error_message,
+            "review_decision": decision,
+            "product": {
+                "id": product.id if product is not None else job.product_id,
+                "name": product.name if product is not None else "Product",
+                "category": product.category if product is not None else None,
+                "image_url": _signed_generation_url(client, source.object_key) if source is not None else None,
+            },
+            "asset": ({
+                "id": asset.id,
+                "filename": asset.filename,
+                "content_type": asset.content_type,
+                "status": asset.status,
+                "image_url": _signed_generation_url(client, asset.object_key),
+            } if asset is not None else None),
+        })
+    reviewed = approved + rejected
+    in_progress = max(0, len(jobs) - ready - failed)
+    return {
+        "id": run.id,
+        "status": run.status,
+        "total_jobs": len(jobs),
+        "created_at": run.created_at.isoformat(),
+        "progress": _generation_progress(jobs),
+        "counts": {
+            "products": len(product_ids),
+            "in_progress": in_progress,
+            "ready": ready,
+            "reviewed": reviewed,
+            "approved": approved,
+            "rejected": rejected,
+            "failed": failed,
+        },
+        "jobs": payload_jobs,
+    }
 
 
 @app.middleware("http")
@@ -94,20 +250,53 @@ class AnalysisJobCreate(BaseModel):
     source_asset_ids: list[str] = Field(min_length=1, max_length=50)
 
 
-class GenerationRunCreate(BaseModel):
+class GenerationSelection(BaseModel):
     product_id: str = Field(min_length=1, max_length=36)
     template_id: str = Field(min_length=1, max_length=160)
     channel: str = Field(default="ecommerce", min_length=1, max_length=30)
+
+
+class GenerationRunCreate(BaseModel):
+    # Legacy fields remain accepted while the frontend migrates to selections.
+    product_id: str | None = Field(default=None, min_length=1, max_length=36)
+    template_id: str | None = Field(default=None, min_length=1, max_length=160)
+    channel: str = Field(default="ecommerce", min_length=1, max_length=30)
+    selections: list[GenerationSelection] | None = Field(default=None, min_length=1, max_length=100)
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=255)
+
+    @field_validator("selections")
+    @classmethod
+    def unique_selections(cls, selections: list[GenerationSelection] | None) -> list[GenerationSelection] | None:
+        if selections is not None and not selections:
+            raise ValueError("At least one generation selection is required")
+        return selections
+
+    def normalized_selections(self) -> list[dict[str, str]]:
+        if self.selections is not None:
+            return [selection.model_dump() for selection in self.selections]
+        if self.product_id is None or self.template_id is None:
+            raise ValueError("Either selections or the legacy product_id and template_id fields are required")
+        return [{"product_id": self.product_id, "template_id": self.template_id, "channel": self.channel}]
 
 
 class GenerationReview(BaseModel):
     approved: bool
 
 
+class GenerationDecision(BaseModel):
+    decision: Literal["approved", "rejected"]
+
+
 class ProductReviewDraft(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
+    gender: Literal["male", "female", "unisex"] = "unisex"
     product_name: str = Field(min_length=1, max_length=160)
+
+    @field_validator("product_name")
+    @classmethod
+    def product_name_max_five_words(cls, value: str) -> str:
+        return " ".join(value.split()[:5])
     product_type: str = Field(min_length=1, max_length=160)
     colours: str = Field(min_length=1, max_length=300)
     materials: str = Field(min_length=1, max_length=300)
@@ -117,6 +306,17 @@ class ProductReviewDraft(BaseModel):
 
 class ProductDecision(ProductReviewDraft):
     status: str = Field(pattern=r"^(suggested|approved|rejected|cancelled)$")
+
+
+def assumed_gender(global_details: Any) -> str:
+    gender = global_details.get("gender") if isinstance(global_details, dict) else None
+    value = gender.get("user_confirmed") or gender.get("assumed") if isinstance(gender, dict) else gender
+    text = str(value or "").lower()
+    if any(word in text for word in ("female", "woman", "women", "womens", "girl")):
+        return "female"
+    if any(word in text for word in ("male", "man", "men", "mens", "boy")):
+        return "male"
+    return "unisex"
 
 
 class ProductApprovalDraft(ProductReviewDraft):
@@ -142,22 +342,123 @@ def create_generation_run(
 ) -> dict[str, Any]:
     workspace = _workspace_for_user(db, user["sub"])
     try:
-        run, job = create_single_generation_run(
+        run, jobs = create_generation_run_persistence(
             db,
             workspace_id=workspace.id,
-            product_id=payload.product_id,
-            template_id=payload.template_id,
-            channel=payload.channel,
+            selections=payload.normalized_selections(),
+            idempotency_key=payload.idempotency_key,
+            enforce_evidence=True,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     try:
         redis = SyncRedis.from_url(settings.redis_url, decode_responses=True)
-        redis.xadd("productframe:generation", {"type": "generate", "job_id": job.id}, maxlen=10000, approximate=True)
+        for job in jobs:
+            redis.xadd("productframe:generation", {"type": "generate", "job_id": job.id}, maxlen=10000, approximate=True)
         redis.close()
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Generation could not be queued") from exc
-    return {"run_id": run.id, "job_id": job.id, "status": run.status, "total_jobs": run.total_jobs, "graph_thread_id": job.graph_thread_id}
+    return {
+        "run_id": run.id,
+        "job_id": jobs[0].id if len(jobs) == 1 else None,
+        "status": run.status,
+        "total_jobs": run.total_jobs,
+        "graph_thread_id": jobs[0].graph_thread_id if len(jobs) == 1 else None,
+        "progress": _generation_progress(jobs),
+        "jobs": [{"id": job.id, "graph_thread_id": job.graph_thread_id} for job in jobs],
+    }
+
+
+@app.get("/generation-runs/{run_id}")
+def get_generation_run(
+    run_id: str,
+    user: dict[str, Any] = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    workspace = _workspace_for_user(db, user["sub"])
+    run = db.scalar(
+        select(GenerationRun)
+        .where(GenerationRun.id == run_id, GenerationRun.workspace_id == workspace.id)
+        .options(selectinload(GenerationRun.jobs).selectinload(GenerationJob.generated_asset))
+    )
+    if run is None:
+        raise HTTPException(status_code=404, detail="Generation run not found")
+    return _generation_run_payload(db, run)
+
+
+def _record_generation_decision(
+    *,
+    job_id: str,
+    decision: Literal["approved", "rejected"],
+    clerk_user_id: str,
+    db: Session,
+) -> tuple[GenerationJob, bool]:
+    workspace = _workspace_for_user(db, clerk_user_id)
+    local_user = db.scalar(select(User).where(User.clerk_user_id == clerk_user_id))
+    job = db.scalar(
+        select(GenerationJob)
+        .where(GenerationJob.id == job_id, GenerationJob.workspace_id == workspace.id)
+        .with_for_update()
+    )
+    if job is None:
+        raise HTTPException(status_code=404, detail="Generation job not found")
+    asset = job.generated_asset
+    existing = _generation_decision(job)
+    if existing is not None and existing != decision:
+        raise HTTPException(status_code=409, detail=f"Generation job was already {existing}")
+    if existing == decision:
+        if job.review_decision != decision:
+            job.review_decision = decision
+            job.reviewed_at = job.reviewed_at or datetime.now(timezone.utc)
+            job.reviewed_by_user_id = job.reviewed_by_user_id or (local_user.id if local_user is not None else None)
+            db.commit()
+            db.refresh(job)
+        return job, False
+    legacy_review = asset is None and job.status in {"awaiting_review", "validating"}
+    if asset is None and not legacy_review:
+        raise HTTPException(status_code=409, detail="Generated image is not ready for review")
+    if asset is not None and job.status == "failed":
+        raise HTTPException(status_code=409, detail="Failed generation cannot be reviewed")
+    if asset is not None and asset.status in {"approved", "rejected"} and asset.status != decision:
+        raise HTTPException(status_code=409, detail=f"Generated image was already {asset.status}")
+
+    job.review_decision = decision
+    job.reviewed_at = job.reviewed_at or datetime.now(timezone.utc)
+    job.reviewed_by_user_id = job.reviewed_by_user_id or (local_user.id if local_user is not None else None)
+    if asset is not None:
+        asset.status = decision
+    db.commit()
+    db.refresh(job)
+    return job, legacy_review and job.status in {"awaiting_review", "validating"}
+
+
+def _queue_legacy_generation_review(job: GenerationJob, approved: bool) -> None:
+    redis = SyncRedis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        redis.xadd("productframe:generation", {"type": "review", "job_id": job.id, "approved": "1" if approved else "0"}, maxlen=10000, approximate=True)
+    finally:
+        redis.close()
+
+
+@app.put("/generation-jobs/{job_id}/decision")
+def decide_generation_job(
+    job_id: str,
+    payload: GenerationDecision,
+    user: dict[str, Any] = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    job, queue_legacy = _record_generation_decision(
+        job_id=job_id,
+        decision=payload.decision,
+        clerk_user_id=user["sub"],
+        db=db,
+    )
+    if queue_legacy:
+        try:
+            _queue_legacy_generation_review(job, payload.decision == "approved")
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="Decision was saved, but legacy finalisation could not be queued. Retry this action.") from exc
+    return {"job_id": job.id, "status": job.status, "decision": job.review_decision}
 
 
 @app.post("/generation-jobs/{job_id}/review")
@@ -167,16 +468,103 @@ def review_generation_job(
     user: dict[str, Any] = Depends(current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
+    """Backward-compatible review route for an in-flight old frontend."""
+    decision: Literal["approved", "rejected"] = "approved" if payload.approved else "rejected"
+    job, queue_legacy = _record_generation_decision(
+        job_id=job_id,
+        decision=decision,
+        clerk_user_id=user["sub"],
+        db=db,
+    )
+    if queue_legacy:
+        try:
+            _queue_legacy_generation_review(job, payload.approved)
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="Decision was saved, but legacy finalisation could not be queued. Retry this action.") from exc
+    return {"job_id": job.id, "status": job.status, "approved": payload.approved, "decision": job.review_decision}
+
+
+@app.delete("/generation-jobs/{job_id}")
+def delete_generation_job(
+    job_id: str,
+    user: dict[str, Any] = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """Delete one generated output without deleting its product or siblings."""
     workspace = _workspace_for_user(db, user["sub"])
-    job = db.scalar(select(GenerationJob).where(GenerationJob.id == job_id, GenerationJob.workspace_id == workspace.id).with_for_update())
+    job = db.scalar(
+        select(GenerationJob)
+        .where(GenerationJob.id == job_id, GenerationJob.workspace_id == workspace.id)
+        .with_for_update()
+    )
+    if job is None:
+        asset = db.scalar(
+            select(GeneratedAsset)
+            .where(GeneratedAsset.id == job_id, GeneratedAsset.workspace_id == workspace.id)
+            .with_for_update()
+        )
+        job = asset.job if asset is not None else None
     if job is None:
         raise HTTPException(status_code=404, detail="Generation job not found")
-    if job.status != "awaiting_review":
-        raise HTTPException(status_code=409, detail="Generation job is not awaiting review")
-    redis = SyncRedis.from_url(settings.redis_url, decode_responses=True)
-    redis.xadd("productframe:generation", {"type": "review", "job_id": job.id, "approved": "1" if payload.approved else "0"}, maxlen=10000, approximate=True)
-    redis.close()
-    return {"job_id": job.id, "status": job.status, "approved": payload.approved}
+    if job.status == GenerationJobStatus.GENERATING.value:
+        raise HTTPException(status_code=409, detail="This image is still generating. Try again when it is ready.")
+    asset_key = job.generated_asset.object_key if job.generated_asset else None
+    run = job.run
+    if asset_key:
+        s3 = boto3.client("s3", endpoint_url=settings.minio_endpoint, aws_access_key_id=settings.minio_access_key, aws_secret_access_key=settings.minio_secret_key, region_name="us-east-1")
+        try:
+            s3.delete_object(Bucket=settings.minio_bucket, Key=asset_key)
+        except Exception:
+            pass
+    db.delete(job)
+    db.flush()
+    run.total_jobs = max(0, run.total_jobs - 1)
+    recalculate_generation_run(db, run.id)
+    db.commit()
+    return {"job_id": job_id, "run_id": run.id, "status": "deleted"}
+
+
+@app.post("/generation-jobs/{job_id}/retry")
+def retry_generation_job(
+    job_id: str,
+    user: dict[str, Any] = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    workspace = _workspace_for_user(db, user["sub"])
+    job = db.scalar(
+        select(GenerationJob)
+        .where(GenerationJob.id == job_id, GenerationJob.workspace_id == workspace.id)
+        .with_for_update()
+    )
+    if job is None:
+        raise HTTPException(status_code=404, detail="Generation job not found")
+    if job.status != "failed" or job.generated_asset is not None:
+        raise HTTPException(status_code=409, detail="Only a failed generation without an image can be retried")
+    job.status = "pending"
+    job.attempt_count = 0
+    job.error_message = None
+    job.next_attempt_at = None
+    job.started_at = None
+    job.completed_at = None
+    job.provider_request_id = None
+    job.graph_thread_id = f"generation-job-{job.id}-retry-{uuid.uuid4()}"
+    job.run.failed_jobs = max(0, job.run.failed_jobs - 1)
+    job.run.status = GenerationRunStatus.PENDING.value
+    job.run.completed_at = None
+    db.commit()
+    try:
+        redis = SyncRedis.from_url(settings.redis_url, decode_responses=True)
+        redis.xadd("productframe:generation", {"type": "generate", "job_id": job.id}, maxlen=10000, approximate=True)
+        redis.close()
+    except Exception as exc:
+        job.status = "failed"
+        job.error_message = "Retry could not be queued"
+        job.run.failed_jobs += 1
+        job.run.status = GenerationRunStatus.FAILED.value
+        job.run.completed_at = datetime.now(timezone.utc)
+        db.commit()
+        raise HTTPException(status_code=503, detail="Generation retry could not be queued") from exc
+    return {"job_id": job.id, "status": job.status}
 
 
 @app.get("/generation-jobs/{job_id}")
@@ -185,12 +573,16 @@ def get_generation_job(job_id: str, user: dict[str, Any] = Depends(current_user)
     job = db.scalar(select(GenerationJob).where(GenerationJob.id == job_id, GenerationJob.workspace_id == workspace.id))
     if job is None:
         raise HTTPException(status_code=404, detail="Generation job not found")
+    run_jobs = db.scalars(select(GenerationJob).where(
+        GenerationJob.generation_run_id == job.generation_run_id,
+        GenerationJob.workspace_id == workspace.id,
+    )).all()
     preview_url = None
     if job.preview_object_key:
         client = boto3.client("s3", endpoint_url=settings.minio_endpoint, aws_access_key_id=settings.minio_access_key, aws_secret_access_key=settings.minio_secret_key, region_name="us-east-1")
         preview_url = client.generate_presigned_url("get_object", Params={"Bucket": settings.minio_bucket, "Key": job.preview_object_key}, ExpiresIn=900)
     asset = job.generated_asset
-    return {"id": job.id, "run_id": job.generation_run_id, "status": job.status, "template_id": job.template_id, "graph_thread_id": job.graph_thread_id, "attempt_count": job.attempt_count, "preview_object_key": job.preview_object_key, "preview_url": preview_url, "error_message": job.error_message, "asset": {"id": asset.id, "object_key": asset.object_key, "filename": asset.filename} if asset else None}
+    return {"id": job.id, "run_id": job.generation_run_id, "status": job.status, "template_id": job.template_id, "graph_thread_id": job.graph_thread_id, "attempt_count": job.attempt_count, "preview_object_key": job.preview_object_key, "preview_url": preview_url, "error_message": job.error_message, "review_decision": _generation_decision(job), "progress": _generation_progress(run_jobs), "asset": {"id": asset.id, "object_key": asset.object_key, "filename": asset.filename, "status": asset.status} if asset else None}
 
 
 @app.post("/analysis-jobs")
@@ -231,6 +623,9 @@ def _apply_product_decision(
     payload: ProductReviewDraft, status: str,
 ) -> None:
     record.product_name = payload.product_name
+    gender_details = record.global_details.get("gender", {}) if isinstance(record.global_details, dict) else {}
+    if not isinstance(gender_details, dict): gender_details = {}
+    record.global_details = {**(record.global_details or {}), "gender": {**gender_details, "user_confirmed": payload.gender}}
     record.product_type = payload.product_type
     record.colours = payload.colours
     record.materials = payload.materials
@@ -355,7 +750,7 @@ def get_analysis_results(
         "unique_product_count": job.unique_product_count,
         "progress": {"stage": job.progress_stage, "message": job.progress_message, "completed": job.progress_completed, "total": job.progress_total, "percent": job.progress_percent},
         "images": [{"id": image.id, "image_number": image.image_number, "filename": (db.get(SourceAsset, image.source_asset_id).filename if image.source_asset_id and db.get(SourceAsset, image.source_asset_id) else None), "image_url": (s3.generate_presigned_url("get_object", Params={"Bucket": settings.minio_bucket, "Key": db.get(SourceAsset, image.source_asset_id).object_key}, ExpiresIn=900) if image.source_asset_id and db.get(SourceAsset, image.source_asset_id) else None), "status": image.status, "passed": image.passed, "product_number": image.product_number, "rejection_reason": image.rejection_reason} for image in images],
-        "products": [{"id": analysis.id, "final_product_id": analysis.final_product_id, "product_number": analysis.product_number, "product_name": analysis.product_name, "category": analysis.category, "product_type": analysis.product_type, "colours": analysis.colours, "materials": analysis.materials, "features": analysis.features, "description": analysis.description, "confidence": analysis.confidence, "confirmation_status": analysis.confirmation_status} for analysis in analyses],
+        "products": [{"id": analysis.id, "final_product_id": analysis.final_product_id, "product_number": analysis.product_number, "product_name": analysis.product_name, "category": analysis.category, "product_type": analysis.product_type, "colours": analysis.colours, "materials": analysis.materials, "features": analysis.features, "description": analysis.description, "confidence": analysis.confidence, "confirmation_status": analysis.confirmation_status, "gender": assumed_gender(analysis.global_details)} for analysis in analyses],
     }
 
 
@@ -407,15 +802,17 @@ def list_products(
     workspace = _workspace_for_user(db, user["sub"])
     products = db.scalars(
         _library_products_query(workspace.id)
-        .options(selectinload(Product.source_assets))
+        .options(selectinload(Product.source_assets), selectinload(Product.generated_assets))
         .order_by(Product.created_at.desc(), Product.id)
     ).all()
     s3 = boto3.client("s3", endpoint_url=settings.minio_endpoint, aws_access_key_id=settings.minio_access_key, aws_secret_access_key=settings.minio_secret_key, region_name="us-east-1")
     result = []
     for product in products:
+        approved_assets = [asset for asset in product.generated_assets if asset.status == GeneratedAssetStatus.APPROVED.value]
         previews = [{
             "id": asset.id,
             "filename": asset.filename,
+            **({"media_evidence": asset.media_evidence} if asset.media_evidence else {}),
             "image_url": s3.generate_presigned_url("get_object", Params={"Bucket": settings.minio_bucket, "Key": asset.object_key}, ExpiresIn=900),
         } for asset in sorted(product.source_assets, key=lambda source: (source.created_at, source.id), reverse=True)[:4]]
         result.append({
@@ -425,9 +822,9 @@ def list_products(
             "created_at": product.created_at.isoformat(),
             "image_url": previews[0]["image_url"] if previews else None,
             "preview_images": previews,
+            "media_evidence": [asset.media_evidence for asset in sorted(product.source_assets, key=lambda source: (source.created_at, source.id), reverse=True) if asset.media_evidence],
             "upload_count": len(product.source_assets),
-            # Generated outputs will be counted when generation persistence is connected.
-            "generated_count": 0,
+            "generated_count": len(approved_assets),
         })
     return result
 
@@ -439,7 +836,7 @@ def get_product(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     workspace = _workspace_for_user(db, user["sub"])
-    product = db.scalar(_library_products_query(workspace.id).where(Product.id == product_id))
+    product = db.scalar(_library_products_query(workspace.id).where(Product.id == product_id).options(selectinload(Product.generated_assets)))
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     assets = db.scalars(
@@ -458,15 +855,46 @@ def get_product(
             "filename": asset.filename,
             "content_type": asset.content_type,
             "created_at": asset.created_at.isoformat(),
+            **({"media_evidence": asset.media_evidence} if asset.media_evidence else {}),
             "image_url": s3.generate_presigned_url(
                 "get_object",
                 Params={"Bucket": settings.minio_bucket, "Key": asset.object_key},
                 ExpiresIn=900,
             ),
         } for asset in assets],
-        # Reserved for generated outputs with review status; source uploads are never outputs.
-        "generated_assets": [],
+        "generated_assets": [{
+            "id": asset.id,
+            "name": asset.filename,
+            "filename": asset.filename,
+            "content_type": asset.content_type,
+            "created_at": asset.created_at.isoformat(),
+            "status": asset.status,
+            "image_url": s3.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": settings.minio_bucket, "Key": asset.object_key},
+                ExpiresIn=900,
+            ),
+        } for asset in sorted(
+            (item for item in product.generated_assets if item.status == GeneratedAssetStatus.APPROVED.value),
+            key=lambda item: (item.created_at, item.id),
+            reverse=True,
+        )],
     }
+
+
+@app.get("/products/{product_id}/output-readiness")
+def get_output_readiness(
+    product_id: str,
+    user: dict[str, Any] = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    workspace = _workspace_for_user(db, user["sub"])
+    product = db.scalar(_library_products_query(workspace.id).where(Product.id == product_id))
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    evidence = [asset.media_evidence for asset in product.source_assets]
+    templates = list_generation_templates(category=product.category, channel="ecommerce") if product.category else []
+    return {"product_id": product.id, "templates": [evaluate_template(template, evidence) for template in templates]}
 
 
 @app.get("/products/{product_id}/download")
@@ -532,6 +960,27 @@ def download_product_uploads(
     )
 
 
+@app.delete("/products/{product_id}/source-assets/{asset_id}")
+def delete_source_asset(
+    product_id: str,
+    asset_id: str,
+    user: dict[str, Any] = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    workspace = _workspace_for_user(db, user["sub"])
+    asset = db.scalar(select(SourceAsset).join(Product).where(SourceAsset.id == asset_id, SourceAsset.product_id == product_id, Product.workspace_id == workspace.id))
+    if asset is None:
+        raise HTTPException(status_code=404, detail="Source image not found")
+    s3 = boto3.client("s3", endpoint_url=settings.minio_endpoint, aws_access_key_id=settings.minio_access_key, aws_secret_access_key=settings.minio_secret_key, region_name="us-east-1")
+    try:
+        s3.delete_object(Bucket=settings.minio_bucket, Key=asset.object_key)
+    except Exception:
+        pass
+    db.delete(asset)
+    db.commit()
+    return {"asset_id": asset_id, "status": "deleted"}
+
+
 @app.delete("/products/{product_id}")
 def delete_product(product_id: str, user: dict[str, Any] = Depends(current_user), db: Session = Depends(get_db)) -> dict[str, str]:
     workspace = _workspace_for_user(db, user["sub"])
@@ -539,7 +988,7 @@ def delete_product(product_id: str, user: dict[str, Any] = Depends(current_user)
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     s3 = boto3.client("s3", endpoint_url=settings.minio_endpoint, aws_access_key_id=settings.minio_access_key, aws_secret_access_key=settings.minio_secret_key, region_name="us-east-1")
-    for asset in list(product.source_assets):
+    for asset in list(product.source_assets) + list(product.generated_assets):
         try:
             s3.delete_object(Bucket=settings.minio_bucket, Key=asset.object_key)
         except Exception:
@@ -547,6 +996,29 @@ def delete_product(product_id: str, user: dict[str, Any] = Depends(current_user)
     db.delete(product)
     db.commit()
     return {"id": product_id, "status": "deleted"}
+
+
+@app.post("/products/{product_id}/source-assets/{asset_id}/evidence")
+def queue_evidence_analysis(
+    product_id: str,
+    asset_id: str,
+    user: dict[str, Any] = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    workspace = _workspace_for_user(db, user["sub"])
+    asset = db.scalar(select(SourceAsset).join(Product).where(
+        SourceAsset.id == asset_id,
+        SourceAsset.product_id == product_id,
+        Product.workspace_id == workspace.id,
+    ))
+    if asset is None:
+        raise HTTPException(status_code=404, detail="Source image not found")
+    redis = SyncRedis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        redis.xadd(ANALYSIS_QUEUE, {"type": "evidence", "product_id": product_id, "asset_id": asset_id}, maxlen=10000, approximate=True)
+    finally:
+        redis.close()
+    return {"asset_id": asset_id, "status": "queued"}
 
 
 @app.post("/products/{product_id}/source-assets/upload-url")

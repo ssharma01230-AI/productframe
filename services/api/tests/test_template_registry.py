@@ -11,7 +11,8 @@ from productframe_api.generation_templates import (
 def test_tops_ecommerce_front_view_is_a_text_only_product_template():
     template = get_generation_template("ecommerce-tops-front-view")
 
-    assert template == TOPS_FRONT_VIEW
+    assert template.id == TOPS_FRONT_VIEW.id
+    assert template.required_evidence == ("front_view",)
     assert template.category == "tops"
     assert template.channel == "ecommerce"
     assert template.reference_mode == "product_only"
@@ -31,10 +32,21 @@ def test_front_view_supports_tops_subtypes():
     assert list_generation_templates(category="tops", channel="ecommerce", subtype="hoodie")
 
 
-def test_front_view_rejects_wrong_category_channel_or_subtype():
+def test_outerwear_front_medium_accepts_zip_up_hoodie_subtype():
+    template = validate_generation_template(
+        "ecommerce-outerwear-front-medium",
+        category="outerwear",
+        channel="ecommerce",
+        subtype="zip up hoodie sweatshirt with front pockets",
+    )
+    assert template.name == "Front Medium"
+
+
+def test_front_view_rejects_wrong_category_or_channel_but_allows_unknown_subtype():
     with pytest.raises(ValueError):
         validate_generation_template("ecommerce-tops-front-view", category="footwear", channel="ecommerce")
     with pytest.raises(ValueError):
         validate_generation_template("ecommerce-tops-front-view", category="tops", channel="lifestyle")
-    with pytest.raises(ValueError, match="subtype"):
-        validate_generation_template("ecommerce-tops-front-view", category="tops", channel="ecommerce", subtype="jeans")
+    assert validate_generation_template(
+        "ecommerce-tops-front-view", category="tops", channel="ecommerce", subtype="zip-up hoodie sweatshirt"
+    ).id == "ecommerce-tops-front-view"
