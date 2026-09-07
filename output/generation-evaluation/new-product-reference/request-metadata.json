@@ -1,0 +1,18 @@
+{
+  "source": "/Users/shivamsharma/Documents/new product reference.webp",
+  "product_id": "c40ccafb-e141-4c09-8ecf-b63b6104e023",
+  "generation_job_id": "6af28f40-2c20-4066-babb-a33f4ea7b9f7",
+  "template_id": "ecommerce-tops-front-view",
+  "template_version": 1,
+  "model": "gpt-image-2-2026-04-21",
+  "endpoint": "images.edit",
+  "size": "1024x1024",
+  "quality": "high",
+  "reference_count": 1,
+  "reference_object_key": "workspaces/679c90ff-68da-4886-b94b-9d5369269156/products/c40ccafb-e141-4c09-8ecf-b63b6104e023/sources/4426dd99-cf74-4f2b-ada2-b2f956385594-new product reference.webp",
+  "reference_preprocessing": "EXIF orientation applied; metadata removed; lossless alpha path or JPEG quality 95",
+  "outcome": "passed",
+  "fidelity_error": null,
+  "generated_object_key": "workspaces/679c90ff-68da-4886-b94b-9d5369269156/products/c40ccafb-e141-4c09-8ecf-b63b6104e023/generations/6af28f40-2c20-4066-babb-a33f4ea7b9f7/preview/ecommerce-tops-front-view.png",
+  "generated_file": "output/generation-evaluation/new-product-reference/generated.png"
+}

@@ -1,0 +1,126 @@
+{
+  "method": "Built-in image_gen tool, generated sequentially",
+  "category": "outerwear",
+  "source": "source-reference.png",
+  "notes": [
+    "Eleven separate ecommerce reference concepts based on the user-supplied black leather biker jacket.",
+    "Rear construction and areas absent from the source photograph are inferred, not verified product details.",
+    "Model images are cropped to exclude the face.",
+    "These are reference assets, not approved customer generations. The app uses outputs 01–10 with output 03 replaced by the separately documented 03-over-the-shoulder-no-face.png; output 11 is excluded."
+  ],
+  "outputs": [
+    {
+      "number": 1,
+      "title": "Front close",
+      "file": "01-front-close.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph, output 01 FRONT CLOSE of a ten-image outerwear set. Input image: exact product identity reference, a black leather biker jacket. Preserve its slightly glossy black leather, broad asymmetric snap lapels, silver diagonal main zipper and zip hardware, visible seam construction and silhouette. Do not redesign it, add embellishments or change the colour. Transform the casual hanger photo into polished honest studio product photography on a seamless light warm-grey/off-white background with soft diffused light and detailed natural leather texture. Remove the wire hanger and bedsheet completely; no human, mannequin or props visible. Portrait 4:5 composition. Jacket upright and front-facing, upper-front crop from collar through the upper/mid chest: lapels and upper diagonal zipper are the primary subject, upper shoulders visible, lower torso and hem deliberately outside the frame. This is an upper-product front close view, NOT a tiny macro detail and NOT the entire jacket. No added text, captions, graphic border, watermark or invented branding. Generate a single photograph, never a collage.",
+      "references": [
+        "source-reference.png"
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Front medium",
+      "file": "02-front-medium.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 02 FRONT MEDIUM. Product-only straight-on front view, jacket upright and empty with naturally shaped sleeves, no visible mannequin or person. Show the entire jacket including shoulder edges, both full sleeves, both cuffs and the full hem; tight but uncropped framing with about 6-8 percent clear space around it. Jacket fills about 85 percent of image height. Keep its asymmetric front zip arrangement faithful to the original source. Distinguish this from the previous upper-chest close crop and the next distant full-length view. Image 2 supplies only lighting/background continuity from output 01.",
+      "references": [
+        "source-reference.png",
+        "01-front-close.png"
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Front far / full length",
+      "file": "03-front-far-full-length.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 03 FRONT FAR / FULL LENGTH. Product-only studio photograph, no person or visible mannequin. Match the upright straight-on jacket pose from image 2, which is the preceding medium view. The whole jacket, both full sleeves and hem remain visible. Pull the camera back so the complete jacket occupies only approximately 60-65 percent of the portrait image height, centered with generous off-white negative space on every side. This must unmistakably be a farther camera framing than image 2, not another tightly framed jacket. Keep the jacket details identical to the source and the established studio lighting consistent. No hanger, props or additional objects.",
+      "references": [
+        "source-reference.png",
+        "02-front-medium.png"
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Full body with model, no face",
+      "file": "04-full-body-model-no-face.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 04 FULL BODY WITH MODEL, NO FACE. One adult fashion model naturally wearing this exact jacket, straight-on relaxed catalogue pose, arms comfortably down so the jacket pockets and silhouette remain visible. Simple plain white crew-neck top under the jacket, black straight-leg trousers and understated black ankle boots. The jacket is the hero and must not be redesigned to match the outfit. Image 2 is the established full jacket product-only reference. Show the model from the BASE OF THE NECK down to below both shoes: the entire outfit and feet fit in the frame, but the upper frame strictly excludes the chin, mouth, face and head. No face anywhere, no reflection, no human head. This is a full-body outfit/scale view, not a torso crop. Realistic adult proportions, neutral pose and soft studio grounding shadow. No extra accessories, bags, hats or jewellery.",
+      "references": [
+        "source-reference.png",
+        "02-front-medium.png"
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Close-up",
+      "file": "05-construction-close-up.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 05 CONSTRUCTION CLOSE-UP. No person. An extremely close product photograph of the jacket's lapel corner, one round silver snap, adjacent diagonal metal zipper teeth and the visible neat edge stitching. Crop to this small construction junction, filling nearly the entire image with leather and hardware. Do not show a whole collar, full torso or entire jacket. Silver metal and seam detail are the visual focus, with the real black leather grain as context; medium depth of field keeps the snap and zipper crisp. Follow the hardware in the original reference, do not add a fastener. Image 2 gives the established studio appearance and jacket arrangement. This must read as a genuine construction/detail shot and be clearly different from output 01 front-close and a pure leather texture macro.",
+      "references": [
+        "source-reference.png",
+        "01-front-close.png"
+      ]
+    },
+    {
+      "number": 6,
+      "title": "Back",
+      "file": "06-back-product.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 06 BACK, PRODUCT ONLY. Straight-on rear view of this same jacket, upright, no person and no visible mannequin or hanger. Include the complete back, both full sleeves and cuffs and the hem, at the same medium framing as image 2 with small clear margins. The original does not show the rear: make a conservative plausible inferred back consistent with the front's black leather, hip-length silhouette and waistband. Keep the back plain black leather with only restrained practical seam construction; no graphic, embroidery, text, patches, new zipper, hood, belt or decorations. Preserve sleeve length, shoulder proportions and leather finish. This is explicitly a rear-view reference concept, not a claim to document unseen exact construction.",
+      "references": [
+        "source-reference.png",
+        "02-front-medium.png"
+      ],
+      "note": "Back construction is inferred; no rear source photograph was supplied."
+    },
+    {
+      "number": 7,
+      "title": "Front with model, no face",
+      "file": "07-front-model-no-face.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 07 FRONT WITH MODEL, NO FACE. Image 2 is the established adult model and outfit: keep the same adult build, skin tone, white crew-neck top, black trousers, same jacket fit and styling. Photograph the model straight-on in a neutral relaxed catalogue stance with arms down and hands clear of the jacket's distinctive pocket details. Crop from the base of the neck to the upper thighs. The entire jacket including collar, cuffs and hem is visible and fills most of the frame. Absolutely no chin, mouth, face or head anywhere in the image; make the top edge pass through the neck above the collar. This is a close torso/front fit shot and is clearly tighter than the full-body source image 2. Realistic garment folds and proportions, same clean studio background and light. No extra accessories or objects.",
+      "references": [
+        "source-reference.png",
+        "04-full-body-model-no-face.png"
+      ]
+    },
+    {
+      "number": 8,
+      "title": "Back with model, no face",
+      "file": "08-back-model-no-face.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 08 BACK WITH MODEL, NO FACE. Image 2 is the established model, outfit and close torso framing; keep that adult build, skin tone and black trousers. Image 3 is the established inferred rear design: reproduce that same simple black back, yoke seam, centre seam and waistband without adding features. Show the model facing directly away from the camera, standing naturally with arms down, jacket worn with realistic folds. Frame from the base of the neck to the upper thighs with the full back, sleeves, cuffs and hem visible. Strictly exclude the entire head and all facial features at the upper image edge; no head turn or reflection. The jacket fills most of the portrait frame, matching output 07's product scale. No props or additional garments obscuring the jacket. Rear construction remains an inferred concept because no original rear photo exists.",
+      "references": [
+        "source-reference.png",
+        "07-front-model-no-face.png",
+        "06-back-product.png"
+      ],
+      "note": "Back construction is inferred and matched to output 06."
+    },
+    {
+      "number": 9,
+      "title": "Side / angled view with model, no face",
+      "file": "09-side-angle-model-no-face.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 09 SIDE / ANGLED VIEW WITH MODEL, NO FACE. Image 2 establishes the model, black trousers, white crew-neck top and jacket fit; preserve this adult build, skin tone and plain outfit. Image 3 shows the consistent rear construction if any back edge appears. Turn the model about 65 degrees away from straight-on to show a strong side/three-quarter front view, making the sleeve profile, jacket depth, hem and front lapel clear. Keep the camera level with no dramatic Dutch tilt. Relaxed catalogue pose, arms natural and hands out of pockets so the garment silhouette is not hidden. Frame from the base of the neck down to the upper thighs; show the complete jacket and cuffs. The entire chin, face and head MUST stay above and outside the top of the image, no reflection. Strongly distinct from the straight front shot while preserving soft studio lighting and realistic folds.",
+      "references": [
+        "source-reference.png",
+        "07-front-model-no-face.png",
+        "06-back-product.png"
+      ]
+    },
+    {
+      "number": 10,
+      "title": "Fabric shot",
+      "file": "10-fabric-leather-texture.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph for a cohesive ten-image outerwear set. Portrait 4:5 composition, seamless light warm-grey/off-white studio background, soft diffused light, realistic fine leather grain and controlled highlights. Image 1 is the product identity reference: use this black leather biker jacket, preserving its black colour, material, broad asymmetric snap lapels, silver diagonal main zipper, visible silver pocket zips and seam details. Do not redesign the garment or add branding, decoration, badges or hardware. Remove the source wire hanger and bedsheet. Other supplied images are generated consistency references; the original reference takes priority for product identity. No added text, caption, border, watermark or collage. Output 10 FABRIC / MATERIAL SHOT. A photorealistic macro photograph of the black leather surface of the reference jacket. The image is filled edge to edge by real-looking fine leather grain, supple shallow folds and a soft directional highlight, showing the material's black colour and subtly glossy finish. Image 2 gives the close-up material and lighting continuity; use a plain area of leather away from its hardware. Absolutely no zipper, metal snap, label, lapel outline, mannequin, model, white background or entire garment in this crop. Texture scale remains fine and natural, not giant reptile scales, woven fabric, embossed pattern, plastic or synthetic 3D rendering. This is a useful ecommerce material reference, distinctly different from the previous hardware/construction detail. Portrait 4:5 photograph, no text or graphics.",
+      "references": [
+        "source-reference.png",
+        "05-construction-close-up.png"
+      ]
+    },
+    {
+      "number": 11,
+      "title": "Sleeve-first product shot",
+      "file": "11-sleeve-first-product-shot.png",
+      "prompt": "Use case: product-mockup. Create ONE photorealistic ecommerce SLEEVE-FIRST PRODUCT SHOT of the same black leather biker jacket in the supplied images. Image 1 is the original product identity reference; image 2 is the established clean studio reference, supplying consistent jacket details, lighting and backdrop. Preserve the black slightly glossy leather, silver zips, cuff construction and stitching. Product ONLY: no person, hand, mannequin, hanger, props or additional objects. Arrange the complete jacket naturally on a seamless warm off-white studio surface with one sleeve extended diagonally toward the camera. Photograph from a low oblique overhead angle: the sleeve and cuff occupy the foreground and are the clear primary subject, with the sleeve leading back toward the shoulder and the recognisable jacket torso and lapels further behind. The empty sleeve must remain visibly attached to the jacket, not a separate cut-off sleeve. Show the cuff edge and silver cuff zip from image 2, with sharp leather texture and seam details. Let the jacket body recede gently in depth while remaining identifiable, not a full-front hero and not an extreme texture macro. Soft diffused studio lighting, restrained realistic highlights, natural grounded shadows. Portrait 4:5 framing, tasteful negative space, no added text, graphic borders, watermarks, invented branding or decoration. Single photograph, never a collage.",
+      "references": [
+        "source-reference.png",
+        "02-front-medium.png"
+      ]
+    }
+  ]
+}

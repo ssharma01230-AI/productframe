@@ -1,0 +1,13 @@
+{
+  "method": "Built-in image_gen tool",
+  "category": "outerwear",
+  "number": 3,
+  "title": "Over-the-Shoulder (No Face)",
+  "file": "03-over-the-shoulder-no-face.png",
+  "replaces": "03-front-far-full-length.png",
+  "prompt": "Use case: product-mockup. Generate ONE photorealistic premium ecommerce preview of 'Over-the-Shoulder / Upper Back', an alternative outerwear template. Both input images are reference photographs of the SAME black leather biker jacket and adult model. Preserve the jacket identity, fine leather grain, broad collar, shoulder epaulettes, upper-back horizontal yoke seam, rear central vertical seam, fit and proportions. Match the existing neutral warm light-grey studio background and soft directional lighting. NEW COMPOSITION: a tight and intimate rear three-quarter view photographed slightly above and behind the model's shoulder, looking diagonally across the near shoulder towards the collar and upper back. The near shoulder is prominent in the foreground with enough depth to show the rounded sleeve head and epaulette; upper-back stitching and collar are sharp and clearly readable. Frame from the base of the neck to around mid back or lower ribs; crop the head completely out so no face, eyes or chin are visible. The model is naturally wearing the jacket with a relaxed arm. Make it distinctly different from a straight back view and from a front side-profile view: emphasize shoulder structure, rear collar, leather texture and the drape across the upper back, rather than the whole garment. Realistic anatomy and photographic proportions, controlled soft highlights on the black leather, focus across the garment details, subtle falloff on the clean empty backdrop. Portrait 4:5 image. No text, labels, numbers, logos added, watermarks, collages, props, hanger or visible mannequin. A single finished photograph, no layout.",
+  "references": [
+    "08-back-model-no-face.png",
+    "09-side-angle-model-no-face.png"
+  ]
+}

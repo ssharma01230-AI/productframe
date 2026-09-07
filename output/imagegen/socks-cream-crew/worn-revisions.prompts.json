@@ -1,0 +1,59 @@
+{
+  "method": "Built-in image_gen tool, sequential edits using prior sock previews and the adult front-on-feet reference",
+  "category": "socks",
+  "removed_templates": [
+    "02-side-profile.png",
+    "05-cuff-detail.png"
+  ],
+  "notes": [
+    "Eight active Ecommerce templates. Original filename numbers are retained; UI numbers them consecutively.",
+    "Shaped socks now show actual adult lower legs above the cuffs. Flat Lay, Knit Texture, Front on Feet and Folded Product retain their existing images.",
+    "All original and superseded source images remain archived in this folder, outside public serving."
+  ],
+  "outputs": [
+    {
+      "title": "Three-Quarter on Feet",
+      "file": "01-three-quarter-on-feet.png",
+      "replaces": "01-pair-product-shot.png",
+      "prompt": "Use case: precise-object-edit / product-mockup. Create ONE photorealistic ecommerce photograph revising the supplied sock preview. Preserve the same unbranded warm ivory/cream crew socks, narrow regular rib knit, smooth same-colour heel and rounded toe, yarn texture, correct natural fabric thickness. Keep neutral warm light-grey seamless backdrop, soft studio lighting, portrait 4:5 format. Important user requirement: whenever a sock has a filled-out shape, it must visibly be worn on a real adult foot and lower leg. Show a substantial strip of natural calf skin ABOVE each sock cuff, with the leg continuing out of the top edge; absolutely no hollow openings, amputated/standalone socks, invisible fill, floating socks, shoes, captions, graphics or watermark. Adult only, crop below the knees and omit face/torso. Use the supporting front-on-feet image for matching warm medium skin tone, realistic anatomy, cuff height and fit. A single finished photograph. Revise original output01 into THREE-QUARTER ON FEET. Image1 is the original three-quarter sock pair composition. Image2 is the established adult model wearing these socks. Photograph both socked feet at a three-quarter angle, turned approximately35 degrees toward the left, showing rounded toes, ribbed insteps, outside foot shape and the heels. Both feet comfortably flat on the floor in a natural slightly staggered stance; no high tiptoe pose. Show both full socks and their cuffs, with a generous visible section of actual bare adult calf above each cuff continuing out the upper frame. Frame roughly just below knees to floor, all toes and heels included with margins. Match model, fit and realistic foot dimensions to image2; choose this same photographic angle as image1 while adding visible legs. Keep pair clearly distinct from a head-on front view.",
+      "references": [
+        "01-pair-product-shot.png",
+        "09-front-on-feet.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-10dc669a-3595-4073-91e4-2637af541e07.png"
+    },
+    {
+      "title": "Rear on Feet",
+      "file": "03-rear-on-feet.png",
+      "replaces": "03-rear-view.png",
+      "prompt": "Use case: precise-object-edit / product-mockup. Create ONE photorealistic ecommerce photograph revising the supplied sock preview. Preserve the same unbranded warm ivory/cream crew socks, narrow regular rib knit, smooth same-colour heel and rounded toe, yarn texture, correct natural fabric thickness. Keep neutral warm light-grey seamless backdrop, soft studio lighting, portrait 4:5 format. Important user requirement: whenever a sock has a filled-out shape, it must visibly be worn on a real adult foot and lower leg. Show a substantial strip of natural calf skin ABOVE each sock cuff, with the leg continuing out of the top edge; absolutely no hollow openings, amputated/standalone socks, invisible fill, floating socks, shoes, captions, graphics or watermark. Adult only, crop below the knees and omit face/torso. Use the supporting front-on-feet image for matching warm medium skin tone, realistic anatomy, cuff height and fit. A single finished photograph. Revise original output03 into REAR ON FEET. Image1 is the original rear pair composition. Image2 supplies the adult wearer. Straight-on rear photograph of the matching socks worn by the model, looking squarely at the backs of both calves and rounded heel cups. Feet are flat on the floor, toes point directly away from camera, two heels fully visible with a natural gap. Socks remain cream crew length with consistent ribbing, cuff height and shaping; include the COMPLETE two socks from cuff to heel and a clearly visible generous strip of actual bare calf above each cuff, extending to the top edge. Frame below the knees, no knees or face. Natural relaxed upright stance, not tiptoe. Match heel construction to image1 and skin to image2. This is a full rear fit reference, not a front or side view.",
+      "references": [
+        "03-rear-view.png",
+        "09-front-on-feet.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-7403c5fd-6de8-4e19-a410-e88b0b455c2c.png"
+    },
+    {
+      "title": "Heel Detail on Foot",
+      "file": "06-heel-detail-on-foot.png",
+      "replaces": "06-heel-detail.png",
+      "prompt": "Use case: precise-object-edit / product-mockup. Create ONE photorealistic ecommerce photograph revising the supplied sock preview. Preserve the same unbranded warm ivory/cream crew socks, narrow regular rib knit, smooth same-colour heel and rounded toe, yarn texture, correct natural fabric thickness. Keep neutral warm light-grey seamless backdrop, soft studio lighting, portrait 4:5 format. Important user requirement: whenever a sock has a filled-out shape, it must visibly be worn on a real adult foot and lower leg. Show a substantial strip of natural calf skin ABOVE each sock cuff, with the leg continuing out of the top edge; absolutely no hollow openings, amputated/standalone socks, invisible fill, floating socks, shoes, captions, graphics or watermark. Adult only, crop below the knees and omit face/torso. Use the supporting front-on-feet image for matching warm medium skin tone, realistic anatomy, cuff height and fit. A single finished photograph. Revise original output06 into HEEL DETAIL ON FOOT. Image1 supplies the cream sock's exact rounded heel shaping and fine-knit construction. Image2 supplies the adult wearer. Photograph ONE sock actually worn on the adult's foot from a close rear three-quarter angle, with heel raised gently off the surface while toes rest naturally on the floor. The rounded heel and diagonal heel-shaping stitches are the focal point in the lower-middle of frame. Reframe wider than image1 so the ENTIRE ribbed ankle/calf section reaches its clearly visible cuff, then include a substantial visible section of real bare calf skin above that cuff at the top of frame, continuing beyond the crop. The natural calf skin must be unmistakably visible; do not crop it off and do not show a hollow cuff. Use a diagonal composition to keep heel visually prominent while fitting cuff and leg into portrait frame. Only one leg/foot is needed. Forefoot may extend toward lower-left edge; no separated toes or bare foot. Keep cream colour and knit consistent, realistic adult anatomy, no extra heel pads or branding. Detail-focused commercial sock photography with readable heel construction and clear worn context.",
+      "references": [
+        "06-heel-detail.png",
+        "09-front-on-feet.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-f1d00cf6-5476-4ef4-b48f-182f1692b51e.png"
+    },
+    {
+      "title": "Toe Detail on Foot",
+      "file": "07-toe-detail-on-foot.png",
+      "replaces": "07-toe-detail.png",
+      "prompt": "Use case: precise-object-edit / product-mockup. Create ONE photorealistic ecommerce photograph revising the supplied sock preview. Preserve the same unbranded warm ivory/cream crew socks, narrow regular rib knit, smooth same-colour heel and rounded toe, yarn texture, correct natural fabric thickness. Keep neutral warm light-grey seamless backdrop, soft studio lighting, portrait 4:5 format. Important user requirement: whenever a sock has a filled-out shape, it must visibly be worn on a real adult foot and lower leg. Show a substantial strip of natural calf skin ABOVE each sock cuff, with the leg continuing out of the top edge; absolutely no hollow openings, amputated/standalone socks, invisible fill, floating socks, shoes, captions, graphics or watermark. Adult only, crop below the knees and omit face/torso. Use the supporting front-on-feet image for matching warm medium skin tone, realistic anatomy, cuff height and fit. A single finished photograph. Revise original output07 into TOE DETAIL ON FOOT. Image1 supplies the sock's rounded toe cap, subtle toe seam, fine yarn and ribbed instep. Image2 supplies the adult wearer and cream crew-sock fit. Show ONE sock actually being worn by the adult, photographed from an elevated front three-quarter angle looking down across the toe and instep towards the ankle. The toe is prominent in the foreground near the lower-left, sharp enough to read the seam and fine knit. The foot rests naturally flat on the floor. Include the instep and sock-covered calf rising diagonally to its visible cuff, PLUS a substantial segment of actual bare lower-leg skin above the cuff in the upper-right/top of frame, continuing out beyond the crop. Do not crop out the skin or show a hollow opening. Reframe wider than the original macro to establish worn context while keeping the rounded toe the visual focus. Natural adult foot perspective, no huge distorted toes, no bare toes or toenails, no shoes. Single complete socked foot with clean margins around the toe and visible calf; below-knee crop, neutral studio product photography.",
+      "references": [
+        "07-toe-detail.png",
+        "09-front-on-feet.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-514bece4-2760-4198-8f85-73f56dd2bdab.png"
+    }
+  ]
+}

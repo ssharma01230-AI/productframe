@@ -17,3 +17,4 @@ minio-data/
 .DS_Store
 *.tsbuildinfo
 *.egg-info/
+.cache/

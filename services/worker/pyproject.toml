@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "productframe-worker"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["redis>=5.0", "boto3>=1.35", "sqlalchemy>=2.0"]
+dependencies = ["redis>=5.0", "boto3>=1.35", "sqlalchemy>=2.0", "httpx>=0.27", "openai>=1.60", "psycopg[binary]>=3.2", "langgraph>=0.2", "langgraph-checkpoint-postgres>=2.0", "Pillow>=11.0"]
 
 [project.scripts]
 productframe-worker = "productframe_worker.cli:main"

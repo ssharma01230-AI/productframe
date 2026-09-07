@@ -3,9 +3,12 @@
 import { UserButton } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import ProductForm from './ProductForm';
 import CreateView from './CreateView';
+import type { OutputProduct } from './OutputSelection';
+import StudioIcon from './StudioIcon';
 import './studio-home.css';
 
 type StudioHomeProps = {
@@ -14,7 +17,10 @@ type StudioHomeProps = {
   apiError: boolean;
   message?: string;
   activeRunId?: string;
-  products: { id:string; name:string; image_url:string|null }[];
+  initialCreate?: boolean;
+  initialSelectedIds?: string[];
+  initialOutputStep?: boolean;
+  products: OutputProduct[];
 };
 
 const exampleImages = {
@@ -25,36 +31,23 @@ const exampleImages = {
   style: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&q=80',
 };
 
-type IconName = 'home' | 'plus' | 'folder' | 'compass' | 'settings' | 'menu' | 'details' | 'arrow' | 'sparkle';
-
-function StudioIcon({ name }: { name: IconName }) {
-  const paths = {
-    home: <><path d="M2.75 11.35 12 3.5l9.25 7.85"/><path d="M5.25 9.3v9.95a1.25 1.25 0 0 0 1.25 1.25h11a1.25 1.25 0 0 0 1.25-1.25V9.3M9.6 20.5v-4.7a2.4 2.4 0 0 1 4.8 0v4.7"/></>,
-    plus: <><rect x="3.5" y="3.5" width="17" height="17" rx="4.75"/><path d="M12 8.5v7M8.5 12h7"/></>,
-    folder: <><path d="M5.5 7.5V6a1.5 1.5 0 0 1 1.5-1.5h4l2 2h4a1.5 1.5 0 0 1 1.5 1.5v2"/><path d="M4 9a1.5 1.5 0 0 1 1.5-1.5H9l2 2h7.5A1.5 1.5 0 0 1 20 11v6.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5Z"/></>,
-    compass: <><circle cx="12" cy="12" r="8.6"/><path d="m15.55 8.45-2.2 4.9-4.9 2.2 2.2-4.9Z"/></>,
-    settings: <><path d="m9.5 4 .7-2h3.6l.7 2 2.1 1.2 2.1-.4 1.8 3.1-1.4 1.6v2.5l1.4 1.6-1.8 3.1-2.1-.4-2.1 1.2-.7 2h-3.6l-.7-2-2.1-1.2-2.1.4L3.5 14l1.4-1.6V9.9L3.5 8.3l1.8-3.1 2.1.4Z" transform="translate(0 1)"/><circle cx="12" cy="12" r="3"/></>,
-    menu: <path d="M4 6h16M4 12h16M4 18h16"/>,
-    details: <><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>,
-    arrow: <path d="M4 12h16m-6-6 6 6-6 6"/>,
-    sparkle: <path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z"/>,
-  };
-  return <svg className="sh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
-}
-
-function Navigation({ onUpload, onCreate, onNavigate }: { onUpload: () => void; onCreate: () => void; onNavigate?: () => void }) {
+function Navigation({ createOpen, onCreate, onNavigate }: { createOpen: boolean; onCreate: () => void; onNavigate?: () => void }) {
   return <>
-    <Link className="sh-nav-item sh-nav-active" href="/studio" prefetch={false} aria-current="page" onClick={onNavigate}><StudioIcon name="home"/>Home</Link>
-    <button className="sh-nav-item" type="button" onClick={() => { onNavigate?.(); onCreate(); }}><StudioIcon name="plus"/>Create</button>
+    <Link className={`sh-nav-item${createOpen ? '' : ' sh-nav-active'}`} href="/studio" prefetch={false} aria-current={createOpen ? undefined : 'page'} onClick={onNavigate}><StudioIcon name="home"/>Home</Link>
+    <button className={`sh-nav-item${createOpen ? ' sh-nav-active' : ''}`} type="button" aria-current={createOpen ? 'page' : undefined} onClick={onCreate}><StudioIcon name="plus"/>Create</button>
     <Link className="sh-nav-item" href="/products" prefetch={false} onClick={onNavigate}><StudioIcon name="folder"/>Product library</Link>
     <button className="sh-nav-item" type="button" disabled title="Explore is not available yet"><StudioIcon name="compass"/>Explore</button>
     <button className="sh-nav-item" type="button" disabled title="Settings are not available yet"><StudioIcon name="settings"/>Settings</button>
   </>;
 }
 
-export default function StudioHome({ workspace, userId, apiError, message, activeRunId, products }: StudioHomeProps) {
+export default function StudioHome({ workspace, userId, apiError, message, activeRunId, products, initialCreate = false, initialSelectedIds = [], initialOutputStep = false }: StudioHomeProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
+  const createOpen = searchParams ? searchParams.get('view') === 'create' : initialCreate;
+  const outputStep = searchParams ? createOpen && searchParams.get('step') === 'outputs' : initialOutputStep;
+  const selectedProductIds = searchParams ? searchParams.getAll('product') : initialSelectedIds;
   const accountDetails = useRef<HTMLDetailsElement>(null);
   const mobileNavigation = useRef<HTMLDetailsElement>(null);
 
@@ -72,6 +65,11 @@ export default function StudioHome({ workspace, userId, apiError, message, activ
   }, []);
 
   const openUpload = () => setUploadOpen(true);
+  const openCreate = () => {
+    const params = new URLSearchParams({ view:'create' });
+    selectedProductIds.forEach(id => params.append('product', id));
+    router.push('/studio?' + params.toString());
+  };
   const closeMobileNavigation = () => {
     const navigation = mobileNavigation.current;
     if (!navigation) return;
@@ -84,7 +82,7 @@ export default function StudioHome({ workspace, userId, apiError, message, activ
       <a className="sh-skip-link" href="#studio-content">Skip to content</a>
       <aside className="sh-sidebar" aria-label="Studio sidebar">
         <Link className="sh-logo" href="/studio" prefetch={false} aria-label="ProductFrame home"><span className="sh-logo-mark">P</span><span>productframe</span></Link>
-        <nav className="sh-navigation" aria-label="Main navigation"><Navigation onUpload={openUpload} onCreate={() => setCreateOpen(true)} onNavigate={() => setCreateOpen(false)}/></nav>
+        <nav className="sh-navigation" aria-label="Main navigation"><Navigation createOpen={createOpen} onCreate={openCreate}/></nav>
       </aside>
 
       <div className="sh-main">
@@ -94,9 +92,9 @@ export default function StudioHome({ workspace, userId, apiError, message, activ
               if (event.key === 'Escape') { event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus(); }
             }}>
               <summary className="sh-icon-button" aria-label="Open navigation"><StudioIcon name="menu"/></summary>
-              <nav className="sh-mobile-navigation-panel" aria-label="Mobile navigation"><Navigation onUpload={openUpload} onCreate={() => { setCreateOpen(true); closeMobileNavigation(); }} onNavigate={() => { setCreateOpen(false); closeMobileNavigation(); }}/></nav>
+              <nav className="sh-mobile-navigation-panel" aria-label="Mobile navigation"><Navigation createOpen={createOpen} onCreate={() => { openCreate(); closeMobileNavigation(); }} onNavigate={closeMobileNavigation}/></nav>
             </details>
-            <div className="sh-crumb">Studio / <strong>Overview</strong></div>
+            <div className="sh-crumb">Studio / <strong>{createOpen ? (outputStep ? 'Choose outputs' : 'Create') : 'Overview'}</strong></div>
           </div>
 
           <div className="sh-top-actions">
@@ -107,9 +105,9 @@ export default function StudioHome({ workspace, userId, apiError, message, activ
               <div className="sh-account-panel">
                 <p className="sh-account-heading">Your workspace</p>
                 <dl>
-                  <dt>Workspace</dt><dd>{workspace?.name ?? 'Unavailable'}</dd>
-                  <dt>Role</dt><dd>{workspace?.role ?? 'Unavailable'}</dd>
-                  <dt>User ID</dt><dd className="sh-user-id">{userId ?? 'Not signed in'}</dd>
+                  <dt><StudioIcon name="workspace"/>Workspace</dt><dd>{workspace?.name ?? 'Unavailable'}</dd>
+                  <dt><StudioIcon name="shield"/>Role</dt><dd>{workspace?.role ?? 'Unavailable'}</dd>
+                  <dt><StudioIcon name="user"/>User ID</dt><dd className="sh-user-id">{userId ?? 'Not signed in'}</dd>
                 </dl>
               </div>
             </details>
@@ -117,10 +115,10 @@ export default function StudioHome({ workspace, userId, apiError, message, activ
           </div>
         </header>
 
-        <main className="sh-content" id="studio-content" tabIndex={-1}>
+        <main className={`sh-content${createOpen ? ' sh-create-content' : ''}`} id="studio-content" tabIndex={-1}>
           {apiError && <p className="sh-service-notice" role="status">The API is currently unavailable. Your workspace details and uploads may be temporarily unavailable.</p>}
           {message && !activeRunId && <p className="sh-service-notice" role="status">{message}</p>}
-          {createOpen ? <CreateView products={products} onUpload={openUpload} /> : <>
+          {createOpen ? <CreateView products={products} onUpload={openUpload} initialSelectedIds={selectedProductIds} initialOutputStep={outputStep} /> : <>
           <section className="sh-intro" aria-labelledby="studio-home-title">
             <p className="sh-eyebrow">PRODUCTFRAME / CONTENT STUDIO</p>
             <h1 id="studio-home-title">One product.<br/><em>Everywhere it needs to go.</em></h1>

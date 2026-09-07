@@ -1,0 +1,20 @@
+[
+  {
+    "source": "/Users/shivamsharma/Documents/octopus product reference.jpeg",
+    "product_id": "61384115-ee51-4e37-9b57-05929758631d",
+    "generation_job_id": "9c74fd44-ebd7-4255-bea5-24442eba40ca",
+    "template_id": "ecommerce-tops-front-view",
+    "template_version": 1,
+    "model": "gpt-image-2-2026-04-21",
+    "endpoint": "images.edit",
+    "size": "1024x1024",
+    "quality": "high",
+    "reference_count": 1,
+    "reference_object_key": "workspaces/679c90ff-68da-4886-b94b-9d5369269156/products/61384115-ee51-4e37-9b57-05929758631d/sources/4527e925-75e3-48a1-8174-91431f76c4db-octopus product reference.jpeg",
+    "reference_preprocessing": "EXIF orientation applied; metadata removed; lossless alpha path or JPEG quality 95",
+    "outcome": "rejected",
+    "fidelity_error": "Artwork mask is not sufficiently isolated from the surrounding photograph",
+    "generated_object_key": "workspaces/679c90ff-68da-4886-b94b-9d5369269156/products/61384115-ee51-4e37-9b57-05929758631d/generations/9c74fd44-ebd7-4255-bea5-24442eba40ca/rejected/ecommerce-tops-front-view.png",
+    "generated_file": "output/generation-evaluation/octopus-product-reference/generated.png"
+  }
+]

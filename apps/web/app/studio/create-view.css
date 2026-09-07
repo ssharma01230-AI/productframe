@@ -1,0 +1,86 @@
+.sh-content.sh-create-content { padding: 43px 43px 60px; }
+.pf-create-view { min-width: 0; }
+.pf-create-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.pf-create-intro { margin-bottom: 28px; }
+.pf-create-eyebrow { margin: 0 0 8px; font-size: 12px; color: var(--sh-muted); }
+.pf-create-intro h1 { margin: 0; font-size: 40px; font-weight: 600; line-height: 1.05; letter-spacing: -.055em; }
+.pf-create-intro h1:focus { outline: none; }
+.pf-create-subtitle { margin: 10px 0 0; color: var(--sh-muted); font-size: 12px; }
+.pf-create-paths { display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px; align-items: stretch; }
+.pf-create-path { min-width: 0; }
+.pf-create-path-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.pf-create-path-heading h2 { margin: 0; font-size: 13px; font-weight: 700; }
+.pf-create-path-heading h2:focus { outline: none; }
+.pf-create-path-heading p { margin: 4px 0 0; color: var(--sh-muted); font-size: 10px; }
+.pf-create-path-count { flex-shrink: 0; margin-top: 4px; color: var(--sh-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+
+/* Keep the card borders more specific than the shared Studio button reset. */
+.sh-shell .pf-create-upload-card {
+  width: 100%;
+  height: 285px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: 14px;
+  border: 1px dashed #b8bbb0;
+  border-radius: 12px;
+  background: #edede7;
+  color: var(--sh-ink);
+  text-align: left;
+  overflow: hidden;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.sh-shell .pf-create-upload-card:hover { border-color: var(--sh-ink); transform: translateY(-2px); box-shadow: 0 12px 28px #1d241012; }
+.pf-create-upload-drop { grid-column: 1; grid-row: 1; min-width: 0; display: grid; place-items: center; padding: 16px; text-align: center; border-radius: 8px; background: #f9f9f6; }
+.pf-create-plus { display: grid; place-items: center; width: 42px; height: 42px; margin: 0 auto 14px; border: 1px solid var(--sh-accent); border-radius: 50%; background: var(--sh-accent); color: var(--sh-ink); font-size: 25px; font-weight: 400; }
+.pf-create-upload-drop b { display: block; font-size: 14px; }
+.pf-create-upload-drop span { display: block; margin-top: 6px; color: var(--sh-muted); font-size: 10px; }
+.pf-create-upload-examples { grid-column: 2; grid-row: 1; min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.25fr) repeat(2, minmax(0, 1fr)); gap: 4px; margin-left: 4px; overflow: hidden; border-radius: 7px; }
+.pf-create-upload-examples img { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: cover; }
+.pf-create-upload-foot { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: space-between; gap: 9px; padding: 11px 2px 0; color: var(--sh-muted); font-size: 9px; }
+.pf-create-upload-foot > span { display: flex; align-items: center; gap: 9px; }
+.pf-create-upload-foot em { padding-left: 9px; border-left: 1px solid var(--sh-line); color: #647d34; font-style: normal; font-weight: 500; }
+.pf-create-upload-foot strong { color: var(--sh-ink); font-weight: 600; }
+
+.pf-create-catalogue-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.sh-shell .pf-create-catalogue-card { min-width: 0; padding: 0; overflow: hidden; border: 1px solid var(--sh-line); border-radius: 11px; background: #fff; text-align: left; transition: border-color .2s, transform .2s, box-shadow .2s; }
+.sh-shell .pf-create-catalogue-card:hover { border-color: var(--sh-ink); transform: translateY(-2px); box-shadow: 0 10px 25px #1d24100c; }
+.sh-shell .pf-create-catalogue-card[aria-pressed="true"] { border-color: #76933e; box-shadow: 0 0 0 2px #b9ff3d; background: #f5fbe9; }
+.pf-create-selection-mark { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid #b8bfae; border-radius: 50%; background: #ffffffed; color: #263913; box-shadow: 0 1px 4px #17231214; }
+.pf-create-selection-mark svg { width: 15px; height: 15px; opacity: 0; }
+.pf-create-catalogue-card[aria-pressed="true"] .pf-create-selection-mark { border-color: var(--sh-accent); background: var(--sh-accent); }
+.pf-create-catalogue-card[aria-pressed="true"] .pf-create-selection-mark svg { opacity: 1; }
+.pf-create-product-photo { height: 170px; overflow: hidden; position: relative; display: grid; place-items: center; background: #ebeae4; }
+.pf-create-product-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pf-create-no-image { color: var(--sh-muted); font-size: 11px; }
+.pf-create-product-info { display: block; padding: 12px 13px 14px; }
+.pf-create-product-info b { display: block; font-size: 11px; font-weight: 600; overflow-wrap: anywhere; }
+.pf-create-product-info small { display: block; margin-top: 6px; color: var(--sh-muted); font-size: 10px; }
+.pf-create-empty { grid-column: 1 / -1; padding: 40px 20px; border: 1px dashed #b8bbb0; border-radius: 11px; color: var(--sh-muted); font-size: 12px; text-align: center; background: #fafaf7; }
+.pf-create-selection-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 16px 18px; border: 1px solid #d4dfc1; border-radius: 10px; background: #f0f5e6; }
+.pf-create-selection-copy, .pf-create-selection-buttons { display: flex; align-items: center; gap: 12px; }
+.pf-create-selection-copy { color: #4e642f; font-size: 13px; }
+.sh-shell .pf-create-clear-selection { padding: 10px 5px; background: transparent; color: var(--sh-muted); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.sh-shell .pf-create-continue { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 17px; min-height: 44px; border-radius: 8px; background: var(--sh-accent); color: var(--sh-ink); font-size: 13px; font-weight: 600; }
+.sh-shell .pf-create-continue:hover { background: #acf32c; }
+
+@media (max-width: 1000px) {
+  .sh-content.sh-create-content { padding: 32px; }
+}
+@media (max-width: 950px) {
+  .pf-create-path-heading { margin: 12px 0; }
+  .pf-create-catalogue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .sh-content.sh-create-content { padding: 32px 18px; }
+  .pf-create-intro h1 { font-size: 40px; overflow-wrap: anywhere; }
+  .pf-create-subtitle { line-height: 1.5; }
+  .sh-shell .pf-create-upload-card { height: 390px; display: flex; flex-direction: column; }
+  .pf-create-upload-drop { flex: 1; }
+  .pf-create-upload-examples { flex: 0 0 95px; width: 100%; height: 95px; margin: 4px 0 0; }
+  .pf-create-upload-foot { flex: 0 0 auto; flex-wrap: wrap; }
+  .pf-create-upload-foot > span { align-items: flex-start; }
+  .pf-create-catalogue-grid { grid-template-columns: minmax(0, 1fr); }
+  .pf-create-selection-actions { align-items: stretch; flex-direction: column; }
+  .pf-create-selection-buttons { justify-content: space-between; }
+}

@@ -21,7 +21,7 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
   const [screen, setScreen] = useState<'review'|'summary'>('review');
   const [selected, setSelected] = useState(0);
   const [cancelTarget, setCancelTarget] = useState<number|null>(null);
-  const [saving, setSaving] = useState<number|null>(null);
+  const [saving, setSaving] = useState<number|'all'|null>(null);
   const savingRef = useRef(false);
   const [editingDraft, setEditingDraft] = useState<Draft|null>(null);
   const [error, setError] = useState('');
@@ -54,13 +54,12 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
   };
   async function decide(product:Draft, status:'approved'|'cancelled') {
     const editingApproved = product.confirmation_status === 'approved' && editingDraft?.product_number === product.product_number && status === 'approved';
-    if (savingRef.current || (!isPending(product) && !editingApproved)) return;
+    const allowed = status === 'cancelled' ? canCancelProduct(product) && editingDraft === null : isPending(product) || editingApproved;
+    if (savingRef.current || !allowed) return;
     if (status === 'cancelled') { setCancelTarget(null); }
-    if (status === 'approved' && !product.product_name.trim()) { setError('Every product needs a name before approval.'); return; }
-    const savedProduct = {...product, product_name:product.product_name.trim(), product_type:product.product_type.trim(), colours:product.colours.trim(), materials:product.materials.trim(), features:product.features.map(item => item.trim()).filter(Boolean), description:product.description.trim(), confirmation_status:status};
-    if (status === 'approved' && (!savedProduct.product_type || !savedProduct.colours || !savedProduct.materials || !savedProduct.description || !savedProduct.features.length || savedProduct.features.length > 30)) {
-      setError('Complete each product field and include between 1 and 30 features before saving.'); return;
-    }
+    const savedProduct = {...product, ...approvalFields(product), confirmation_status:status};
+    const validationError = status === 'approved' ? approvalError(savedProduct) : null;
+    if (validationError) { setError(validationError); return; }
     savingRef.current = true;
     setSaving(product.product_number); setError('');
     try {
@@ -75,6 +74,34 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
       setError(editingApproved ? 'We couldn’t save your changes. Your edits are still here—please try again.' : 'We could not save that decision. Please try again.');
     } finally { savingRef.current = false; setSaving(null); }
   }
+  async function approveAll() {
+    if (savingRef.current || editingDraft || cancelTarget !== null || !['awaiting_confirmation', 'completed'].includes(results?.status ?? '')) return;
+    const pending = drafts.filter(isPending);
+    if (!pending.length) return;
+    const products = pending.map(product => ({ product_number:product.product_number, ...approvalFields(product) }));
+    for (const product of products) {
+      const validationError = approvalError(product);
+      if (validationError) {
+        setSelected(drafts.findIndex(item => item.product_number === product.product_number));
+        setError(`Product ${product.product_number}: ${validationError}`);
+        return;
+      }
+    }
+    savingRef.current = true;
+    setSaving('all'); setError('');
+    try {
+      const token = await getToken();
+      if (!token) { setError('Your sign-in session has expired. Sign in again before approving your products.'); return; }
+      const response = await fetch(`${api}/analysis-jobs/${jobId}/products/approve-all`, { method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body:JSON.stringify({ products }) });
+      if (!response.ok) throw new Error('Approval failed');
+      const saved: { products: Product[] } = await response.json();
+      const byNumber = new Map(saved.products.map(product => [product.product_number, product]));
+      if (products.some(product => !byNumber.has(product.product_number))) throw new Error('Incomplete approval response');
+      setDrafts(items => items.map(item => byNumber.get(item.product_number) ?? item));
+    } catch {
+      setError('We couldn’t confirm all approvals. Your edits are still here. Please try again.');
+    } finally { savingRef.current = false; setSaving(null); }
+  }
   const images = results?.images ?? [];
   const rejected = images.filter(image => image.passed === false);
   const total = results?.total_images ?? imageCount;
@@ -82,6 +109,7 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
   const reviewedProducts = drafts.filter(item => ['approved','rejected','cancelled'].includes(item.confirmation_status));
   const cancelled = drafts.filter(item => item.confirmation_status === 'cancelled').length;
   const approved = drafts.filter(item => item.confirmation_status === 'approved');
+  const pendingCount = drafts.filter(isPending).length;
   const eligible = drafts.length - cancelled;
   const complete = drafts.length > 0 && reviewedProducts.length === drafts.length;
   const showReviewFooter = drafts.length > 0 && (results?.status === 'awaiting_confirmation' || results?.status === 'completed');
@@ -117,18 +145,18 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
         <header className="pf-heading">
           <div className="pf-heading-line">
             <h2 id="pf-title" tabIndex={-1} ref={headingRef}>
-              {screen === 'summary' ? (approved.length ? 'Your edit is ready' : 'No products approved') : analysisComplete ? counts.products + ' unique products identified' : analysisFailed ? 'Analysis stopped' : 'Reviewing your products'}
+              {screen === 'summary' ? (approved.length ? 'Your edit is ready' : 'No products approved') : analysisComplete ? counts.products + (counts.products === 1 ? ' product identified' : ' products identified') : analysisFailed ? 'Analysis stopped' : 'Reviewing your products'}
             </h2>
             <div className="pf-heading-controls">
-              {(screen === 'summary' || (!analysisComplete && !analysisFailed)) && <span className={'pf-state-badge' + (screen !== 'summary' ? ' processing' : '')}>
-                {screen === 'summary' ? <Icon name="check" /> : <span className="pf-dot" />}
-                {screen === 'summary' ? 'Review complete' : 'Processing'}
+              {screen !== 'summary' && !analysisComplete && !analysisFailed && <span className="pf-state-badge processing">
+                <span className="pf-dot" />
+                Processing
               </span>}
               {canCloseReview && <button type="button" className="pf-icon-button" aria-label="Close run review" disabled={editingDraft !== null || saving !== null} title={editingDraft ? 'Save or discard your changes first' : undefined} onClick={() => router.push('/studio')}><Icon name="close" /></button>}
             </div>
           </div>
           <p className="pf-description" id="pf-description">
-            {screen === 'summary' ? summaryDescription : analysisComplete ? 'A considered first pass. Review the details, then make them yours.' : analysisFailed ? 'We couldn’t finish preparing these products. You can close this window and try again.' : 'We’ll check your images, group products and get the details ready.'}
+            {screen === 'summary' ? summaryDescription : analysisComplete ? 'Confirm we’ve got it right.' : analysisFailed ? 'We couldn’t finish preparing these products. You can close this window and try again.' : 'We’ll check your images, group products and get the details ready.'}
           </p>
         </header>
 
@@ -176,7 +204,7 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
                 {selected < 0 ? <Rejected images={rejected} passed={passed} /> : current && (
                   <ProductEditor
                     product={editingDraft ?? current} totalProducts={drafts.length} images={currentImages} imageIndex={imageIndex}
-                    setImageIndex={setImageIndex} update={update} onCancel={() => setCancelTarget(current.product_number)}
+                    setImageIndex={setImageIndex} update={update} onCancel={() => { if (!savingRef.current && !editingDraft && canCancelProduct(current)) { setCancelTarget(current.product_number); setError(''); } }}
                     onApprove={() => decide(editingDraft ?? current, 'approved')} saving={saving !== null} cancelOpen={cancelTarget === current.product_number}
                     editing={editingDraft !== null} onEdit={() => { if (!savingRef.current) { setEditingDraft({...current, features:[...current.features]}); setCancelTarget(null); setError(''); } }}
                     onKeep={() => setCancelTarget(null)} onConfirmCancel={() => decide(current, 'cancelled')}
@@ -195,6 +223,7 @@ export default function RunReview({ jobId, imageCount, initial }: { jobId:string
                   </div>
                 </div>
                 <div className="pf-footer-actions">
+                  {!editingDraft && pendingCount > 0 && <button type="button" className="pf-button" disabled={saving !== null || cancelTarget !== null} title={`Approve all ${pendingCount} remaining unreviewed products`} onClick={approveAll}>{saving === 'all' ? 'Approving all…' : 'Approve all'}</button>}
                   {editingDraft ? <>
                     <button type="button" className="pf-button" disabled={saving !== null} onClick={() => { setEditingDraft(null); setError(''); }}>Discard changes</button>
                     <button type="submit" form="pf-product-form" className="pf-button pf-primary" disabled={saving !== null}>{saving !== null ? 'Saving…' : 'Save changes'}<Icon name="check" /></button>
@@ -236,6 +265,16 @@ function Metric({ value, label, icon, warm = false }: { value: number | string; 
   return <div className={'pf-metric' + (warm ? ' warm' : '')}><Icon name={icon} /><strong>{value}</strong><span>{label}</span></div>;
 }
 function isPending(product: Product) { return product.confirmation_status === 'suggested' || product.confirmation_status === 'pending'; }
+function canCancelProduct(product: Product) { return isPending(product) || product.confirmation_status === 'approved'; }
+function approvalFields(product: Product) {
+  return { product_name:product.product_name.trim(), product_type:product.product_type.trim(), colours:product.colours.trim(), materials:product.materials.trim(), features:product.features.map(item => item.trim()).filter(Boolean), description:product.description.trim() };
+}
+function approvalError(product: ReturnType<typeof approvalFields>) {
+  if (!product.product_name) return 'Every product needs a name before approval.';
+  if (!product.product_type || !product.colours || !product.materials || !product.description || !product.features.length || product.features.length > 30) return 'Complete each product field and include between 1 and 30 features before saving.';
+  if (product.product_name.length > 160 || product.product_type.length > 160 || product.colours.length > 300 || product.materials.length > 300 || product.description.length > 320) return 'Shorten any fields that exceed their character limits before saving.';
+  return null;
+}
 function statusLabel(status: string) { return status ? status[0].toUpperCase() + status.slice(1) : 'To review'; }
 function productImage(product: Product, images: ImageResult[]) {
   return images.find(image => image.product_number === product.product_number && image.passed === true && image.image_url)?.image_url ?? null;
@@ -256,26 +295,31 @@ function Loading({ progress, status }: { progress?: Results['progress']; status?
   </div>;
   const statusMessages: Record<string, string> = { pending:'Waiting for analysis to start', queued:'Waiting for analysis to start', screening:'Checking your uploaded images', grouping:'Grouping matching images', analysing:'Analysing your products' };
   const message = progress?.message?.trim() || statusMessages[status ?? ''] || 'Waiting for a progress update';
-  const percent = progress && Number.isFinite(progress.percent) ? Math.min(100, Math.max(0, progress.percent)) : null;
-  const stageTotal = progress && Number.isFinite(progress.total) ? Math.max(0, progress.total) : 0;
-  const stageCompleted = progress && Number.isFinite(progress.completed) ? Math.min(stageTotal, Math.max(0, progress.completed)) : 0;
-  const unit = progress?.stage === 'synthesis' ? 'products' : ['validation', 'screening', 'analysis', 'grouping'].includes(progress?.stage ?? '') ? 'images' : null;
-  const stageCount = stageTotal > 0 && unit ? `${stageCompleted} of ${stageTotal} ${unit}` : '';
-  const progressDescription = [message, stageCount, percent === null ? '' : `${percent}% overall`].filter(Boolean).join(' · ');
+  const stage = progress?.stage ?? status ?? '';
+  const stageTitles: Record<string, string> = { validation:'Checking your images', screening:'Analysing your images', analysis:'Analysing your images', grouping:'Grouping your products', synthesis:'Preparing product details' };
+  const unit = stage === 'synthesis' ? 'products' : ['validation', 'screening', 'analysis'].includes(stage) ? 'images' : null;
+  const hasCount = !!progress && Number.isFinite(progress.total) && progress.total > 0 && Number.isFinite(progress.completed) && unit !== null;
+  const stageTotal = hasCount ? progress!.total : 0;
+  const stageCompleted = hasCount ? Math.min(stageTotal, Math.max(0, progress!.completed)) : 0;
+  // The worker's percent weights the whole pipeline. This bar tracks completed
+  // images (or product details) in the named stage instead.
+  const percent = hasCount ? Math.round(stageCompleted / stageTotal * 100) : null;
+  const stageCount = hasCount ? `${stageCompleted} of ${stageTotal} ${unit}` : '';
+  const progressDescription = [message, stageCount, percent === null ? '' : `${percent}%`].filter(Boolean).join(' · ');
 
   return (
     <div className="pf-loading">
       <div className="pf-loading-batch">
         <div className="pf-loading-images" aria-hidden="true">{[0, 1, 2].map(index => <div className="pf-loading-image" key={index} style={{ '--thumbnail-index': index } as CSSProperties}><Icon name="image" /></div>)}</div>
         <div className="pf-loading-copy">
-          <div className="pf-loading-title"><span className="pf-spinner" aria-hidden="true" /><strong>Reviewing your products</strong></div>
+          <div className="pf-loading-title"><span className="pf-spinner" aria-hidden="true" /><strong>{stageTitles[stage] ?? 'Reviewing your products'}</strong></div>
           <div className="pf-loading-messages" aria-hidden="true">
             <span className="pf-loading-message entering" key={message}>{message}</span>
           </div>
           <span className="pf-sr-only" role="status">{progressDescription}</span>
         </div>
         <div className={'pf-progress' + (percent === null ? ' indeterminate' : '')} role="progressbar" aria-label="Analysis progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent ?? undefined} aria-valuetext={progressDescription}><i style={percent === null ? undefined : { width: percent + '%' }} /></div>
-        <div className="pf-live-progress" aria-hidden="true"><span>{stageCount || (percent === null ? 'Waiting for the next update' : 'Live analysis progress')}</span>{percent !== null && <span>{percent}%</span>}</div>
+        <div className="pf-live-progress" aria-hidden="true"><span>{stageCount || (stage === 'grouping' ? 'Finding matching products' : 'Waiting for the next update')}</span>{percent !== null && <span>{percent}%</span>}</div>
       </div>
     </div>
   );
@@ -336,7 +380,7 @@ function ProductEditor({ product, totalProducts, images, imageIndex, setImageInd
     <section className="pf-editor" aria-label="Selected product details">
       <div className="pf-editor-top">
         <span className="pf-eyebrow">Product {String(product.product_number).padStart(2, '0')} / {String(totalProducts).padStart(2, '0')}</span>
-        <button type="button" className="pf-icon-button" ref={cancelButtonRef} onClick={onCancel} disabled={locked || editing || saving} aria-label="Cancel product"><Icon name="close" /></button>
+        <button type="button" className="pf-icon-button" ref={cancelButtonRef} onClick={onCancel} disabled={!canCancelProduct(product) || editing || saving} aria-label="Cancel product"><Icon name="close" /></button>
       </div>
       {!isPending(product) && <div className={'pf-decision-note ' + product.confirmation_status}>
         <span>{editing ? 'Editing approved details. Save or discard your changes to continue.' : product.confirmation_status === 'approved' ? 'Approved for the Product Library.' : statusLabel(product.confirmation_status) + ' — excluded from the library.'}</span>
@@ -366,7 +410,7 @@ function ProductEditor({ product, totalProducts, images, imageIndex, setImageInd
             {field('features', 'Features')}
             {field('description', 'Description')}
           </div>
-          <p className="pf-suggested"><Icon name="sparkle" />{editing ? 'Saved changes also update this product in your Product Library.' : 'Suggested details. Your approval makes them final.'}</p>
+          <p className="pf-suggested"><Icon name="sparkle" />{editing ? 'Saved changes also update this product in your Product Library.' : 'Suggested details can be changed as you see fit.'}</p>
         </form>
       </div>
       {cancelOpen && <div className="pf-inline-confirm" role="alertdialog" aria-labelledby="pf-cancel-title" aria-describedby="pf-cancel-description" onKeyDown={event => {
@@ -378,7 +422,7 @@ function ProductEditor({ product, totalProducts, images, imageIndex, setImageInd
           else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
         }
       }}>
-        <h3 id="pf-cancel-title">Cancel this product?</h3><p id="pf-cancel-description">It will stay in this run, but won’t enter your Product Library.</p>
+        <h3 id="pf-cancel-title">Cancel this product?</h3><p id="pf-cancel-description">{product.confirmation_status === 'approved' ? 'It will be removed from your Product Library, but its details and images will stay in this run.' : 'It will stay in this run, but won’t enter your Product Library.'}</p>
         <div className="pf-confirm-actions"><button type="button" className="pf-button" onClick={dismissCancellation} autoFocus>Keep product</button><button type="button" className="pf-button pf-cancel-confirm" disabled={saving} onClick={onConfirmCancel}>Cancel product</button></div>
       </div>}
     </section>

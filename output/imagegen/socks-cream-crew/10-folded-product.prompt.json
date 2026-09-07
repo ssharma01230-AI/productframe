@@ -1,0 +1,13 @@
+{
+  "method": "Built-in image_gen tool",
+  "category": "socks",
+  "number": 10,
+  "title": "Folded Product",
+  "file": "10-folded-product.png",
+  "replaces": "10-side-on-feet.png",
+  "prompt": "Use case: product-mockup. Generate ONE standalone photorealistic ecommerce preview for Socks template 10, FOLDED PRODUCT. Both input images are product identity references of the SAME matching pair of unbranded warm cream/ivory crew socks. Preserve the exact cream shade, narrow vertical rib-knit leg and instep, smooth same-colour rounded toe and shaped heel, subtle toe seam, fine cotton-like fibre texture and clean ribbed cuff. Neatly fold the two socks individually into compact soft rectangles and place them in a small, slightly staggered stack on a plain warm light-grey studio surface. Let the upper folded sock sit a little diagonally so its orderly ribbing, doubled cuff edge and a curved portion of toe or heel remain recognizable. Show the second sock as a clearly separate soft folded layer underneath, not a seamless fabric block. Realistic folding of flexible socks, gentle textile volume and natural creases, not rolled balls or stretched-out socks. Photograph from an elevated three-quarter angle so the top knit surface and folded layers are visible. The complete folded pair sits centered with generous clean margins, filling about65 percent of portrait image height. Same premium neutral catalogue styling as the references, soft directional diffused light, subtle grounding shadow and fine knit detail. Portrait 4:5 photograph. Product only, no person, hands, feet, footwear, packaging, bands, hangers or other props. No text, numbering, labels, graphics, logos, watermark or collage. A single finished image.",
+  "references": [
+    "01-pair-product-shot.png",
+    "04-flat-lay.png"
+  ]
+}

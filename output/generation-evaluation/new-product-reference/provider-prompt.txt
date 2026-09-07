@@ -1,0 +1,181 @@
+Create an ecommerce image using the supplied product reference image as the primary visual authority.
+
+REFERENCE-FIRST RULES
+- Inspect the product reference image before interpreting the text description.
+- Reproduce every clearly visible construction detail directly from the reference image.
+- Never replace a visible product feature with a generic category default.
+- The reference image overrides generic template conventions and inferred schema defaults.
+- Uncertainty applies only to details that are genuinely hidden, obstructed, cropped or impossible to assess from the reference.
+- Do not treat a detail as uncertain merely because its exact measurement is unavailable.
+
+PRODUCT IDENTITY — AUTHORITATIVE
+- Name: Blue oversized short-sleeve printed casual t-shirt
+- Category: tops
+- Product type: short-sleeve oversized printed casual t-shirt
+- Colour summary: blue with white print
+- Materials summary: appears to be medium-weight cotton or cotton-blend jersey with soft texture and minimal sheen, slight drape, no visible stretch
+- Visible features:
+- large white print on front with text 'MAYBE' above large numerals '67', print shows slight distressed effect
+- raw edge details on neckline and sleeve hems not visible
+- no collar, standard round neckline
+- short sleeves ending above elbow
+- visible shoulder seam across upper chest
+- Description: This oversized short-sleeve casual t-shirt features a medium-blue colour with a large white distressed print 'MAYBE 67' on the chest. It has a round neckline and relaxed dropped shoulders, made of medium-weight soft cotton or cotton-blend material, providing a loose casual fit with moderate drape.
+
+DETAILED COLOUR DATA
+Primary colour: blue
+Secondary colours:
+  - white
+Pattern: large white printed text and numbers
+Colour distribution: dominantly blue with large white graphic on front
+Tonal variation: uniform blue
+Saturation: medium
+Brightness: medium
+Colour finish: matte
+Wash treatment: none visible
+Fade level: none
+Colour variation: uniform
+Visible uncertainties: None visible
+
+GLOBAL PRODUCT DATA
+Colour:
+  Primary colour: blue
+  Secondary colours:
+    - white
+  Pattern: large white printed text and numbers
+  Colour distribution: dominantly blue with large white graphic on front
+  Tonal variation: uniform blue
+  Saturation: medium
+  Brightness: medium
+  Colour finish: matte
+  Wash treatment: none visible
+  Fade level: none
+  Colour variation: uniform
+  Visible uncertainties: None visible
+Materials:
+  Appearance: smooth soft knit
+  Weight: medium weight
+  Thickness: medium thickness suitable for t-shirt
+  Texture: soft cotton or cotton-blend knit
+  Finish: matte
+  Stretch or flexibility: likely some stretch but not visible
+  Drape or rigidity: moderate drape
+  Visible condition: new, no visible wear or damage
+  Drape quality: moderate
+  Rigidity level: soft
+  Wrinkle visibility: minimal wrinkles
+  Surface softness: soft
+  Fabric body: medium weight knit fabric
+  Visible uncertainties:
+    - exact fibre type
+Construction:
+  Silhouette: oversized loose silhouette
+  Shape: boxy relaxed shape
+  Proportions: wide body relative to length
+  Construction details:
+    - round neckline with flat binding
+    - dropped shoulder seams
+    - set-in short sleeves
+    - double stitched bindings
+    - regular side seams
+  Functional details: None visible
+  Callouts:
+    - large printed front graphic
+  Visible uncertainties:
+    - inner seam details
+Branding:
+  Graphics:
+    - large off-white printed text 'MAYBE' and number '67' on front
+  Logos: None visible
+  Graphic details:
+    - single graphic with two text elements, 'MAYBE' smaller above large '67', print with slight distressed or worn effect edges, centered horizontally on chest, no overlap with seams
+Gender:
+  Assumed: female
+  User confirmed: None
+
+CATEGORY-SPECIFIC DATA — AUTHORITATIVE FOR NECKLINE AND COLLAR CONSTRUCTION
+Subtype: short-sleeve oversized printed casual t-shirt
+Neckline type: round crew neckline
+Neckline depth: standard neckline
+Collar type: narrow flat binding collar
+Sleeve type: set-in short sleeve
+Sleeve length: short
+Sleeve width: loose and relaxed
+Shoulder shape: dropped shoulder seam extending across upper chest
+Cuff details: no cuffs, raw or fixed hem on sleeves
+Hem shape: straight hem
+Fit and silhouette: oversized relaxed fit
+Garment length: hip length
+Closure details: None visible
+Pocket details: None visible
+Hood details: None visible
+Visible uncertainties:
+  - exact collar thickness not visible
+  - neckline rigidity exact level uncertain
+  - exact shoulder drop angle
+  - fabric stretch level
+Collar thickness: thin
+Collar width: narrow
+Neckline rigidity: soft
+Body width relative to length: wide body width relative to length
+Shoulder drop: noticeable dropped shoulder
+Silhouette volume: voluminous
+Sleeve width relative to body: wide loose sleeves
+Hem position: hip
+Drape quality: moderate
+Rigidity level: soft
+Wrinkle visibility: minimal
+Surface softness: soft
+Fabric body: medium weight knit
+Wash treatment: none visible
+Fade level: none
+Graphic condition: slightly distressed print
+Graphic scale: large
+Graphic placement: center front chest
+Graphic edge quality: distressed edges
+
+CONFIDENCE AND UNCERTAINTY
+- Overall: score=0.95, status=clearly_visible
+- Category: score=0.99, status=user_confirmed
+- Product identity: score=0.9, status=clearly_visible
+- Colour: score=0.95, status=clearly_visible
+- Materials: score=0.85, status=partially_visible
+  - Uncertainty: exact fibre composition not determinable
+- Construction: score=0.9, status=clearly_visible
+  - Uncertainty: inner seam construction not visible
+- Branding: score=0.85, status=clearly_visible
+  - Uncertainty: no brand logos visible
+- Category specific: score=0.95, status=clearly_visible
+  - Uncertainty: exact collar thickness uncertain
+- Gender: score=0.75, status=uncertain
+  - Uncertainty: gender identification not confirmed by user
+
+PRODUCT FIDELITY PRESERVATION
+- Preserve observed colour treatment such as washing, fading, tonal variation, sheen, wear and natural wrinkles; do not clean or standardise the surface.
+- Preserve the observed silhouette, body width, garment length, shoulder construction and sleeve width; do not regularise them into a generic top.
+- Treat every visible print, illustration, logo, embroidery and appliqué as immutable product identity, not as a semantic suggestion.
+- Copy the artwork exactly from the reference pixels: preserve its component count, geometry, topology, orientation, linework, internal details, colour boundaries, text, scale, placement, spacing, edge quality, fading and distress.
+- Do not reinterpret, simplify, beautify, complete, replace or redraw artwork from its subject description. For example, identifying an animal or object does not permit drawing a different instance of it.
+- Preserve visible seams, panels, hems, neck binding and construction irregularities even when they reduce symmetry.
+- If a property is not observable, leave it uncertain rather than inventing a conventional ecommerce replacement.
+
+TEMPLATE PRESENTATION
+Create a straight-on ecommerce front view of the complete top as a product-only studio presentation. Present the garment clearly without regularising its observed silhouette, proportions, shoulder construction, sleeve width, wrinkles or surface wear. Use subtle volume and gentle contact shadows so it feels cleanly presented rather than like an overhead flat lay. Use a clean white background with a subtle light-grey studio shadow and even, soft lighting. Do not show a model, mannequin, body, head or support.
+
+PROMPT FORMAT RULES
+- Product identity data must be presented before presentation instructions.
+- The product reference image is the primary authority for every visible feature.
+- Repeat identity-critical attributes as locked constraints.
+- Use the template only for composition and presentation, never for product identity.
+- Uncertainty applies only to genuinely hidden, obstructed, cropped or unassessable details.
+
+IDENTITY PROTECTION
+The product data and product reference images are the only source of truth for
+product identity. Preserve the product's colour, material appearance, texture,
+shape, proportions, construction and category-specific details. Do not allow the
+template presentation to change the product. Treat uncertain attributes as
+uncertain and do not invent replacements. Use the template only for composition,
+framing, lighting and presentation.
+
+Negative prompt:
+Do not fabricate or alter visible construction details, especially the neckline and collar. Do not change the product colour treatment, sleeve shape, proportions, shoulder construction, surface wear, graphic text, graphic scale, graphic geometry, component arrangement, linework, colour boundaries or graphic distress. Do not reinterpret visible artwork from its subject description. Do not smooth, clean up, sharpen or redraw the product. Do not add a model, accessories, extra garments, text, logos, labels, watermarks or props. Do not crop the product, use an overhead flat-lay composition or invent identity details that are not visible in the product references.

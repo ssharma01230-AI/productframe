@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, JSON, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, JSON, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -111,12 +111,101 @@ class ProductAnalysisRecord(Base):
     colours: Mapped[str] = mapped_column(String(300))
     materials: Mapped[str] = mapped_column(String(300))
     features: Mapped[list[str]] = mapped_column(JSON)
+    global_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    category_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    confidence_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     description: Mapped[str] = mapped_column(String(320))
     confidence: Mapped[float] = mapped_column()
     confirmation_status: Mapped[str] = mapped_column(String(20), default=AnalysisConfirmationStatus.SUGGESTED.value)
     final_product_id: Mapped[str | None] = mapped_column(ForeignKey("products.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     job: Mapped[AnalysisJob] = relationship(back_populates="analyses")
+
+
+class GenerationRunStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    PARTIALLY_FAILED = "partially_failed"
+    CANCELLED = "cancelled"
+
+
+class GenerationJobStatus(StrEnum):
+    PENDING = "pending"
+    GENERATING = "generating"
+    AWAITING_REVIEW = "awaiting_review"
+    VALIDATING = "validating"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class GeneratedAssetStatus(StrEnum):
+    READY = "ready"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    FAILED = "failed"
+
+
+class GenerationRun(Base):
+    __tablename__ = "generation_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(30), default=GenerationRunStatus.PENDING.value, index=True)
+    total_jobs: Mapped[int] = mapped_column(default=0)
+    completed_jobs: Mapped[int] = mapped_column(default=0)
+    failed_jobs: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    jobs: Mapped[list["GenerationJob"]] = relationship(back_populates="run", cascade="all, delete-orphan")
+
+
+class GenerationJob(Base):
+    __tablename__ = "generation_jobs"
+    __table_args__ = (UniqueConstraint("generation_run_id", "product_id", "template_id", name="uq_generation_job_selection"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    generation_run_id: Mapped[str] = mapped_column(ForeignKey("generation_runs.id", ondelete="CASCADE"), index=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    product_id: Mapped[str] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
+    template_id: Mapped[str] = mapped_column(String(160))
+    template_version: Mapped[int] = mapped_column(default=1)
+    graph_thread_id: Mapped[str] = mapped_column(String(120), unique=True)
+    preview_object_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    provider_request_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(30), default=GenerationJobStatus.PENDING.value, index=True)
+    attempt_count: Mapped[int] = mapped_column(default=0)
+    prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    negative_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    aspect_ratio: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    run: Mapped[GenerationRun] = relationship(back_populates="jobs")
+    generated_asset: Mapped["GeneratedAsset | None"] = relationship(back_populates="job", uselist=False, cascade="all, delete-orphan")
+
+
+class GeneratedAsset(Base):
+    __tablename__ = "generated_assets"
+    __table_args__ = (UniqueConstraint("generation_job_id", name="uq_generated_asset_job"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    product_id: Mapped[str] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
+    generation_run_id: Mapped[str] = mapped_column(ForeignKey("generation_runs.id", ondelete="CASCADE"), index=True)
+    generation_job_id: Mapped[str] = mapped_column(ForeignKey("generation_jobs.id", ondelete="CASCADE"), index=True)
+    template_id: Mapped[str] = mapped_column(String(160))
+    object_key: Mapped[str] = mapped_column(String(500), unique=True)
+    filename: Mapped[str] = mapped_column(String(255))
+    content_type: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(30), default=GeneratedAssetStatus.READY.value, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    job: Mapped[GenerationJob] = relationship(back_populates="generated_asset")
 
 
 class Product(Base):
@@ -130,10 +219,14 @@ class Product(Base):
     colours: Mapped[str | None] = mapped_column(String(300), nullable=True)
     materials: Mapped[str | None] = mapped_column(String(300), nullable=True)
     features: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    global_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    category_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    confidence_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     description: Mapped[str | None] = mapped_column(String(320), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     source_assets: Mapped[list["SourceAsset"]] = relationship(back_populates="product", cascade="all, delete-orphan")
+    generated_assets: Mapped[list["GeneratedAsset"]] = relationship(foreign_keys="GeneratedAsset.product_id", cascade="all, delete-orphan")
 
 
 class SourceAsset(Base):

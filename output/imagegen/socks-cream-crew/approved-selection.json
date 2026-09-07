@@ -1,0 +1,85 @@
+{
+  "approval": "Exact eight images attached and approved by the user for the current Socks Ecommerce set, in attachment order.",
+  "outputs": [
+    {
+      "attachment": "/var/folders/z1/j7dnw2w90l54_6kld7z4cs480000gn/T/codex-clipboard-20986f21-ef43-480b-9042-30b0209bed15.png",
+      "file": "01-three-quarter-on-feet.png",
+      "title": "Three-Quarter on Feet",
+      "id": "ecommerce-socks-three-quarter-on-feet",
+      "sha256": "1ea059e4ae9098768f83cb39a1fe2bd7da77980273a8db91a4c22936304879ff",
+      "approved_copy": "approved/01-three-quarter-on-feet.png",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "attachment": "/var/folders/z1/j7dnw2w90l54_6kld7z4cs480000gn/T/codex-clipboard-78691d67-26c0-4511-96ac-507ae9a277b8.png",
+      "file": "03-rear-on-feet.png",
+      "title": "Rear on Feet",
+      "id": "ecommerce-socks-rear-on-feet",
+      "sha256": "ebe38d5597ff9860ce4173ed97fbe5a9c52e0ee1690522d3c8d8dd53fe5c2304",
+      "approved_copy": "approved/03-rear-on-feet.png",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "attachment": "/var/folders/z1/j7dnw2w90l54_6kld7z4cs480000gn/T/codex-clipboard-00e7db0f-22b5-4905-90d1-5111caaa0827.png",
+      "file": "10-folded-product.png",
+      "title": "Folded Product",
+      "id": "ecommerce-socks-folded-product",
+      "sha256": "dc93b880cec1e300176426b46752f245a64c8207e83d01ddcd55ab7920b8e9fd",
+      "approved_copy": "approved/10-folded-product.png",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "attachment": "/var/folders/z1/j7dnw2w90l54_6kld7z4cs480000gn/T/codex-clipboard-5b4101ac-a4d9-4c22-970c-d4eb49dec15b.png",
+      "file": "04-flat-lay.png",
+      "title": "Flat Lay",
+      "id": "ecommerce-socks-flat-lay",
+      "sha256": "c0b6ae8eb2cba55c2d8ea3b2e2783065624b9e2324e810cdb8ee84c968b9e0b6",
+      "approved_copy": "approved/04-flat-lay.png",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "attachment": "/var/folders/z1/j7dnw2w90l54_6kld7z4cs480000gn/T/codex-clipboard-4756bbb4-d552-4bce-8a37-568ada1ac397.png",
+      "file": "06-heel-detail.png",
+      "title": "Heel Detail",
+      "id": "ecommerce-socks-heel-detail",
+      "sha256": "6ae5769527e38d5ab629fb8bf899d40492a8b578cb25237f4d5c96ca330bf0b0",
+      "approved_copy": "approved/06-heel-detail.png",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "attachment": "/var/folders/z1/j7dnw2w90l54_6kld7z4cs480000gn/T/codex-clipboard-145eebae-9d28-4e3b-9812-5fa55867c082.png",
+      "file": "08-knit-texture.png",
+      "title": "Knit Texture",
+      "id": "ecommerce-socks-knit-texture",
+      "sha256": "ad185121e8359549417561de5a59bf5e192f236754bfc30423e476d0d9747fd9",
+      "approved_copy": "approved/08-knit-texture.png",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "attachment": "/var/folders/z1/j7dnw2w90l54_6kld7z4cs480000gn/T/codex-clipboard-c8cfe57e-f6b1-4461-b4be-dd12187eeff7.png",
+      "file": "09-front-on-feet.png",
+      "title": "Front on Feet",
+      "id": "ecommerce-socks-front-on-feet",
+      "sha256": "430d1fe3edcc268153ebf774ba86c28c557cb8da340abaeefc8238c7bda38e73",
+      "approved_copy": "approved/09-front-on-feet.png",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "attachment": "/var/folders/z1/j7dnw2w90l54_6kld7z4cs480000gn/T/codex-clipboard-6f9f2bd8-8467-48cb-a650-391c684b1fbf.png",
+      "file": "06-heel-detail-on-foot.png",
+      "title": "Heel Detail on Foot",
+      "id": "ecommerce-socks-heel-detail-on-foot",
+      "sha256": "fd86b71d2965664cfc9776590a5e50fea778fe5b78728f54d33a2a9db5474bd4",
+      "approved_copy": "approved/06-heel-detail-on-foot.png",
+      "width": 1122,
+      "height": 1402
+    }
+  ]
+}

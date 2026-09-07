@@ -1,7 +1,7 @@
 'use strict';
 
 // Run with: node --test apps/web/tests/run-review.test.cjs
-// These are server-rendered markup contracts, not a substitute for browser QA.
+// Markup contracts plus isolated handler/state tests; no real auth or network IO.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -97,6 +97,83 @@ function block(html, tag, className) {
   assert.fail('Unclosed .' + className + ' markup');
 }
 
+function textContent(node) {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(textContent).join('');
+  return textContent(node.props?.children);
+}
+
+function interactive(initial, { fetch: fetchResponse = unexpected, getToken = async () => 'test-token' } = {}) {
+  // Execute the actual component's handlers with persistent hook state. Effects
+  // stay disabled so polling/focus timers cannot perform unrelated work. Children
+  // remain React elements; the separate SSR cases cover their rendered markup.
+  const slots = [];
+  let cursor = 0;
+  const hooks = {
+    ...React,
+    useState(initialValue) {
+      const index = cursor++;
+      if (!(index in slots)) slots[index] = typeof initialValue === 'function' ? initialValue() : initialValue;
+      return [slots[index], value => { slots[index] = typeof value === 'function' ? value(slots[index]) : value; }];
+    },
+    useRef(value) {
+      const index = cursor++;
+      if (!(index in slots)) slots[index] = { current:value };
+      return slots[index];
+    },
+    useMemo: factory => factory(),
+    useEffect: noop,
+  };
+  const module = { exports:{} };
+  vm.runInNewContext(compiled, {
+    module, exports:module.exports,
+    process:{env:{NEXT_PUBLIC_API_URL:'https://api.example.invalid'}},
+    fetch:fetchResponse,
+    require(name) {
+      if (name === 'react') return hooks;
+      if (name.endsWith('.css')) return {};
+      if (name === '@clerk/nextjs') return {useAuth:() => ({getToken})};
+      if (name === 'next/navigation') return {useRouter:() => ({push:unexpected})};
+      if (name === 'next/image') return {__esModule:true,default:MockImage};
+      return requireFromComponent(name);
+    },
+  }, {filename:componentPath});
+  let tree;
+  function rerender() {
+    cursor = 0;
+    tree = module.exports.default({jobId:'analysis-fixture',imageCount:15,initial});
+    return tree;
+  }
+  function nodes(predicate) {
+    const found = [];
+    function visit(node) {
+      if (Array.isArray(node)) { node.forEach(visit); return; }
+      if (!node || typeof node !== 'object' || !node.props) return;
+      if (predicate(node)) found.push(node);
+      visit(node.props.children);
+    }
+    visit(tree);
+    return found;
+  }
+  function button(label) {
+    const found = nodes(node => node.type === 'button' && textContent(node).trim() === label)[0];
+    assert.ok(found, 'Missing button: ' + label);
+    return found;
+  }
+  function component(name) {
+    const found = nodes(node => typeof node.type === 'function' && node.type.name === name)[0];
+    assert.ok(found, 'Missing component: ' + name);
+    return found;
+  }
+  rerender();
+  return {rerender,nodes,button,component,text:() => textContent(tree)};
+}
+
+function approvedRecords(products) {
+  return products.map(product => ({...product,confirmation_status:'approved',status:'approved',final_product_id:'catalogue-' + product.product_number}));
+}
+
 test('editable fields match the reference full-width and paired layout', () => {
   const editor = renderEditor();
   const labels = Array.from(editor.matchAll(/<label\b([^>]*)>([\s\S]*?)<\/label>/g));
@@ -113,6 +190,7 @@ test('editable fields match the reference full-width and paired layout', () => {
   }
   assert.match(editor, /<input(?=[^>]*name="product_name")(?=[^>]*required="")[^>]*>/);
   assert.equal((editor.match(/<textarea\b/g) || []).length, 2);
+  assert.match(editor, /Suggested details can be changed as you see fit\./);
 });
 
 test('category is locked text beneath the gallery thumbnails, outside the form', () => {
@@ -130,8 +208,9 @@ test('category is locked text beneath the gallery thumbnails, outside the form',
 
 test('completed header omits the badge and keeps all four metric icons with real counts', () => {
   const html = render(fixture());
-  assert.match(html, /3 unique products identified/);
-  assert.doesNotMatch(html, /4 unique products identified/);
+  assert.match(html, /3 products identified/);
+  assert.doesNotMatch(html, /4 products identified/);
+  assert.match(html, /Confirm we’ve got it right\./);
   assert.doesNotMatch(block(html, 'header', 'pf-heading'), /pf-state-badge|Analysis complete/);
   const metrics = block(html, 'section', 'pf-metrics');
   assert.equal((metrics.match(/<svg\b/g) || []).length, 4);
@@ -206,33 +285,62 @@ test('loading keeps the centered title and presents a truthful waiting status un
   assert.doesNotMatch(progress, /aria-valuenow/);
 });
 
-test('progress width and accessible percentage come from the backend, not processed-image counts', () => {
-  const html = render({ ...fixture(), status: 'analysing', processed_images: 0, products: [], progress: {stage:'analysis', message:'Analysing image 7 of 15', completed:7, total:15, percent:36} });
-  const progress = block(html, 'div', 'pf-progress');
-  assert.match(progress, /aria-label="Analysis progress"/);
-  assert.match(progress, /aria-valuemax="100" aria-valuenow="36"/);
-  assert.match(progress, /width:36%/);
-  assert.match(progress, /Analysing image 7 of 15 · 7 of 15 images · 36% overall/);
-  assert.match(block(html, 'div', 'pf-live-progress'), /7 of 15 images/);
-  assert.doesNotMatch(progress, /indeterminate/);
+test('image phase progress uses completed images rather than weighted or processed-image percentages', () => {
+  for (const stage of ['validation', 'screening', 'analysis']) {
+    for (const percent of [36, 100, NaN, undefined]) {
+      const html = render({ ...fixture(), status: 'analysing', processed_images: 0, products: [], progress: {stage, message:'Checking submitted images', completed:11, total:15, percent} });
+      const progress = block(html, 'div', 'pf-progress');
+      assert.match(progress, /aria-label="Analysis progress"/);
+      assert.match(progress, /aria-valuemax="100" aria-valuenow="73"/);
+      assert.match(progress, /width:73%/);
+      assert.match(progress, /Checking submitted images · 11 of 15 images · 73%/);
+      assert.match(block(html, 'div', 'pf-live-progress'), /11 of 15 images/);
+      assert.doesNotMatch(progress, /indeterminate|overall/);
+    }
+  }
+  const analysing = render({ ...fixture(), status:'analysing', products:[], progress:{stage:'analysis', message:'Working', completed:11, total:15, percent:36} });
+  assert.match(block(analysing, 'div', 'pf-loading-title'), /Analysing your images/);
 });
 
 test('product-detail synthesis reports products rather than incorrectly calling them images', () => {
   const html = render({ ...fixture(), status:'analysing', products:[], progress:{stage:'synthesis', message:'Preparing product details', completed:2, total:4, percent:88} });
   assert.match(block(html, 'div', 'pf-live-progress'), /2 of 4 products/);
   assert.match(block(html, 'div', 'pf-loading-messages'), /Preparing product details/);
+  assert.match(block(html, 'div', 'pf-loading-title'), /Preparing product details/);
+  const progress = block(html, 'div', 'pf-progress');
+  assert.match(progress, /aria-valuenow="50"/);
+  assert.match(progress, /width:50%/);
+  assert.match(progress, /Preparing product details · 2 of 4 products · 50%/);
+  assert.doesNotMatch(progress, /88%|overall|2 of 4 images/);
 });
 
-test('legacy progress remains indeterminate and invalid backend percentages cannot overflow', () => {
+test('grouping and missing stage counts remain indeterminate instead of implying completion', () => {
   const legacy = render({ ...fixture(), status:'grouping', processed_images:15, products:[] });
   assert.match(block(legacy, 'div', 'pf-progress'), /indeterminate/);
   assert.doesNotMatch(block(legacy, 'div', 'pf-progress'), /aria-valuenow/);
   assert.match(block(legacy, 'div', 'pf-loading-messages'), /Grouping matching images/);
-  for (const [percent, expected] of [[-10, 0], [150, 100], [NaN, null]]) {
-    const html = render({ ...fixture(), status:'screening', products:[], progress:{stage:'screening', message:'Checking images', completed:1, total:15, percent} });
+  assert.match(block(legacy, 'div', 'pf-loading-title'), /Grouping your products/);
+  for (const overrides of [
+    {stage:'grouping'}, {stage:'unrecognised'}, {stage:''}, {completed:undefined}, {total:undefined},
+    {completed:NaN}, {completed:Infinity}, {completed:-Infinity}, {completed:'11'},
+    {total:NaN}, {total:Infinity}, {total:'15'}, {total:0}, {total:-1},
+  ]) {
+    const html = render({ ...fixture(), status:'analysing', processed_images:15, products:[], progress:{stage:'analysis', message:'Working on this phase', completed:15, total:15, percent:100, ...overrides} });
     const progress = block(html, 'div', 'pf-progress');
-    if (expected === null) assert.doesNotMatch(progress, /aria-valuenow/);
-    else assert.ok(progress.includes('aria-valuenow="' + expected + '"'));
+    assert.match(progress, /indeterminate/);
+    assert.doesNotMatch(progress, /aria-valuenow|width:|\d+%|\d+ of \d+/);
+    assert.doesNotMatch(block(html, 'div', 'pf-live-progress'), /\d+%|\d+ of \d+/);
+  }
+});
+
+test('finite phase counts clamp within the total before calculating the percentage', () => {
+  for (const [completed, expectedCount, expectedPercent] of [[-10, 0, 0], [0, 0, 0], [18, 15, 100], [15, 15, 100]]) {
+    const html = render({ ...fixture(), status:'screening', products:[], progress:{stage:'screening', message:'Checking images', completed, total:15, percent:36} });
+    const progress = block(html, 'div', 'pf-progress');
+    assert.ok(progress.includes('aria-valuenow="' + expectedPercent + '"'));
+    assert.ok(progress.includes('width:' + expectedPercent + '%'));
+    assert.ok(progress.includes(expectedCount + ' of 15 images'));
+    assert.doesNotMatch(progress, /indeterminate/);
   }
 });
 
@@ -287,6 +395,7 @@ test('review progress and completion work for every three-product decision combi
     assert.ok(footer.includes(eligible ? approved + ' of ' + eligible + ' products reviewed' : 'All products cancelled'), statuses.join(', '));
     assert.ok(footer.includes(approved + ' approved' + (cancelled ? ' · ' + cancelled + ' cancelled' : '')));
     assert.equal(footer.includes('Done reviewing'), complete);
+    assert.equal(footer.includes('Approve all'), !complete);
     if (eligible) {
       assert.match(footer, new RegExp('aria-valuemax="' + eligible + '" aria-valuenow="' + approved + '"'));
     } else {
@@ -295,7 +404,20 @@ test('review progress and completion work for every three-product decision combi
   }
 });
 
-test('approved product thumbnails display a green-tick marker and locked fields', () => {
+test('Approve all is a non-submit footer action whenever any product remains pending', () => {
+  for (const statuses of [['suggested','suggested','suggested'], ['approved','pending','cancelled'], ['approved','rejected','suggested']]) {
+    const footer = block(render(fixture(statuses)), 'footer', 'pf-footer');
+    const button = Array.from(footer.matchAll(/<button\b[^>]*>[\s\S]*?<\/button>/g), match => match[0]).find(markup => markup.includes('Approve all'));
+    assert.ok(button);
+    assert.match(button, /^<button type="button"/);
+    assert.doesNotMatch(button, /form="pf-product-form"/);
+  }
+  for (const initial of [fixture(['approved','cancelled','rejected']), null, {...fixture(),status:'analysing'}, {...fixture(),status:'failed'}]) {
+    assert.doesNotMatch(render(initial), /Approve all/);
+  }
+});
+
+test('approved products keep locked fields and green ticks while allowing cancellation', () => {
   const initial = fixture(['approved', 'suggested', 'cancelled']);
   const rail = block(render(initial), 'aside', 'pf-rail');
   assert.equal((rail.match(/class="pf-approved-tick"/g) || []).length, 1);
@@ -303,8 +425,21 @@ test('approved product thumbnails display a green-tick marker and locked fields'
   assert.match(rail, /class="pf-sr-only" id="pf-status-product-3">Cancelled/);
   const editor = renderEditor(initial, { product: initial.products[0] });
   assert.equal((editor.match(/readOnly=""/g) || []).length, 6);
-  assert.match(editor, /disabled="" aria-label="Cancel product"/);
+  const cancel = editor.match(/<button[^>]*aria-label="Cancel product"[^>]*>/)[0];
+  assert.doesNotMatch(cancel, /disabled/);
   assert.match(editor, />Edit details<\/button>/);
+});
+
+test('cancellation explains library removal after approval and stays disabled for closed decisions or saves', () => {
+  const initial = fixture(['approved','cancelled','rejected']);
+  const approved = initial.products[0];
+  const confirmation = renderEditor(initial, {product:approved,cancelOpen:true});
+  assert.match(confirmation, /It will be removed from your Product Library, but its details and images will stay in this run/);
+  assert.match(confirmation, /Keep product/);
+  for (const overrides of [{product:approved,saving:true}, {product:approved,editing:true}, {product:initial.products[1]}, {product:initial.products[2]}]) {
+    const cancel = renderEditor(initial, overrides).match(/<button[^>]*aria-label="Cancel product"[^>]*>/)[0];
+    assert.match(cancel, /disabled=""/);
+  }
 });
 
 test('approved products unlock their six editable fields without unlocking category or cancellation', () => {
@@ -347,4 +482,234 @@ test('missing product photos use an image fallback instead of broken images or i
   const html = renderToStaticMarkup(React.createElement(Summary, { approved: [initial.products[0]], images: [], onBack: noop, onProduce: noop }));
   assert.match(html, /class="pf-image-empty"/);
   assert.doesNotMatch(html, /<img\b/);
+});
+
+test('bulk approval sends only pending drafts with trimmed editable fields and reconciles canonical saved records', async () => {
+  const initial = fixture(['approved','pending','cancelled']);
+  const draft = initial.products[1];
+  Object.assign(draft, {product_name:'  Updated shirt  ',product_type:'  Cotton shirt  ',colours:'  Navy blue  ',materials:' Cotton ',features:[' Collared ','  ',' Button front '],description:'  Current edited description.  '});
+  const saved = {...draft,product_name:'Canonical saved shirt',features:['Collared','Button front'],confirmation_status:'approved',status:'approved',final_product_id:'saved-catalogue-product'};
+  const requests = [];
+  const ui = interactive(initial, {fetch:async (url, options) => {
+    requests.push({url,options});
+    return {ok:true,json:async () => ({products:[saved]})};
+  }});
+
+  await ui.button('Approve all').props.onClick();
+  ui.rerender();
+
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url, 'https://api.example.invalid/analysis-jobs/analysis-fixture/products/approve-all');
+  assert.equal(requests[0].options.method, 'POST');
+  assert.equal(requests[0].options.headers.Authorization, 'Bearer test-token');
+  assert.equal(requests[0].options.headers['Content-Type'], 'application/json');
+  assert.deepEqual(JSON.parse(requests[0].options.body), {products:[{
+    product_number:2,product_name:'Updated shirt',product_type:'Cotton shirt',colours:'Navy blue',materials:'Cotton',features:['Collared','Button front'],description:'Current edited description.',
+  }]});
+  assert.equal(ui.nodes(node => typeof node.type === 'function' && node.type.name === 'Summary').length, 0);
+  assert.doesNotMatch(ui.text(), /Approve all/);
+  ui.button('Done reviewing').props.onClick();
+  ui.rerender();
+  const summary = ui.component('Summary');
+  assert.equal(summary.props.approved.length, 2);
+  assert.equal(summary.props.approved[1].product_name, 'Canonical saved shirt');
+  assert.equal(summary.props.approved[1].final_product_id, 'saved-catalogue-product');
+});
+
+test('bulk approval validates every pending draft, selects invalid unselected products, and sends nothing', async () => {
+  const invalidFields = [
+    ['product_name','   '], ['product_name','x'.repeat(161)], ['product_type',''], ['product_type','x'.repeat(161)],
+    ['colours',' '], ['colours','x'.repeat(301)], ['materials',''], ['materials','x'.repeat(301)],
+    ['description',' '], ['description','x'.repeat(321)], ['features',['  ']], ['features',Array(31).fill('Feature')],
+  ];
+  for (const [field,value] of invalidFields) {
+    const initial = fixture();
+    initial.products[2][field] = value;
+    let tokenCalls = 0;
+    let requestCalls = 0;
+    const ui = interactive(initial, {getToken:async () => {tokenCalls++; return 'test-token';},fetch:async () => {requestCalls++; throw new Error('Unexpected submission');}});
+    await ui.button('Approve all').props.onClick();
+    ui.rerender();
+    assert.equal(tokenCalls, 0, field);
+    assert.equal(requestCalls, 0, field);
+    assert.equal(ui.component('ProductEditor').props.product.product_number, 3, field);
+    const error = ui.nodes(node => node.props.role === 'alert')[0];
+    assert.ok(error, field);
+    assert.match(textContent(error), /Product 3:/, field);
+  }
+});
+
+test('bulk approval blocks duplicate submissions and edits until the pending request settles', async () => {
+  const initial = fixture();
+  let releaseToken;
+  const token = new Promise(resolve => {releaseToken = resolve;});
+  let tokenCalls = 0;
+  const requests = [];
+  const ui = interactive(initial, {getToken:() => {tokenCalls++; return token;},fetch:async (url, options) => {
+    requests.push({url,options});
+    return {ok:true,json:async () => ({products:approvedRecords(initial.products)})};
+  }});
+  const click = ui.button('Approve all').props.onClick;
+  const first = click();
+  await click();
+  ui.rerender();
+  assert.equal(tokenCalls, 1);
+  assert.equal(requests.length, 0);
+  const editor = ui.component('ProductEditor');
+  assert.equal(editor.props.saving, true);
+  editor.props.update(1, 'product_name', 'Unsubmitted concurrent edit');
+  ui.rerender();
+  assert.equal(ui.component('ProductEditor').props.product.product_name, initial.products[0].product_name);
+  const tabs = ui.nodes(node => node.type === 'button' && node.props.className === 'pf-product-tab');
+  assert.ok(tabs.length > 0);
+  assert.ok(tabs.every(tab => tab.props.disabled));
+  assert.ok(ui.nodes(node => node.type === 'button' && node.props['aria-label'] === 'Close run review')[0].props.disabled);
+
+  releaseToken('test-token');
+  await first;
+  ui.rerender();
+  assert.equal(requests.length, 1);
+  assert.equal(ui.component('ProductEditor').props.saving, false);
+  assert.ok(ui.button('Done reviewing'));
+});
+
+test('a failed bulk request retains edits and pending decisions so retry can safely approve them', async () => {
+  const initial = fixture();
+  const bodies = [];
+  const ui = interactive(initial, {fetch:async (url, options) => {
+    const body = JSON.parse(options.body);
+    bodies.push(body);
+    if (bodies.length === 1) return {ok:false};
+    return {ok:true,json:async () => ({products:approvedRecords(initial.products.map(product => ({...product,...body.products.find(saved => saved.product_number === product.product_number)})))})};
+  }});
+  ui.component('ProductEditor').props.update(1, 'product_name', 'My edited product');
+  ui.rerender();
+  await ui.button('Approve all').props.onClick();
+  ui.rerender();
+  assert.equal(ui.component('ProductEditor').props.product.product_name, 'My edited product');
+  assert.equal(ui.component('ProductEditor').props.product.confirmation_status, 'suggested');
+  assert.equal(ui.component('ProductEditor').props.saving, false);
+  assert.match(ui.text(), /Your edits are still here/);
+  assert.doesNotMatch(ui.text(), /Done reviewing/);
+
+  await ui.button('Approve all').props.onClick();
+  ui.rerender();
+  assert.equal(bodies.length, 2);
+  assert.deepEqual(bodies[1], bodies[0]);
+  assert.equal(bodies[1].products[0].product_name, 'My edited product');
+  assert.equal(ui.component('ProductEditor').props.product.product_name, 'My edited product');
+  assert.equal(ui.component('ProductEditor').props.product.confirmation_status, 'approved');
+  assert.ok(ui.button('Done reviewing'));
+});
+
+test('an incomplete bulk response cannot mark only part of the pending drafts approved', async () => {
+  const initial = fixture();
+  const ui = interactive(initial, {fetch:async () => ({ok:true,json:async () => ({products:approvedRecords(initial.products.slice(0, 1))})})});
+  await ui.button('Approve all').props.onClick();
+  ui.rerender();
+  assert.equal(ui.component('ProductEditor').props.product.confirmation_status, 'suggested');
+  assert.equal(ui.nodes(node => node.props.className === 'pf-approved-tick').length, 0);
+  assert.match(ui.text(), /Your edits are still here/);
+  assert.ok(ui.button('Approve all'));
+  assert.doesNotMatch(ui.text(), /Done reviewing/);
+});
+
+test('bulk response reconciliation respects a server-side cancellation rather than approving every draft locally', async () => {
+  const initial = fixture();
+  const records = approvedRecords(initial.products);
+  records[1] = {...records[1],confirmation_status:'cancelled',status:'cancelled',final_product_id:null};
+  const ui = interactive(initial, {fetch:async () => ({ok:true,json:async () => ({products:records})})});
+  await ui.button('Approve all').props.onClick();
+  ui.rerender();
+  assert.match(ui.text(), /2 approved · 1 cancelled/);
+  assert.doesNotMatch(ui.text(), /Approve all/);
+  ui.button('Done reviewing').props.onClick();
+  ui.rerender();
+  assert.equal(ui.component('Summary').props.approved.map(product => product.product_number).join(','), '1,3');
+});
+
+test('bulk approval is unavailable during approved-product editing and pending cancellation confirmation', async () => {
+  for (const mode of ['editing','cancelling']) {
+    const initial = fixture(mode === 'editing' ? ['approved','pending','suggested'] : undefined);
+    let requests = 0;
+    const ui = interactive(initial, {fetch:async () => {requests++; throw new Error('Unexpected approval');}});
+    const editor = ui.component('ProductEditor');
+    if (mode === 'editing') editor.props.onEdit();
+    else editor.props.onCancel();
+    ui.rerender();
+    if (mode === 'editing') assert.doesNotMatch(ui.text(), /Approve all/);
+    else {
+      assert.equal(ui.button('Approve all').props.disabled, true, mode);
+      await ui.button('Approve all').props.onClick();
+    }
+    assert.equal(requests, 0, mode);
+  }
+});
+
+test('cancelling an approved product requires confirmation, saves once, and updates counts and summary', async () => {
+  const initial = fixture(['approved','approved','cancelled']);
+  initial.products[0].final_product_id = 'saved-product-1';
+  let releaseToken;
+  const token = new Promise(resolve => {releaseToken = resolve;});
+  const requests = [];
+  const ui = interactive(initial, {getToken:() => token, fetch:async (url,options) => {
+    requests.push({url,options});
+    return {ok:true};
+  }});
+  ui.component('ProductEditor').props.onCancel();
+  ui.rerender();
+  assert.equal(ui.component('ProductEditor').props.cancelOpen, true);
+  assert.equal(requests.length, 0);
+  ui.component('ProductEditor').props.onKeep();
+  ui.rerender();
+  assert.equal(ui.component('ProductEditor').props.cancelOpen, false);
+  assert.equal(ui.component('ProductEditor').props.product.confirmation_status, 'approved');
+
+  ui.component('ProductEditor').props.onCancel();
+  ui.rerender();
+  const confirm = ui.component('ProductEditor').props.onConfirmCancel;
+  const saving = confirm();
+  await confirm();
+  ui.rerender();
+  assert.equal(ui.component('ProductEditor').props.saving, true);
+  assert.equal(ui.component('ProductEditor').props.product.confirmation_status, 'approved');
+  releaseToken('test-token');
+  await saving;
+  ui.rerender();
+
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url, 'https://api.example.invalid/analysis-jobs/analysis-fixture/products/1');
+  assert.equal(requests[0].options.method, 'PATCH');
+  assert.equal(JSON.parse(requests[0].options.body).status, 'cancelled');
+  assert.equal(ui.component('ProductEditor').props.product.confirmation_status, 'cancelled');
+  assert.equal(ui.component('ProductEditor').props.product.final_product_id, 'saved-product-1');
+  assert.match(ui.text(), /1 of 1 products reviewed/);
+  assert.match(ui.text(), /1 approved · 2 cancelled/);
+  assert.equal(ui.nodes(node => node.props.className === 'pf-approved-tick').length, 1);
+  ui.button('Done reviewing').props.onClick();
+  ui.rerender();
+  assert.equal(ui.component('Summary').props.approved.map(product => product.product_number).join(','), '2');
+});
+
+test('failed cancellation keeps the approved product and can be retried', async () => {
+  const initial = fixture(['approved','suggested','cancelled']);
+  let requests = 0;
+  const ui = interactive(initial, {fetch:async () => ({ok:++requests > 1})});
+  ui.component('ProductEditor').props.onCancel();
+  ui.rerender();
+  await ui.component('ProductEditor').props.onConfirmCancel();
+  ui.rerender();
+  assert.equal(ui.component('ProductEditor').props.saving, false);
+  assert.equal(ui.component('ProductEditor').props.product.confirmation_status, 'approved');
+  assert.match(ui.text(), /We could not save that decision/);
+  assert.match(ui.text(), /1 approved · 1 cancelled/);
+
+  ui.component('ProductEditor').props.onCancel();
+  ui.rerender();
+  await ui.component('ProductEditor').props.onConfirmCancel();
+  ui.rerender();
+  assert.equal(requests, 2);
+  assert.equal(ui.component('ProductEditor').props.product.confirmation_status, 'cancelled');
+  assert.match(ui.text(), /0 approved · 2 cancelled/);
+  assert.doesNotMatch(ui.text(), /We could not save that decision/);
 });

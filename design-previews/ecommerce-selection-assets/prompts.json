@@ -1,0 +1,16 @@
+{
+  "purpose": "Fictional sample customer uploads for an illustrative Ecommerce template-selection staging page; not generated outputs from the application.",
+  "method": "Built-in image_gen tool",
+  "assets": [
+    {
+      "file": "scarf-source.png",
+      "prompt": "Use case: product-mockup. Create a single photorealistic sample source product photograph for an illustrative ecommerce software prototype. NOT an interface or collage. One square silk scarf laid completely open and almost flat on a seamless pale warm grey/off-white studio surface, photographed from directly overhead. The scarf is terracotta/rust with a refined ivory broad border, thin dark burgundy piping, and a subtle cream organic geometric motif across its centre. Entire square visible, edges parallel to image edges, tiny natural undulations, no folds obscuring the design, no fringes, no labels or lettering. Material has delicate visible silk weave and subtle soft sheen. Quiet upper-left studio lighting, soft shadows. Scarf fills around 80% of frame width, centred with clean breathing room. Portrait 4:5 image. No hands, people, watches, bags, accessories beside it, branding, logos, captions, graphic overlays or watermark. This image will act as a fictional customer upload, reused honestly as source crops in a staging UI.",
+      "source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-7f5c1678-afcf-497c-9383-32400893533c.png"
+    },
+    {
+      "file": "top-source.png",
+      "prompt": "Use case: product-mockup. Create ONE photorealistic fictional source product photograph for an ecommerce software staging UI. A simple premium SKY BLUE cotton crew-neck short-sleeved T-shirt, adult regular fit, laid neatly flat on a seamless pale warm grey/off-white studio background and photographed from directly overhead. Complete front visible, sleeves laid symmetrically at a slight downward angle, collar and hem and all sleeve edges visible. No hanger, no mannequin, no person. Natural cotton jersey texture, subtle stitching around collar and hem, soft small natural fabric wrinkles. Absolutely no printed graphics, text, branding, tags, pockets or logos. The T-shirt fills about 80% of image width with margins, centred. Upper-left diffuse light and soft realistic contact shadows. Calm premium catalogue aesthetic, portrait4:5. No UI overlays or captions. This image will act as a sample customer upload for source-image crops and preview diagrams; no collage or alternative views.",
+      "source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-c4bc488e-3231-4647-8263-1cfc719b9097.png"
+    }
+  ]
+}

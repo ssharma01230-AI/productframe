@@ -1,0 +1,112 @@
+{
+  "method": "Built-in image_gen tool, one photograph per call, generated sequentially",
+  "category": "socks",
+  "reference": "01-pair-product-shot.png",
+  "notes": [
+    "Fictional unbranded cream ribbed crew socks; no user product photo was supplied.",
+    "Output 01 establishes the product. Remaining views are generated reference concepts.",
+    "Adult worn views are cropped below the knees, without footwear.",
+    "Public copies are Ecommerce template examples, not approved customer generations."
+  ],
+  "outputs": [
+    {
+      "number": 1,
+      "title": "Pair Product Shot",
+      "file": "01-pair-product-shot.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone premium photorealistic ecommerce reference photograph, output 01 PAIR PRODUCT SHOT of a coherent ten-image Socks set. Establish a fictional unbranded pair of matching warm ivory/cream crew socks, adult size, fine cotton-rich knitted appearance, narrow regular vertical ribs from a clean double-layer ribbed cuff down the leg and across the instep, smoothly knitted reinforced heel and rounded toe in the SAME cream colour, neat subtle toe seam. No logos, stripes, patterns or colour blocking. The socks have ordinary crew length reaching the lower-to-mid calf, not ankle socks or knee highs. Product-only photograph: both socks are empty but naturally shaped with invisible internal support, standing upright on the foot sections. Place the matching pair slightly staggered, both pointing the same direction at a gentle three-quarter angle towards the camera, so the cuffs, ribbing, toe shapes and one heel profile can be read. The complete two socks, all cuffs, heels and toes, must fit in the image with breathing room. No visible mannequin or body parts. Seamless warm light-grey/off-white studio background, softly grounded contact shadow, soft directional studio lighting, realistic fine knit fibres and subtle natural fabric folds, accurate plausible sock anatomy and not rigid shoes. Neutral restrained product catalogue aesthetic, portrait 4:5 image, pair occupying approximately 78 percent of image height. No text, captions, numbers, graphic frames, collage, props, shoes, hanger or watermark. Generate just one finished photograph.",
+      "references": [],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-01061dfb-2e5b-494f-9d9a-025f44f04ceb.png"
+    },
+    {
+      "number": 2,
+      "title": "Side Profile",
+      "file": "02-side-profile.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 02 SIDE PROFILE. One sock, product only, viewed exactly perpendicular to its outer side, entire sock from cuff to heel to toe visible. Its natural L-shaped silhouette is clear: calf section upright, foot rests flat and points horizontally to the left, rounded heel at the right. Invisible internal shaping, empty opening, no human body or skin. Do not reproduce the tiptoe pose of image 1: a true flat-foot side profile with correct foot and leg proportions. Full sock centered with generous small margins, approximately80 percent frame height. Show the transition from ribbed leg to smoother heel and toe, subtle contact shadow.",
+      "references": [
+        "01-pair-product-shot.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-0c9bf714-5c5b-433a-a41c-e99d2e5566d7.png"
+    },
+    {
+      "number": 3,
+      "title": "Rear View",
+      "file": "03-rear-view.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 03 REAR VIEW. Product-only straight-on rear photograph of the complete matching pair, looking directly at the backs of their legs and rounded heel cups. Socks stand naturally shaped on invisible support, soles flat on the surface and toes pointing directly away from the camera, so heel shaping and ribbed calf backs are clearly shown. Both full cuffs, full calves and complete heels visible with comfortable margins. Pair side by side with a small gap, same height, realistic crew proportions. No human body or skin. Heel and leg construction must match master reference. Clearly a rear view, not a front view or underside.",
+      "references": [
+        "01-pair-product-shot.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-754fffee-bd43-4318-8443-228c1b4aa0ba.png"
+    },
+    {
+      "number": 4,
+      "title": "Flat Lay",
+      "file": "04-flat-lay.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 04 FLAT LAY. Product-only overhead photograph of the two matching cream crew socks laid completely flat and relaxed on the studio surface, no filling or support. Arrange side-by-side slightly staggered at a gentle diagonal, toes pointing the same direction. Show each full cuff, straight ribbed leg, shaped heel and rounded toe with comfortable space around the pair. Natural small fabric ripples and softness; it must clearly read as flattened textile rather than standing or worn socks. Preserve the crew-length proportions and specific plain ribbed knit of the reference. Restrained editorial arrangement, fine knit detail in focus, soft contact shadows.",
+      "references": [
+        "01-pair-product-shot.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-6ecfc93a-3fc3-4b1f-b52c-2383f0c71080.png"
+    },
+    {
+      "number": 5,
+      "title": "Cuff Detail",
+      "file": "05-cuff-detail.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 05 CUFF DETAIL. Tight macro product-only close-up of the top opening of ONE sock, filling the frame with the gently curved double-layer ribbed cuff and a short section of vertical rib-knit leg directly below it. The cuff is softly oval and naturally open, revealing the inner rim and thickness of the neatly knitted top edge. Individual loops and fine fibres are sharply visible without looking oversized or chunky; match the master's narrow cream ribbing. The foot, heel, toe and full sock are deliberately outside frame. No hand stretching the cuff, no body inside, no added elastic band or different knit border. Shallow but usable product-photography depth of field, focus on cuff edge and nearby ribs, same neutral backdrop in remaining space.",
+      "references": [
+        "01-pair-product-shot.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-804a25d7-acfa-4245-b0b2-84e1cf54b176.png"
+    },
+    {
+      "number": 6,
+      "title": "Heel Detail",
+      "file": "06-heel-detail.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 06 HEEL DETAIL. Product-only close-up of ONE sock's shaped rounded heel cup, photographed from a rear-side angle. The heel fills the centre of the frame, its smooth denser same-cream knit contrasts subtly with the fine vertical ribbing above; show the diagonal shaping stitches where heel cup meets the ankle/foot fabric. Include only a short section of ankle above and sole/arch below. Entire cuff and toe are outside frame. Support the empty sock naturally so the heel is rounded and anatomically plausible, no skin or model visible. Soft side light reveals delicate knit loops, heel shape and joins without exaggerating thickness. This is a garment construction detail, never a bare human heel or shoe.",
+      "references": [
+        "01-pair-product-shot.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-d1122f2c-d5ed-4736-a09d-ef3ae955a3fd.png"
+    },
+    {
+      "number": 7,
+      "title": "Toe Detail",
+      "file": "07-toe-detail.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 07 TOE DETAIL. Product-only macro close-up of ONE empty sock's rounded toe cap and its neat subtle linking seam across the top, viewed from a low front three-quarter angle on the studio surface. Smooth cream toe knit transitions into the narrow ribbed instep behind it. Toe cap occupies most of frame with a short length of forefoot; cuff, ankle and heel are completely outside frame. Fine knit stitches, tiny natural cotton fibres and the seam are crisp. Anatomically believable rounded single sock toe shape, no individually separated toes, no actual skin, no visible support, no shoe. Soft natural contact shadow, restrained realistic construction detail photography.",
+      "references": [
+        "01-pair-product-shot.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-233bfc83-f5b7-4966-9368-8fcf0680e8d1.png"
+    },
+    {
+      "number": 8,
+      "title": "Knit Texture",
+      "file": "08-knit-texture.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 08 KNIT TEXTURE. An extreme macro photograph of the cream rib-knit fabric from the sock leg, filling the ENTIRE frame edge to edge. Parallel narrow raised knit ribs run gently diagonally across a very slight natural fabric ripple. Individual orderly yarn loops and fine fibres clearly visible, true cream shade and cotton-like matte softness match the reference. Show just the textile surface: no cuff edge, no openings, no heel, no toe, no whole sock and no body. Raking soft light creates delicate highlights and shadows between ribs while retaining believable yarn detail, premium textile swatch photography. Deep enough focus through the central area to read the knit structure.",
+      "references": [
+        "01-pair-product-shot.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-87fee90e-aebd-46a5-8fc0-c70d0f6e6d96.png"
+    },
+    {
+      "number": 9,
+      "title": "Front on Feet",
+      "file": "09-front-on-feet.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 09 FRONT ON FEET. The same pair of cream ribbed crew socks worn naturally by one adult model, photograph straight from the front at lower-leg height. Frame ONLY from just below the knees down to the floor with both full socked feet and all cuffs visible; no knees, face or torso. Natural adult lower legs, warm medium skin tone with realistic subtle skin texture above the cuffs. Socks reach the lower-to-mid calf, gently hugging the legs with ordinary slight ankle folds, fine narrow ribs and smoothly knitted rounded toes matching the product reference. Stand relaxed with feet flat and approximately hip-width apart, toes generally towards camera. No footwear, no shoes, no sandals or accessories; socks are the sole featured garment and feet fully covered. Feet and calf anatomy realistic, use sufficiently natural camera distance to avoid huge foreshortened feet, both feet fully inside frame with floor beneath. Clear commercial fit view, not fashion editorial or glamour photography.",
+      "references": [
+        "01-pair-product-shot.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-878c034b-b7ff-474a-b8f8-120607d8a1e9.png"
+    },
+    {
+      "number": 10,
+      "title": "Side on Feet",
+      "file": "10-side-on-feet.png",
+      "prompt": "Use case: product-mockup. Create ONE standalone photorealistic ecommerce reference photograph in a consistent socks set. Image 1 is the master identity reference: the SAME unbranded warm ivory/cream crew socks, narrow regular vertical rib knit, plain smooth same-colour reinforced heel and rounded toe, subtle toe seam, clean doubled ribbed cuff, cotton-rich fine fibres. Preserve cream shade, crew length, rib scale, thickness and construction; do not add branding, stripes, colour blocks or features. Match the warm light-grey seamless studio backdrop, soft diffused directional lighting, subtle natural shadows and realistic knit texture. Portrait 4:5 composition. No text, captions, graphics, numbering, collage, watermark, shoes, props or visible mannequin. Generate a single photograph. Output 10 SIDE ON FEET. Image 2 is the established adult wearer and front-on-feet fit reference. Show the SAME socks worn by the SAME adult model with matching warm medium skin tone, cream shade, cuff height and ankle fit, now photographed in a clear straight side profile. Frame only lower legs from below the knees down to the floor; full sock cuffs and complete heels and toes visible. Both feet point horizontally left; the near foot is flat and fully visible, the far foot is slightly behind and offset enough that the second sock is readable. Relaxed ordinary standing pose, no tiptoe or walking stride. Show true side silhouette, heel shaping, smooth toe and fine ribbed leg following the calf. No shoes or accessories. Preserve natural anatomy and credible proportions; do not hide the cuff or heel. Same studio floor, backdrop, soft light and photographic scale as image 2. This must clearly be a side fit view rather than another front view.",
+      "references": [
+        "01-pair-product-shot.png",
+        "09-front-on-feet.png"
+      ],
+      "generated_source": "/Users/shivamsharma/.codex/generated_images/01a06ac2-55ff-77e3-a1b6-1fd286eebba0/exec-f28b5472-65db-4698-b83c-c22a1a8d3e43.png"
+    }
+  ]
+}

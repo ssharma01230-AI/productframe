@@ -1,0 +1,111 @@
+{
+  "method": "Built-in image_gen tool; one image per call, generated sequentially.",
+  "category": "footwear",
+  "product": "Fictional unbranded white leather low-top trainer with natural gum rubber sole.",
+  "masterReference": "01-three-quarter-product.png",
+  "notes": [
+    "No customer product reference was supplied. Output 01 establishes the fictional trainer used across the set.",
+    "All ten are ecommerce reference examples. The outsole tread and other newly revealed surfaces are concept details, not verified specifications of a real product.",
+    "Outputs 09 and 10 show an adult wearing a matching pair, cropped below the knees."
+  ],
+  "outputs": [
+    {
+      "number": 1,
+      "title": "Three-Quarter Product",
+      "file": "01-three-quarter-product.png",
+      "prompt": "Use case: product-mockup. Create ONE photorealistic premium ecommerce preview photograph, the THREE-QUARTER PRODUCT view for a ten-image footwear set. Establish one fictional unbranded adult RIGHT FOOT low-top trainer: clean white lightly grained leather, rounded toe, plain minimal stitched leather panels, six eyelet pairs and neatly tied white flat laces, padded white collar and a plain white heel tab, pale natural gum-rubber cupsole of moderate thickness. Simple shallow herringbone outsole if a tiny edge is visible. No perforated decorative logo shapes, no stripes, no words, no brand, no numbers, no coloured embellishments. This shoe design must be simple and reproducible across further views. Show a single complete right shoe at a front three-quarter angle, toe toward the lower left and heel toward the upper right, revealing toe, lacing and lateral outer side. Include the whole toe, heel and sole with comfortable margins. Seamless warm off-white/light-grey studio floor and background, soft diffused side lighting, realistic subtle grounding shadow, accurate leather and rubber textures, restrained contemporary catalogue style. Portrait4:5 composition with product centered. No person, feet, socks, hands, shoe box or props. No text, border, watermark or collage. Single photographic image.",
+      "references": []
+    },
+    {
+      "number": 2,
+      "title": "Outer Side",
+      "file": "02-outer-side.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output02 OUTER SIDE. Use the supplied generated shoe photograph as the exact product and studio appearance reference. Photograph the same single RIGHT shoe at ground/shoe height in a perfectly straight lateral OUTER side profile. Toe points left, heel right, sole level and horizontal. This view is perpendicular to the shoe side, not an angled three-quarter view: reveal the whole lateral leather panel, stitching, low collar, toe and heel silhouette from end to end. The entire shoe has clear margins and fills about80percent of frame width, vertically centered. Do not flip/mirror the image or create the inner side. No person or second shoe. Preserve the gum sole thickness and visible fine-textured toe bumper exactly as reference.",
+      "references": [
+        "01-three-quarter-product.png"
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Inner Side",
+      "file": "03-inner-side.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output03 INNER SIDE. Image1 is the master three-quarter product identity; image2 is the outer lateral profile. Rotate that SAME RIGHT SHOE around to photograph its MEDIAL INNER side, with TOE TO THE RIGHT and HEEL TO THE LEFT. This is the inward-facing side next to the other foot, not a mirror of the lateral photograph and not a different left shoe. Let the natural subtle medial arch contour and correctly turned collar/lacing establish the new viewpoint. Keep the design simple and matching, with the same plain white leather panel language and gum sole, no added ventilation holes, labels or hardware. Perfectly straight side profile at shoe height, complete shoe from heel to toe, sole level, centered with similar scale and margins to the outer-side preview. No person and no second shoe.",
+      "references": [
+        "01-three-quarter-product.png",
+        "02-outer-side.png"
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Front View",
+      "file": "04-front-view.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output04 FRONT VIEW. Same single right trainer as the supplied reference. A precise centered straight-on view looking directly at the rounded TOE from the front. Position the camera low, just above toe height, so the toe shape, gum-rubber front bumper and the lacing/tongue rising behind are clear; not an overhead or three-quarter photograph. The shoe points straight toward the viewer, heel away from viewer, aligned vertically in the frame. Show the complete visible front silhouette with modest clear margins, naturally proportioned rather than stretched to fill the frame. Preserve the white panel seams, six-eyelet lacing arrangement and the gum toe bumper texture. No feet, model or second shoe.",
+      "references": [
+        "01-three-quarter-product.png",
+        "02-outer-side.png"
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Rear View",
+      "file": "05-rear-view.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output05 REAR VIEW. Same single right trainer, photograph straight from BEHIND its heel at shoe height. Heel faces viewer; toe points directly away behind it. Center the plain white heel tab, heel counter and natural leather seam construction above the gum sole, with the low padded collar visible. Complete heel silhouette, realistic sole thickness and the same white leather grain. Front laces may be subtly visible beyond the opening if physically appropriate, but must not look like front-facing lacing mounted on the heel. Keep the heel plain with no invented brand label or lettering. Match source product scale and studio lighting, allow comfortable blank margins. No person, foot or extra shoe.",
+      "references": [
+        "01-three-quarter-product.png",
+        "02-outer-side.png"
+      ]
+    },
+    {
+      "number": 6,
+      "title": "Top View",
+      "file": "06-top-view.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output06 TOP VIEW. Photograph the same single right shoe DIRECTLY FROM ABOVE at90degrees. Entire shoe in one clear overhead product photograph, TOE AT TOP and HEEL AT BOTTOM, with comfortable margins around the full outline. Show the rounded toe box, orderly white laces, tongue, collar opening and simple plain insole. The foot-shaped outline should naturally be that of a right shoe, not an abstract symmetrical oval. Keep the exact minimal white leather panels, eyelet count, tied lace bow and natural gum sole rim consistent with image1 master and image2 front reference. Camera optical axis perpendicular to the surface, no side perspective or isometric angle. No feet, hands, second shoe, props, insole logo or text.",
+      "references": [
+        "01-three-quarter-product.png",
+        "04-front-view.png"
+      ]
+    },
+    {
+      "number": 7,
+      "title": "Sole View",
+      "file": "07-sole-view.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output07 SOLE VIEW. Rotate the same single right trainer to expose the complete UNDERSIDE of its gum-rubber outsole, facing the camera square-on. Toe at the top, heel at bottom. Show the full foot-shaped outsole from heel to toe with clear margins, centered in the portrait frame, camera perpendicular to the sole so the tread is legible. Match the natural gum colour, rounded toe shape and overall shoe dimensions in image1; image2 is its overhead outline. Use a coherent simple shallow herringbone tread appropriate to this fictional minimal cupsole trainer, with plain perimeter border and no brand, logo, size number, text or decorative symbol. The original generated reference does not depict the underside, so this is a plausible concept outsole rather than a verified physical tread. No visible hand, foot, model or support holding the shoe. Keep realistic rubber grain and soft lighting, not a graphic diagram or technical drawing.",
+      "references": [
+        "01-three-quarter-product.png",
+        "06-top-view.png"
+      ],
+      "note": "Generic concept tread for the fictional trainer, not a verified real product outsole."
+    },
+    {
+      "number": 8,
+      "title": "Material and Detail",
+      "file": "08-material-and-detail.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output08 MATERIAL AND DETAIL. A tight macro ecommerce photograph of the same trainer's WHITE LEATHER PANEL JUNCTION, showing leather grain, the precise double stitching near the lower lace-facing panel and its join above the GUM RUBBER SOLE. Include a small recognizable portion of a white lace/eyelet near the upper edge, the stitched leather panel across the middle, and a narrow strip of the tan gum sidewall at the bottom. These details already appear in image1 and image2, reproduce their relationships faithfully. The crop should fill the frame with the actual shoe materials and construction; do not show the whole shoe or underside tread. Very realistic fine leather grain and thread, soft studio highlights, sharp main seam and gentle natural depth falloff. No branding, text, artificial glitter, decorative overlays, hand or model. Clearly a close-up construction/texture shot.",
+      "references": [
+        "01-three-quarter-product.png",
+        "02-outer-side.png"
+      ]
+    },
+    {
+      "number": 9,
+      "title": "Front on Feet",
+      "file": "09-front-on-feet.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output09 FRONT ON FEET. Show a properly matching LEFT AND RIGHT PAIR of the established white leather/gum trainers actually worn by ONE ADULT model, photographed straight from the front at footwear height. Use image1 as the shoe identity reference and image2 as the exact front-facing design. Both feet stand naturally side by side, approximately hip-width apart, toes pointing toward the camera with almost parallel orientation. The model wears plain black straight-leg trousers ending just above the shoe collars; no visible branding or distracting styling. Crop from BELOW THE KNEES, approximately mid-calf, to the floor below the entire shoes. No torso, hands or face. Make the trainers prominent, preserve correct adult anatomy, realistic footwear fit, naturally tied laces, gum sole colour, toe shape and panel details. Keep both complete toes and heels within frame and clear of each other, soft grounded studio shadows, no extra footwear.",
+      "references": [
+        "01-three-quarter-product.png",
+        "04-front-view.png"
+      ]
+    },
+    {
+      "number": 10,
+      "title": "Side on Feet",
+      "file": "10-side-on-feet.png",
+      "prompt": "Use case: product-mockup. Generate ONE photorealistic ecommerce reference photograph for a consistent ten-image footwear set. Portrait 4:5 image, seamless warm off-white/light-grey studio background and surface, soft diffused side light, delicate grounded shadows, natural product textures. Use the same unbranded low-top lace-up white leather trainer in every supplied reference: rounded toe, simple stitched leather panel construction, white flat laces, six eyelet pairs, plain padded collar and heel tab, pale natural rubber cupsole. Preserve the actual silhouette, panel layout, eyelets, laces, outsole sidewall and material colours established by the references. This is a fictional reference product for illustrating output types. No logos, branding, words, size labels, text, watermark, border, split panel or collage. No props. Output10 SIDE ON FEET. Image1 is the master trainer product, image2 its outer side and image3 the established adult model's black trousers and front-on-feet fit. Show that matching white leather/gum LEFT AND RIGHT PAIR worn by the same adult with the same plain black trousers, now in a relaxed sideways stance. Camera at footwear height perpendicular to the near shoe's outer lateral side, TOES POINT LEFT and heels right. The nearest shoe's full toe-to-heel profile is clear and unobstructed. The farther foot is subtly staggered behind, natural anatomy and floor contact, not another floating disconnected shoe. Crop below the knees, with full shoes in the frame and comfortable margins. Emphasize gum sole thickness, white leather side panels, collar fit and natural foot proportions. Keep identical lighting/background and no torso, face, hands or extra props. Clearly a side profile worn view, not another three-quarter or front angle.",
+      "references": [
+        "01-three-quarter-product.png",
+        "02-outer-side.png",
+        "09-front-on-feet.png"
+      ]
+    }
+  ]
+}

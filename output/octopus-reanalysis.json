@@ -1,0 +1,284 @@
+{
+  "product_name": "Teal short sleeve crew neck graphic t-shirt with orange octopus print",
+  "category": "tops",
+  "product_type": "short sleeve teal crew neck t-shirt with detailed orange octopus graphic print",
+  "colours": "Primary colour teal with secondary colours orange, white, black. Graphic octopus print centred on chest. Colour distribution mostly solid teal background with central graphic. Tonal variation moderate in graphic shading. Saturation medium. Brightness medium. Matte finish. No visible wash or fade. No",
+  "colour_details": {
+    "primary_colour": "teal",
+    "secondary_colours": [
+      "orange",
+      "white",
+      "black"
+    ],
+    "pattern": "graphic octopus print",
+    "colour_distribution": "solid teal background with central graphic",
+    "tonal_variation": "moderate variation in the print shading",
+    "saturation": "medium",
+    "brightness": "medium",
+    "colour_finish": "matte",
+    "wash_treatment": "none visible",
+    "fade_level": "none visible",
+    "colour_variation": "none visible",
+    "visible_uncertainties": []
+  },
+  "materials": "Appears to be medium weight cotton or cotton-blend jersey fabric with soft, smooth texture. Moderate drape typical of knit tees. No high sheen or stretch visibly apparent. Matte finish without surface gloss or shine. Fabric appears wrinkle-free and evenly worn. No visible surface damage or pilling.",
+  "features": [
+    "short sleeves",
+    "crew neckline with narrow band",
+    "central large detailed orange octopus graphic print with eight curling tentacles, white suction cups and shading for dimension, black outline and features including eyes, positioned centred on chest with sharp edges and no fading.",
+    "No visible pockets, buttons, zips or hardware."
+  ],
+  "description": "This teal crew neck t-shirt features a large, detailed orange octopus graphic prominently centred on the chest. Made from a smooth, medium-weight cotton jersey with short sleeves, it has a matte finish and shows no visible wear or distress. The fit is standard with a narrow neck binding and relaxed shoulders.",
+  "confidence": 0.9,
+  "tops_details": {
+    "neckline_type": "crew neck with narrow band",
+    "neckline_depth": "standard crew neckline",
+    "sleeve_type": "set-in sleeves",
+    "sleeve_length": "short sleeves ending mid-upper arm",
+    "sleeve_width": "moderate, not tight",
+    "shoulder_shape": "natural shoulder with no drop",
+    "collar_or_neck_binding": "narrow band binding at neckline",
+    "hem_shape": "straight hem",
+    "fit_and_silhouette": "standard fit, neither tight nor loose",
+    "garment_length": "standard t-shirt length falling at hips",
+    "material_appearance": "matte, smooth cotton jersey",
+    "apparent_weight": "medium weight",
+    "surface_texture": "smooth, fine knit",
+    "surface_finish": "matte",
+    "construction_details": [
+      "stitched hem",
+      "narrow neck band stitched in place",
+      "set-in sleeves sewn flat to body"
+    ],
+    "visible_uncertainties": [
+      "exact fabric composition",
+      "exact fit dimensions"
+    ],
+    "collar_thickness": "thin, single layered",
+    "collar_width": "narrow band approx 1cm",
+    "neckline_rigidity": "soft, flexible neckline band",
+    "body_width_relative_to_length": "balanced width and length",
+    "shoulder_drop": "none visible, natural shoulder seam placement",
+    "silhouette_volume": "standard volume, not oversized or fitted",
+    "sleeve_width_relative_to_body": "proportional, moderate width",
+    "hem_position": "hip level",
+    "drape_quality": "moderate drape with natural fall",
+    "rigidity_level": "soft fabric",
+    "wrinkle_visibility": "none visible",
+    "surface_softness": "soft appearance",
+    "fabric_body": "medium body",
+    "wash_treatment": "no visible treatments or fading",
+    "fade_level": "none",
+    "graphic_condition": "sharp and clear print, no fading or cracking",
+    "graphic_scale": "large, covering central chest area",
+    "graphic_placement": "center front, chest level",
+    "graphic_edge_quality": "clean, sharp edges without distress or wear"
+  },
+  "global_details": {
+    "colour": {
+      "primary_colour": "teal",
+      "secondary_colours": [
+        "orange",
+        "white",
+        "black"
+      ],
+      "pattern": "graphic octopus print",
+      "colour_distribution": "mainly solid with central graphic",
+      "tonal_variation": "moderate in print shading",
+      "saturation": "medium",
+      "brightness": "medium",
+      "colour_finish": "matte",
+      "wash_treatment": "none visible",
+      "fade_level": "none",
+      "colour_variation": "none",
+      "visible_uncertainties": []
+    },
+    "materials": {
+      "appearance": "smooth knit fabric",
+      "weight": "medium",
+      "thickness": "medium",
+      "texture": "soft, fine knit",
+      "finish": "matte",
+      "stretch_or_flexibility": "moderate stretch typical of jersey knit",
+      "drape_or_rigidity": "natural drape",
+      "visible_condition": "excellent, no wear or damage",
+      "drape_quality": "moderate",
+      "rigidity_level": "soft",
+      "wrinkle_visibility": "none",
+      "surface_softness": "soft",
+      "fabric_body": "medium",
+      "visible_uncertainties": [
+        "exact fibre composition"
+      ]
+    },
+    "construction": {
+      "silhouette": "standard t-shirt fit",
+      "shape": "straight body",
+      "proportions": "balanced length and width",
+      "construction_details": [
+        "stitched hems",
+        "narrow neck binding",
+        "set-in sleeves"
+      ],
+      "functional_details": [
+        "standard crew neck, short sleeve t-shirt"
+      ],
+      "callouts": [
+        "large central octopus print graphic"
+      ],
+      "visible_uncertainties": []
+    },
+    "branding": {
+      "graphics": [
+        "large octopus graphic centred on chest, orange with white suction cups and black details"
+      ],
+      "logos": [],
+      "graphic_details": [
+        "eight curling tentacles",
+        "distinct eye details",
+        "sharp edges, no edge wear",
+        "centrally placed"
+      ]
+    },
+    "gender": {
+      "assumed": "male",
+      "user_confirmed": null
+    }
+  },
+  "category_details": {
+    "subtype": "short sleeve crew neck graphic t-shirt",
+    "neckline_type": "crew neck",
+    "neckline_depth": "standard depth",
+    "collar_type": "narrow band collar",
+    "sleeve_type": "set-in sleeves",
+    "sleeve_length": "short",
+    "sleeve_width": "moderate width",
+    "shoulder_shape": "natural shoulder with no visible drop",
+    "cuff_details": "none",
+    "hem_shape": "straight hem",
+    "fit_and_silhouette": "standard fit",
+    "garment_length": "standard t-shirt length at hips",
+    "closure_details": [],
+    "pocket_details": [],
+    "hood_details": [],
+    "visible_uncertainties": [
+      "exact fabric fibre composition",
+      "exact numeric size",
+      "back and side views hidden"
+    ],
+    "collar_thickness": "thin collar band",
+    "collar_width": "narrow approx 1 cm",
+    "neckline_rigidity": "soft flexible band",
+    "body_width_relative_to_length": "balanced",
+    "shoulder_drop": "none",
+    "silhouette_volume": "standard",
+    "sleeve_width_relative_to_body": "proportionate",
+    "hem_position": "hip",
+    "drape_quality": "moderate drape",
+    "rigidity_level": "soft fabric",
+    "wrinkle_visibility": "none",
+    "surface_softness": "soft",
+    "fabric_body": "medium",
+    "wash_treatment": "none visible",
+    "fade_level": "none",
+    "graphic_condition": "sharp and clear",
+    "graphic_scale": "large",
+    "graphic_placement": "centre front chest",
+    "graphic_edge_quality": "clean edges"
+  },
+  "confidence_details": {
+    "overall": {
+      "score": 0.9,
+      "status": "clearly_visible",
+      "evidence": [
+        "high resolution image shows clear textile and print details",
+        "graphic octopus print is sharp and centrally positioned",
+        "neckline, sleeve and hem construction visible"
+      ],
+      "uncertainties": [
+        "exact fibre content",
+        "numeric size",
+        "hidden parts of garment"
+      ]
+    },
+    "category": {
+      "score": 1.0,
+      "status": "user_confirmed",
+      "evidence": [
+        "categorization from user input"
+      ],
+      "uncertainties": []
+    },
+    "product_identity": {
+      "score": 0.85,
+      "status": "clearly_visible",
+      "evidence": [
+        "visible detailed graphic print",
+        "distinct neckline and sleeve style"
+      ],
+      "uncertainties": [
+        "exact size",
+        "fibre content"
+      ]
+    },
+    "colour": {
+      "score": 0.95,
+      "status": "clearly_visible",
+      "evidence": [
+        "consistent teal fabric colour",
+        "distinct orange, white and black graphic"
+      ],
+      "uncertainties": []
+    },
+    "materials": {
+      "score": 0.7,
+      "status": "partially_visible",
+      "evidence": [
+        "texture and drape consistent with knit cotton or blend"
+      ],
+      "uncertainties": [
+        "exact fibre composition",
+        "fabric treatments"
+      ]
+    },
+    "construction": {
+      "score": 0.85,
+      "status": "clearly_visible",
+      "evidence": [
+        "visible neckline binding, hem stitching and sleeve seams"
+      ],
+      "uncertainties": [
+        "interior construction details not visible"
+      ]
+    },
+    "branding": {
+      "score": 0.9,
+      "status": "clearly_visible",
+      "evidence": [
+        "clear identifiable graphic exact in details and placement"
+      ],
+      "uncertainties": []
+    },
+    "category_specific": {
+      "score": 0.9,
+      "status": "clearly_visible",
+      "evidence": [
+        "crew neck, short sleeves, graphic print clearly visible"
+      ],
+      "uncertainties": [
+        "numeric sizing details not visible"
+      ]
+    },
+    "gender": {
+      "score": 0.65,
+      "status": "uncertain",
+      "evidence": [
+        "model wearing shirt appears male"
+      ],
+      "uncertainties": [
+        "gender assumed from wear style, user not confirmed"
+      ],
+      "source": "none"
+    }
+  }
+}

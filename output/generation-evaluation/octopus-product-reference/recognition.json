@@ -1,0 +1,294 @@
+{
+  "product_name": "Dark teal short-sleeve crew neck T-shirt with orange octopus graphic",
+  "category": "tops",
+  "product_type": "short-sleeve crew neck T-shirt with graphic print",
+  "colours": "Dark teal base with bright orange and white details in octopus graphic",
+  "colour_details": {
+    "primary_colour": "dark teal",
+    "secondary_colours": [
+      "bright orange",
+      "white"
+    ],
+    "pattern": "solid base with centered large graphic print",
+    "colour_distribution": "mostly dark teal with large orange octopus graphic central on front",
+    "tonal_variation": "low tonal variation in base, high contrast graphic",
+    "saturation": "graphic has high saturation in orange",
+    "brightness": "base colour medium-dark, graphic bright",
+    "colour_finish": "matte base, matte graphic print",
+    "wash_treatment": "none visible",
+    "fade_level": "none visible",
+    "colour_variation": "none visible",
+    "visible_uncertainties": []
+  },
+  "materials": "appears to be medium-weight knit fabric, likely cotton or cotton blend with soft texture and moderate drape, no visible sheen, no visible stretch, untreated surface without fading or wear",
+  "features": [
+    "center front large octopus graphic print with eight curled tentacles, detailed suckers in white, black shading for depth, single large eye distinct",
+    "crew neckline with ribbed neck binding",
+    "short sleeves ending above the elbow",
+    "no visible pockets or closures"
+  ],
+  "description": "This short-sleeve crew neck T-shirt is dark teal with a prominent orange octopus graphic at the front center. The print depicts detailed tentacles with suckers and shading for dimension. The knit fabric has a soft texture with moderate drape and no sheen. The shirt has a clean neckline with no additional features or ob",
+  "confidence": 0.95,
+  "tops_details": {
+    "neckline_type": "crew neck",
+    "neckline_depth": "standard, above collarbone",
+    "sleeve_type": "set-in",
+    "sleeve_length": "short, above elbow",
+    "sleeve_width": "standard, not tight nor loose",
+    "shoulder_shape": "natural shoulder line, not dropped",
+    "collar_or_neck_binding": "ribbed neck binding, approximately 1cm thick",
+    "hem_shape": "straight hem",
+    "fit_and_silhouette": "comfortable, semi-fitted silhouette",
+    "garment_length": "hip length",
+    "material_appearance": "matte, knit fabric with soft texture, medium weight",
+    "apparent_weight": "medium",
+    "surface_texture": "soft, slightly textured knit",
+    "surface_finish": "matte",
+    "construction_details": [
+      "crew neck with ribbed binding",
+      "standard side seams",
+      "no visible embellishments beyond print"
+    ],
+    "visible_uncertainties": [
+      "exact fibre content",
+      "fabric stretch",
+      "interior construction details"
+    ],
+    "collar_thickness": "approximately 1cm ribbing",
+    "collar_width": "standard crew neck width",
+    "neckline_rigidity": "soft, flexible neckline ribbing",
+    "body_width_relative_to_length": "balanced standard ratio",
+    "shoulder_drop": "minimal or none",
+    "silhouette_volume": "moderate, semi-fitted",
+    "sleeve_width_relative_to_body": "proportional standard",
+    "hem_position": "hip level",
+    "drape_quality": "moderate drape",
+    "rigidity_level": "soft, pliable",
+    "wrinkle_visibility": "no prominent wrinkles",
+    "surface_softness": "appears soft",
+    "fabric_body": "medium body knit",
+    "wash_treatment": "no visible wash effects",
+    "fade_level": "no visible fading",
+    "graphic_condition": "sharp print edges with clean detail",
+    "graphic_scale": "large scale covering front torso",
+    "graphic_placement": "centered on front torso",
+    "graphic_edge_quality": "crisp edges without distress or fading"
+  },
+  "global_details": {
+    "colour": {
+      "primary_colour": "dark teal",
+      "secondary_colours": [
+        "bright orange",
+        "white"
+      ],
+      "pattern": "solid with graphic print",
+      "colour_distribution": "dark teal background with large orange graphic center front",
+      "tonal_variation": "low in base, high in print",
+      "saturation": "print colors high",
+      "brightness": "medium dark base, bright print",
+      "colour_finish": "matte",
+      "wash_treatment": "none visible",
+      "fade_level": "none visible",
+      "colour_variation": "none visible",
+      "visible_uncertainties": []
+    },
+    "materials": {
+      "appearance": "matte knit fabric with soft texture",
+      "weight": "medium weight",
+      "thickness": "medium thickness",
+      "texture": "soft, slight grain",
+      "finish": "matte finish",
+      "stretch_or_flexibility": "unknown",
+      "drape_or_rigidity": "moderate drape",
+      "visible_condition": "new or well-maintained",
+      "drape_quality": "moderate",
+      "rigidity_level": "soft",
+      "wrinkle_visibility": "none notable",
+      "surface_softness": "soft",
+      "fabric_body": "medium body knit",
+      "visible_uncertainties": [
+        "exact fibre content",
+        "fabric stretch"
+      ]
+    },
+    "construction": {
+      "silhouette": "semi-fitted T-shirt",
+      "shape": "standard crew neck T-shirt shape",
+      "proportions": "balanced proportions for torso and sleeves",
+      "construction_details": [
+        "crew neckline ribbed binding",
+        "set-in short sleeves",
+        "standard side seams"
+      ],
+      "functional_details": [],
+      "callouts": [
+        "center front graphic print"
+      ],
+      "visible_uncertainties": []
+    },
+    "branding": {
+      "graphics": [
+        "orange octopus graphic with eight curled tentacles, detailed suckers, shading, single visible eye"
+      ],
+      "logos": [],
+      "graphic_details": [
+        "graphic occupies central front torso, vertically aligned, with tentacles spreading outward",
+        "clean edges with no distress or fading",
+        "colors include shades of orange, white highlights and black shading",
+        "print rectangular bounds roughly centered below neckline"
+      ],
+      "artwork_regions": [
+        {
+          "artwork_type": "print",
+          "description": "Large orange octopus graphic print with detailed tentacles and suckers placed center front chest on dark teal T-shirt",
+          "source_bounds": [
+            0.18,
+            0.35,
+            0.64,
+            0.46
+          ],
+          "garment_relative_bounds": [
+            0.18,
+            0.35,
+            0.64,
+            0.46
+          ],
+          "visible_fraction": 1.0,
+          "extraction_confidence": 0.9
+        }
+      ]
+    },
+    "gender": {
+      "assumed": "male",
+      "user_confirmed": null
+    },
+    "source_rotation_degrees": 180
+  },
+  "category_details": {
+    "subtype": "short-sleeve crew neck T-shirt with graphic print",
+    "neckline_type": "crew neck",
+    "neckline_depth": "standard, close to neckline base",
+    "collar_type": "ribbed crew neck binding",
+    "sleeve_type": "set-in short sleeves",
+    "sleeve_length": "short, above the elbow",
+    "sleeve_width": "standard",
+    "shoulder_shape": "natural, not dropped",
+    "cuff_details": "none",
+    "hem_shape": "straight",
+    "fit_and_silhouette": "semi fitted",
+    "garment_length": "hip length",
+    "closure_details": [],
+    "pocket_details": [],
+    "hood_details": [],
+    "visible_uncertainties": [],
+    "collar_thickness": "approximately 1cm ribbing",
+    "collar_width": "standard crew neck width",
+    "neckline_rigidity": "soft and flexible ribbing",
+    "body_width_relative_to_length": "balanced body width relative to length",
+    "shoulder_drop": "minimal",
+    "silhouette_volume": "moderate",
+    "sleeve_width_relative_to_body": "proportional",
+    "hem_position": "hip level",
+    "drape_quality": "moderate",
+    "rigidity_level": "soft",
+    "wrinkle_visibility": "no prominent wrinkles",
+    "surface_softness": "soft",
+    "fabric_body": "medium weight knit",
+    "wash_treatment": "none visible",
+    "fade_level": "none visible",
+    "graphic_condition": "sharp, clean edges",
+    "graphic_scale": "large, centered",
+    "graphic_placement": "center front chest",
+    "graphic_edge_quality": "crisp"
+  },
+  "confidence_details": {
+    "overall": {
+      "score": 0.95,
+      "status": "clearly_visible",
+      "evidence": [
+        "good image clarity",
+        "all major product features clearly visible",
+        "distinct graphic print visible and detailed"
+      ],
+      "uncertainties": []
+    },
+    "category": {
+      "score": 0.98,
+      "status": "user_confirmed",
+      "evidence": [
+        "user confirmed 'tops' category"
+      ],
+      "uncertainties": []
+    },
+    "product_identity": {
+      "score": 0.95,
+      "status": "clearly_visible",
+      "evidence": [
+        "clear T-shirt silhouette and construction",
+        "visible crew neck and sleeves",
+        "distinct graphic print"
+      ],
+      "uncertainties": []
+    },
+    "colour": {
+      "score": 0.95,
+      "status": "clearly_visible",
+      "evidence": [
+        "dark teal base clearly visible",
+        "bright orange and white graphic colours",
+        "no obscured colours"
+      ],
+      "uncertainties": []
+    },
+    "materials": {
+      "score": 0.85,
+      "status": "partially_visible",
+      "evidence": [
+        "knit texture and weight visible",
+        "soft surface texture apparent"
+      ],
+      "uncertainties": [
+        "exact fibre content unconfirmed",
+        "fabric stretch unknown"
+      ]
+    },
+    "construction": {
+      "score": 0.9,
+      "status": "clearly_visible",
+      "evidence": [
+        "neckline ribbing visible",
+        "set-in sleeves and hem clear"
+      ],
+      "uncertainties": [
+        "interior construction not visible"
+      ]
+    },
+    "branding": {
+      "score": 0.8,
+      "status": "clearly_visible",
+      "evidence": [
+        "large, detailed octopus graphic at center front with clear edges"
+      ],
+      "uncertainties": []
+    },
+    "category_specific": {
+      "score": 0.95,
+      "status": "clearly_visible",
+      "evidence": [
+        "all tops-specific attributes determinable from image"
+      ],
+      "uncertainties": []
+    },
+    "gender": {
+      "score": 0.85,
+      "status": "uncertain",
+      "evidence": [
+        "model assumed male"
+      ],
+      "uncertainties": [
+        "gender not user confirmed"
+      ],
+      "source": "none"
+    }
+  }
+}

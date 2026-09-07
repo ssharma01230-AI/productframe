@@ -1,0 +1,274 @@
+{
+  "product_name": "Blue oversized short-sleeve printed casual t-shirt",
+  "category": "tops",
+  "product_type": "short-sleeve oversized printed casual t-shirt",
+  "colours": "blue with white print",
+  "colour_details": {
+    "primary_colour": "blue",
+    "secondary_colours": [
+      "white"
+    ],
+    "pattern": "large printed text and number",
+    "colour_distribution": "mostly blue with a large white print on front",
+    "tonal_variation": "low - solid blue",
+    "saturation": "medium",
+    "brightness": "medium",
+    "colour_finish": "matte",
+    "wash_treatment": "none visible",
+    "fade_level": "none",
+    "colour_variation": "uniform",
+    "visible_uncertainties": []
+  },
+  "materials": "appears to be medium-weight cotton or cotton-blend jersey with soft texture and minimal sheen, slight drape, no visible stretch",
+  "features": [
+    "large white print on front with text 'MAYBE' above large numerals '67', print shows slight distressed effect",
+    "raw edge details on neckline and sleeve hems not visible",
+    "no collar, standard round neckline",
+    "short sleeves ending above elbow",
+    "visible shoulder seam across upper chest"
+  ],
+  "description": "This oversized short-sleeve casual t-shirt features a medium-blue colour with a large white distressed print 'MAYBE 67' on the chest. It has a round neckline and relaxed dropped shoulders, made of medium-weight soft cotton or cotton-blend material, providing a loose casual fit with moderate drape.",
+  "confidence": 0.95,
+  "tops_details": {
+    "neckline_type": "round crew neckline",
+    "neckline_depth": "standard - neckline sits close to base of neck",
+    "sleeve_type": "set-in sleeve",
+    "sleeve_length": "short sleeve ending above elbow",
+    "sleeve_width": "loose and relaxed",
+    "shoulder_shape": "dropped relaxed shoulders with shoulder seam extending across upper chest",
+    "collar_or_neck_binding": "double stitched flat binding at neckline",
+    "hem_shape": "straight hem",
+    "fit_and_silhouette": "oversized relaxed fit",
+    "garment_length": "hip length, lower than waist",
+    "material_appearance": "medium-weight, soft cotton or cotton-blend jersey",
+    "apparent_weight": "medium",
+    "surface_texture": "smooth soft knit",
+    "surface_finish": "matte finish",
+    "construction_details": [
+      "shoulder seams drop across upper chest",
+      "double stitched neckline binding",
+      "regular side seams"
+    ],
+    "visible_uncertainties": [
+      "collar thickness not prominent",
+      "collar width exact measurement not visible",
+      "neckline rigidity uncertain",
+      "shoulder drop degree exact measurement not visible",
+      "wear or finish variations"
+    ],
+    "collar_thickness": "thin collar binding",
+    "collar_width": "narrow collar band",
+    "neckline_rigidity": "soft neckline",
+    "body_width_relative_to_length": "wide body width relative to length, loose fit",
+    "shoulder_drop": "noticeable dropped shoulder seam",
+    "silhouette_volume": "voluminous relaxed silhouette",
+    "sleeve_width_relative_to_body": "proportionally wide loose sleeves",
+    "hem_position": "positional hip length",
+    "drape_quality": "moderate drape",
+    "rigidity_level": "soft fabric with low rigidity",
+    "wrinkle_visibility": "minimal wrinkles visible",
+    "surface_softness": "soft texture",
+    "fabric_body": "medium weight knit fabric",
+    "wash_treatment": "no visible wash treatment",
+    "fade_level": "none visible",
+    "graphic_condition": "print with slight distressed effect",
+    "graphic_scale": "large central print",
+    "graphic_placement": "center front chest",
+    "graphic_edge_quality": "edges slightly distressed or worn"
+  },
+  "global_details": {
+    "colour": {
+      "primary_colour": "blue",
+      "secondary_colours": [
+        "white"
+      ],
+      "pattern": "large white printed text and numbers",
+      "colour_distribution": "dominantly blue with large white graphic on front",
+      "tonal_variation": "uniform blue",
+      "saturation": "medium",
+      "brightness": "medium",
+      "colour_finish": "matte",
+      "wash_treatment": "none visible",
+      "fade_level": "none",
+      "colour_variation": "uniform",
+      "visible_uncertainties": []
+    },
+    "materials": {
+      "appearance": "smooth soft knit",
+      "weight": "medium weight",
+      "thickness": "medium thickness suitable for t-shirt",
+      "texture": "soft cotton or cotton-blend knit",
+      "finish": "matte",
+      "stretch_or_flexibility": "likely some stretch but not visible",
+      "drape_or_rigidity": "moderate drape",
+      "visible_condition": "new, no visible wear or damage",
+      "drape_quality": "moderate",
+      "rigidity_level": "soft",
+      "wrinkle_visibility": "minimal wrinkles",
+      "surface_softness": "soft",
+      "fabric_body": "medium weight knit fabric",
+      "visible_uncertainties": [
+        "exact fibre type"
+      ]
+    },
+    "construction": {
+      "silhouette": "oversized loose silhouette",
+      "shape": "boxy relaxed shape",
+      "proportions": "wide body relative to length",
+      "construction_details": [
+        "round neckline with flat binding",
+        "dropped shoulder seams",
+        "set-in short sleeves",
+        "double stitched bindings",
+        "regular side seams"
+      ],
+      "functional_details": [],
+      "callouts": [
+        "large printed front graphic"
+      ],
+      "visible_uncertainties": [
+        "inner seam details"
+      ]
+    },
+    "branding": {
+      "graphics": [
+        "large off-white printed text 'MAYBE' and number '67' on front"
+      ],
+      "logos": [],
+      "graphic_details": [
+        "single graphic with two text elements, 'MAYBE' smaller above large '67', print with slight distressed or worn effect edges, centered horizontally on chest, no overlap with seams"
+      ]
+    },
+    "gender": {
+      "assumed": "female",
+      "user_confirmed": null
+    }
+  },
+  "category_details": {
+    "subtype": "short-sleeve oversized printed casual t-shirt",
+    "neckline_type": "round crew neckline",
+    "neckline_depth": "standard neckline",
+    "collar_type": "narrow flat binding collar",
+    "sleeve_type": "set-in short sleeve",
+    "sleeve_length": "short",
+    "sleeve_width": "loose and relaxed",
+    "shoulder_shape": "dropped shoulder seam extending across upper chest",
+    "cuff_details": "no cuffs, raw or fixed hem on sleeves",
+    "hem_shape": "straight hem",
+    "fit_and_silhouette": "oversized relaxed fit",
+    "garment_length": "hip length",
+    "closure_details": [],
+    "pocket_details": [],
+    "hood_details": [],
+    "visible_uncertainties": [
+      "exact collar thickness not visible",
+      "neckline rigidity exact level uncertain",
+      "exact shoulder drop angle",
+      "fabric stretch level"
+    ],
+    "collar_thickness": "thin",
+    "collar_width": "narrow",
+    "neckline_rigidity": "soft",
+    "body_width_relative_to_length": "wide body width relative to length",
+    "shoulder_drop": "noticeable dropped shoulder",
+    "silhouette_volume": "voluminous",
+    "sleeve_width_relative_to_body": "wide loose sleeves",
+    "hem_position": "hip",
+    "drape_quality": "moderate",
+    "rigidity_level": "soft",
+    "wrinkle_visibility": "minimal",
+    "surface_softness": "soft",
+    "fabric_body": "medium weight knit",
+    "wash_treatment": "none visible",
+    "fade_level": "none",
+    "graphic_condition": "slightly distressed print",
+    "graphic_scale": "large",
+    "graphic_placement": "center front chest",
+    "graphic_edge_quality": "distressed edges"
+  },
+  "confidence_details": {
+    "overall": {
+      "score": 0.95,
+      "status": "clearly_visible",
+      "evidence": [
+        "clear image of short-sleeve loose t-shirt with visible neckline, sleeves, print, and fabric texture"
+      ],
+      "uncertainties": []
+    },
+    "category": {
+      "score": 0.99,
+      "status": "user_confirmed",
+      "evidence": [
+        "user provided category 'tops' and type"
+      ],
+      "uncertainties": []
+    },
+    "product_identity": {
+      "score": 0.9,
+      "status": "clearly_visible",
+      "evidence": [
+        "clear visible short-sleeve oversized t-shirt with large top front white print"
+      ],
+      "uncertainties": []
+    },
+    "colour": {
+      "score": 0.95,
+      "status": "clearly_visible",
+      "evidence": [
+        "visible solid blue primary colour and white contrasting print"
+      ],
+      "uncertainties": []
+    },
+    "materials": {
+      "score": 0.85,
+      "status": "partially_visible",
+      "evidence": [
+        "fabric texture visible as medium-weight knit typical of cotton or blend"
+      ],
+      "uncertainties": [
+        "exact fibre composition not determinable"
+      ]
+    },
+    "construction": {
+      "score": 0.9,
+      "status": "clearly_visible",
+      "evidence": [
+        "visible seams, neckline binding, sleeve hems, shoulder construction visible"
+      ],
+      "uncertainties": [
+        "inner seam construction not visible"
+      ]
+    },
+    "branding": {
+      "score": 0.85,
+      "status": "clearly_visible",
+      "evidence": [
+        "large printed graphic with readable text and numbers, visible print distress detail"
+      ],
+      "uncertainties": [
+        "no brand logos visible"
+      ]
+    },
+    "category_specific": {
+      "score": 0.95,
+      "status": "clearly_visible",
+      "evidence": [
+        "dropped shoulder seams, oversized loose fit, round neckline, short sleeves"
+      ],
+      "uncertainties": [
+        "exact collar thickness uncertain"
+      ]
+    },
+    "gender": {
+      "score": 0.75,
+      "status": "uncertain",
+      "evidence": [
+        "model presenting female fit and style"
+      ],
+      "uncertainties": [
+        "gender identification not confirmed by user"
+      ],
+      "source": "none"
+    }
+  }
+}
