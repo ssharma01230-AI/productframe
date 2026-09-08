@@ -850,7 +850,7 @@ const underwearExamples = [
 ];
 
 test('underwear uses seven ordered local Ecommerce examples and category-specific IDs', () => {
-  const product = { id: 'catalogue-grey-boxers', name: 'Grey cotton boxer briefs', category: ' Underwear ', image_url: 'https://assets.example.test/boxers.jpg' };
+  const product = { id: 'catalogue-grey-boxers', name: 'Grey cotton boxer briefs', category: ' Underwear ', product_family: 'lower_body_underwear', image_url: 'https://assets.example.test/boxers.jpg' };
   const { ui, chooseRecipe, selection } = outputUi([product]);
   const ecommerce = categorySection(ui, 'Ecommerce');
   const cards = outputCards(ui, ecommerce);
@@ -870,6 +870,17 @@ test('underwear uses seven ordered local Ecommerce examples and category-specifi
   chooseRecipe('Waistband & Fabric Detail');
   assert.deepEqual(selection(), { [product.id]: ['ecommerce-underwear-front-product', 'ecommerce-underwear-waistband-detail'] });
   assert.equal(outputCards(ui).length, 31);
+});
+
+test('underwear templates are limited to lower-body family products', () => {
+  const lower = { id: 'catalogue-lower-underwear', name: 'Boxer briefs', category: 'underwear', product_family: 'lower_body_underwear', image_url: null };
+  const bra = { id: 'catalogue-bra', name: 'Soft bralette', category: 'underwear', product_family: 'bra', image_url: null };
+  const lowerUi = outputUi([lower]).ui;
+  assert.equal(outputCards(lowerUi, categorySection(lowerUi, 'Ecommerce')).length, 7);
+  assert.equal(textContent(categorySection(lowerUi, 'Ecommerce')).includes('7 templates'), true);
+  const braUi = outputUi([bra]).ui;
+  assert.equal(outputCards(braUi, categorySection(braUi, 'Ecommerce')).length, 0);
+  assert.equal(textContent(categorySection(braUi, 'Ecommerce')).includes('0 templates'), true);
 });
 
 test('bottoms selection uses category-specific IDs and approved detail thumbnails', () => {

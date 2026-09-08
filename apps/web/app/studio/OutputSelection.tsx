@@ -10,7 +10,7 @@ import type { GenerationPresentation, GenerationRunRequest, GenerationRunRespons
 import './output-selection.css';
 
 type MediaEvidence = { views?: string[]; evidence?: string[] };
-export type OutputProduct = { id: string; name: string; category: string | null; image_url: string | null; media_evidence?: MediaEvidence[] };
+export type OutputProduct = { id: string; name: string; category: string | null; product_family?: string | null; image_url: string | null; media_evidence?: MediaEvidence[] };
 
 const generationSliceEnabled = process.env.NEXT_PUBLIC_ENABLE_GENERATION_SLICE !== 'false';
 
@@ -58,19 +58,19 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
   const [submissionKey, setSubmissionKey] = useState<string | null>(null);
   const activeProduct = products.find(product => product.id === activeProductId) ?? products[0];
   const activeCategory = activeProduct?.category?.trim().toLowerCase();
-  const recipesByProduct = new Map(products.map(product => [product.id, getOutputRecipes(product.category)]));
+  const recipesByProduct = new Map(products.map(product => [product.id, getOutputRecipes(product.category, product.product_family)]));
   const activeRecipes = activeProduct ? recipesByProduct.get(activeProduct.id) ?? [] : [];
   const availableEvidence = new Set((activeProduct?.media_evidence ?? []).flatMap(item => [...(item.views ?? []), ...(item.evidence ?? [])]));
   const requiresEvidence = (recipe: { id: string }) => {
     if (!generationSliceEnabled) return false;
-    const required = recipeEvidence(recipe.id, activeProduct?.category);
+    const required = recipeEvidence(recipe.id, activeProduct?.category, activeProduct?.product_family);
     return required.length > 0 && !required.every(item => availableEvidence.has(item));
   };
   const hasEvidence = (recipe: { id: string }) => {
     // The rollout flag restores the pre-readiness selection behaviour as well
     // as disabling submission, which keeps rollback genuinely reversible.
     if (!generationSliceEnabled) return true;
-    const required = recipeEvidence(recipe.id, activeProduct?.category);
+    const required = recipeEvidence(recipe.id, activeProduct?.category, activeProduct?.product_family);
     // The user may explicitly continue with a best-effort output when the
     // recommended supporting view is unavailable.
     if (activeProduct && evidenceOverrides[activeProduct.id]?.includes(recipe.id)) return true;
@@ -115,7 +115,7 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
 
   function requestEvidence(recipe: { id: string }) {
     if (uploading) return;
-    const missing = recipeEvidence(recipe.id, activeProduct?.category)[0]?.replaceAll('_', ' ') ?? 'product';
+    const missing = recipeEvidence(recipe.id, activeProduct?.category, activeProduct?.product_family)[0]?.replaceAll('_', ' ') ?? 'product';
     setUploadMessage(`Add a clear image showing the missing ${missing}`);
     setPendingEvidenceRecipe(recipe.id);
     setUploadOpen(true);
@@ -288,9 +288,10 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
 
 function formatCategory(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(); }
 
-function recipeEvidence(id: string, category?: string | null): string[] {
+function recipeEvidence(id: string, category?: string | null, family?: string | null): string[] {
   const normalized = category?.trim().toLowerCase();
   if (normalized === 'socks') return [];
+  if (normalized === 'underwear' && family?.trim().toLowerCase() !== 'lower_body_underwear') return [];
   if (normalized === 'footwear') {
     if (id.includes('sole')) return ['sole_or_underside'];
     if (id.includes('top')) return ['top_view'];

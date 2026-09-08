@@ -1,8 +1,10 @@
 import pytest
 
 from productframe_api.category_registry import (
+    BOTTOMS_FAMILY_SUBTYPE_MAP,
     CATEGORIES,
     CHANNELS,
+    get_bottoms_family_for_subtype,
     get_category_definition,
     validate_category_channel,
     validate_category_details,
@@ -75,6 +77,30 @@ def test_underwear_definition_and_details_cover_identity_fields():
     assert details["subtype"] == "boxers"
 
 
+def test_bottoms_family_is_nullable_and_controlled():
+    base = {
+        "subtype": "jeans",
+        "waistband_type": "fixed waistband",
+        "waist_height": "mid-rise",
+        "fly_or_closure": "zip fly and button",
+        "leg_shape": "straight",
+        "leg_width": "regular",
+        "garment_length": "full length",
+        "hem_details": "plain hem",
+        "pocket_details": ["front pockets"],
+        "pleats_or_darts": [],
+        "belt_loops": "visible",
+        "panel_or_seam_details": ["side seams"],
+        "fit_and_silhouette": "straight-leg silhouette",
+        "visible_uncertainties": [],
+    }
+
+    assert validate_category_details("bottoms", {**base, "family": "structured_bottoms"})["family"] == "structured_bottoms"
+    assert validate_category_details("bottoms", base)["family"] is None
+    with pytest.raises(ValueError):
+        validate_category_details("bottoms", {**base, "family": "jeans"})
+
+
 def test_category_details_are_validated_against_the_category_schema():
     details = validate_category_details("socks", {
         "subtype": "crew",
@@ -93,6 +119,18 @@ def test_category_details_are_validated_against_the_category_schema():
     })
 
     assert details["subtype"] == "crew"
+
+
+def test_bottoms_subtypes_have_one_controlled_rendering_family():
+    bottoms = get_category_definition("bottoms")
+
+    assert set(BOTTOMS_FAMILY_SUBTYPE_MAP) == set(bottoms.subtypes)
+    assert get_bottoms_family_for_subtype(" Jeans ") == "structured_bottoms"
+    assert get_bottoms_family_for_subtype("joggers") == "casual_bottoms"
+    assert get_bottoms_family_for_subtype("leggings") == "leggings"
+    assert get_bottoms_family_for_subtype("skirt") == "skirts"
+    assert get_bottoms_family_for_subtype("unknown lower-body garment") is None
+    assert get_bottoms_family_for_subtype(None) is None
 
 
 def test_unknown_category_or_channel_is_rejected():

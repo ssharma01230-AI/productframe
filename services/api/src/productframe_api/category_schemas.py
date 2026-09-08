@@ -1,5 +1,5 @@
 """Category-specific visual schemas used by product recognition."""
-from typing import Union
+from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 
@@ -68,7 +68,13 @@ class OuterwearDetails(BaseModel):
     visible_uncertainties: list[str]
 
 
+BottomsFamily = Literal[
+    "structured_bottoms", "casual_bottoms", "leggings", "skirts"
+]
+
+
 class BottomsDetails(BaseModel):
+    family: BottomsFamily | None = None
     subtype: str
     waistband_type: str
     waist_height: str
@@ -85,21 +91,72 @@ class BottomsDetails(BaseModel):
     visible_uncertainties: list[str]
 
 
+UnderwearFamily = Literal[
+    "lower_body_underwear", "bra", "lingerie", "base_layer", "underwear_set"
+]
+
+
+class LowerBodyUnderwearDetails(BaseModel):
+    pouch_or_front_construction: str = "not_applicable"
+    fly_details: str = "not_applicable"
+    leg_length_and_opening: str = "not_applicable"
+    gusset_details: str = "not_applicable"
+    side_coverage: str = "not_applicable"
+
+
+class BraDetails(BaseModel):
+    cup_construction: str = "not_applicable"
+    strap_construction: str = "not_applicable"
+    band_construction: str = "not_applicable"
+    support_structure: str = "not_applicable"
+    fastening_details: list[str] = Field(default_factory=list)
+
+
+class LingerieDetails(BaseModel):
+    lace_or_mesh_details: str = "not_applicable"
+    panel_details: list[str] = Field(default_factory=list)
+    decorative_trim_details: list[str] = Field(default_factory=list)
+    shaping_or_boning_details: str = "not_applicable"
+
+
+class BaseLayerDetails(BaseModel):
+    neckline_or_opening: str = "not_applicable"
+    strap_or_sleeve_details: str = "not_applicable"
+    hem_details: str = "not_applicable"
+    layering_fit: str = "not_applicable"
+
+
+class UnderwearSetDetails(BaseModel):
+    piece_count: str = "not_applicable"
+    coordinated_piece_details: list[str] = Field(default_factory=list)
+    matching_features: list[str] = Field(default_factory=list)
+
+
 class UnderwearDetails(BaseModel):
+    """Stable underwear core with optional family-specific detail groups."""
+
+    family: UnderwearFamily | None = None
     subtype: str
     coverage: str
     waist_height: str
     rise: str
-    strap_type: str
-    strap_width: str
-    support_details: str
-    cup_shape: str
     elastic_details: str
-    closure_details: list[str]
-    seam_details: list[str]
     fabric_appearance: str
     fit_and_silhouette: str
     visible_uncertainties: list[str]
+    # These attributes are retained for compatibility but are explicitly
+    # non-applicable by default rather than being required for every family.
+    strap_type: str = "not_applicable"
+    strap_width: str = "not_applicable"
+    support_details: str = "not_applicable"
+    cup_shape: str = "not_applicable"
+    closure_details: list[str] = Field(default_factory=list)
+    seam_details: list[str] = Field(default_factory=list)
+    lower_body: LowerBodyUnderwearDetails | None = None
+    bra: BraDetails | None = None
+    lingerie: LingerieDetails | None = None
+    base_layer: BaseLayerDetails | None = None
+    set_details: UnderwearSetDetails | None = None
 
 
 class SocksDetails(BaseModel):

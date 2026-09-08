@@ -611,6 +611,17 @@ const bottomsOutputRecipes: readonly OutputRecipe[] = [
   ...BOTTOMS_ECOMMERCE_RECIPES,
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
 ];
+
+// Bottoms families currently share the same composition primitives. Keeping
+// family routing explicit allows family-specific recipe policies later without
+// changing the product/category API or template IDs.
+const bottomsFamilyOutputRecipes: Record<string, readonly OutputRecipe[]> = {
+  structured_bottoms: bottomsOutputRecipes,
+  casual_bottoms: bottomsOutputRecipes,
+  leggings: bottomsOutputRecipes,
+  skirts: bottomsOutputRecipes,
+};
+
 const underwearOutputRecipes: readonly OutputRecipe[] = [
   ...UNDERWEAR_ECOMMERCE_RECIPES,
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
@@ -707,13 +718,18 @@ const socksOutputRecipes: readonly OutputRecipe[] = [
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
 ];
 
-export function getOutputRecipes(productCategory?: string | null): readonly OutputRecipe[] {
+export function getOutputRecipes(productCategory?: string | null, productFamily?: string | null): readonly OutputRecipe[] {
   const category = productCategory?.trim().toLowerCase();
+  const family = productFamily?.trim().toLowerCase();
   if (category === 'tops') return topsOutputRecipes;
-  if (category === 'bottoms') return bottomsOutputRecipes;
+  if (category === 'bottoms') return bottomsFamilyOutputRecipes[family ?? ''] ?? bottomsOutputRecipes;
   if (category === 'outerwear') return outerwearOutputRecipes;
   if (category === 'footwear') return footwearOutputRecipes;
   if (category === 'socks') return socksOutputRecipes;
-  if (category === 'underwear') return underwearOutputRecipes;
+  if (category === 'underwear') {
+    return family === 'lower_body_underwear'
+      ? underwearOutputRecipes
+      : OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce');
+  }
   return OUTPUT_RECIPES;
 }

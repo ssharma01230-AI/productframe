@@ -5,6 +5,25 @@ from typing import Final
 from .category_schemas import CATEGORY_DETAIL_MODELS
 
 
+BOTTOMS_FAMILY_SUBTYPE_MAP: Final[dict[str, str]] = {
+    "jeans": "structured_bottoms",
+    "trousers": "structured_bottoms",
+    "chinos": "structured_bottoms",
+    "cargo trousers": "structured_bottoms",
+    "shorts": "structured_bottoms",
+    "joggers": "casual_bottoms",
+    "leggings": "leggings",
+    "skirt": "skirts",
+}
+
+
+def get_bottoms_family_for_subtype(subtype: str | None) -> str | None:
+    """Return the controlled rendering family for a bottoms subtype."""
+    if not subtype or not isinstance(subtype, str):
+        return None
+    return BOTTOMS_FAMILY_SUBTYPE_MAP.get(" ".join(subtype.strip().lower().split()))
+
+
 @dataclass(frozen=True, slots=True)
 class ChannelDefinition:
     id: str

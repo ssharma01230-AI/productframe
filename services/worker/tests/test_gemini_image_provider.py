@@ -60,7 +60,7 @@ def test_gemini_provider_sends_product_and_template_references(monkeypatch):
     result = provider.generate(prompt)
 
     assert result.content == response_image
-    assert result.provider == "gemini-2.5-flash-image"
+    assert result.provider == "gemini-3.1-flash-lite-image"
     assert result.content_type == "image/png"
     body = captured["body"].decode()
     assert "product reference" in body

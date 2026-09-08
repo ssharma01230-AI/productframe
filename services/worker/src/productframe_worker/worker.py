@@ -12,7 +12,12 @@ from sqlalchemy.orm import Session
 from productframe_api.config import get_settings
 from productframe_api.db import SessionLocal
 from productframe_api.description_utils import concise_product_description
-from productframe_api.generation_persistence import recalculate_generation_run, reschedule_generation_job
+from productframe_api.generation_persistence import (
+    image_provider_model,
+    planned_image_provider,
+    recalculate_generation_run,
+    reschedule_generation_job,
+)
 from productframe_api.image_recognition import analyze_media_evidence, analyze_product_images
 from productframe_api.image_processing import normalize_image_orientation
 from productframe_api.models import AnalysisJob, AnalysisJobImage, AnalysisImageStatus, AnalysisJobStatus, GenerationJob, ProductAnalysisRecord, SourceAsset
@@ -20,6 +25,7 @@ from productframe_api.models import AnalysisJob, AnalysisJobImage, AnalysisImage
 from .generation_graph import run_persisted_generation
 from .generation_storage import MinioGeneratedImageStorage
 from .fidelity_validator import OpenAIProductFidelityValidator
+from .gemini_image_provider import GeminiImageGenerationProvider
 from .openai_image_provider import OpenAIImageGenerationError, OpenAIImageGenerationProvider
 
 QUEUE = "productframe:analysis"
@@ -29,6 +35,32 @@ MAX_GENERATION_ATTEMPTS = 3
 GENERATION_RECOVERY_LEASE_SECONDS = 600
 _RECOVERY_DONE = False
 logger = logging.getLogger(__name__)
+
+
+def _image_generation_provider(provider: str) -> Any:
+    """Build the selected provider without exposing credentials to callers."""
+    if provider == "openai":
+        return OpenAIImageGenerationProvider()
+    if provider == "gemini":
+        return GeminiImageGenerationProvider()
+    raise ValueError("Image generation provider must be 'openai' or 'gemini'")
+
+
+def _ensure_job_provider(job: GenerationJob, db: Session) -> str:
+    provider = (job.provider or planned_image_provider(
+        total_jobs=job.run.total_jobs, job_index=job.job_index
+    )).strip().lower()
+    if provider not in {"openai", "gemini"}:
+        provider = "openai"
+    if job.provider != provider or not job.provider_model:
+        job.provider = provider
+        job.provider_model = image_provider_model(provider)
+        db.commit()
+    return provider
+
+
+def _fallback_provider(provider: str) -> str:
+    return "gemini" if provider == "openai" else "openai"
 
 
 def _now() -> datetime:
@@ -236,9 +268,10 @@ def process_generation_job(job_id: str, *, approved: bool | None = None, db: Ses
         if job.status != "pending":
             return
 
+        provider_name = _ensure_job_provider(job, db)
         while True:
             try:
-                provider = OpenAIImageGenerationProvider()
+                provider = _image_generation_provider(provider_name)
                 fidelity_validator = None
                 try:
                     if _env_flag("OPENAI_IMAGE_FIDELITY_VALIDATION"):
@@ -269,6 +302,16 @@ def process_generation_job(job_id: str, *, approved: bool | None = None, db: Ses
                 )
                 if not retryable:
                     raise
+                if job is not None and getattr(exc, "retryable", False) and job.provider_fallback_count == 0:
+                    provider_name = _fallback_provider(provider_name)
+                    job.provider = provider_name
+                    job.provider_model = image_provider_model(provider_name)
+                    job.provider_fallback_count += 1
+                    db.commit()
+                    logger.warning(
+                        "Provider-side generation failure; failing over job_id=%s to provider=%s",
+                        job_id, provider_name,
+                    )
                 retry = reschedule_generation_job(db, job_id, str(exc))
                 delay = 0.0
                 if retry.next_attempt_at is not None:

@@ -21,7 +21,8 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .analysis_limits import AnalysisBudgetError, AnalysisLimits, RateLimiter, estimate_request_tokens, retry_delay
-from .category_schemas import CATEGORY_DETAIL_MODELS, CategoryDetails
+from .category_registry import get_bottoms_family_for_subtype
+from .category_schemas import CATEGORY_DETAIL_MODELS, BottomsFamily, CategoryDetails, UnderwearFamily
 from .analysis_router import AnalysisRouter, AnalysisSafetyError
 from .image_processing import normalize_image_orientation
 
@@ -148,6 +149,11 @@ class ProductCategory(StrEnum):
 
 class ProductCategorization(BaseModel):
     category: ProductCategory
+    # Product family is system-controlled for categories that use rendering
+    # families. Null is deliberate when the image does not support a confident
+    # family assignment.
+    product_family: UnderwearFamily | BottomsFamily | None = None
+    subtype: str | None = None
     product_type: str = Field(min_length=5, max_length=120)
     confidence: float = Field(ge=0, le=1)
 
@@ -359,6 +365,9 @@ class TopGarmentDetails(BaseModel):
 class ProductAnalysis(BaseModel):
     product_name: str = Field(min_length=3, max_length=160)
     category: ProductCategory
+    # Populated for categories with rendering families; null means the family
+    # could not be established confidently and conservative fallback is used.
+    product_family: UnderwearFamily | BottomsFamily | None = None
 
     @field_validator("product_name")
     @classmethod
@@ -438,13 +447,31 @@ def categorize_product_image(client: OpenAI, data_url: str) -> ProductCategoriza
         input=[{"role": "user", "content": [{"type": "input_text", "text": """Categorize this already-approved wearable fashion product.
 Choose exactly one category: outerwear, tops, bottoms, socks, footwear, underwear, headwear, scarves, gloves, rings, neckwear, watches, bracelets, earrings, belts.
 Never return bags; bags are outside the supported clothing product scope and must be rejected.
+For category underwear, set product_family to exactly one of: lower_body_underwear, bra, lingerie, base_layer, underwear_set. Set it to null when the family cannot be established confidently. Use underwear_set for a coordinated multi-piece product; use bra for bras or bralettes; use lower_body_underwear for boxers, briefs or bikini briefs; use base_layer for vests, undershirts or camisoles; use lingerie for slips, bodysuits, corsets or decorative lingerie-led pieces.
+For category bottoms, return subtype as exactly one of: shorts, skirt, leggings, trousers, jeans, cargo trousers, joggers, chinos. Set product_family to exactly one of: structured_bottoms, casual_bottoms, leggings, skirts, matching the subtype mapping. Set both subtype and product_family to null when the bottoms subtype cannot be established confidently.
+For all other categories, product_family and subtype must be null.
 Return a highly specific product_type, such as '3/4 length dark green leather jacket with a belted waist'.
 Do not describe colours, materials, features, or write a long description yet."""}, _image_input(data_url, detail="high")]}],
         text_format=ProductCategorization,
     )
     if response.output_parsed is None:
         raise ValueError("product categorization returned no result")
-    return response.output_parsed
+    categorization = response.output_parsed
+    if categorization.category == ProductCategory.BOTTOMS:
+        # The model identifies the subtype, but the family is assigned by the
+        # backend mapping so users and model output cannot override routing.
+        family = get_bottoms_family_for_subtype(categorization.subtype)
+        categorization.product_family = family
+        if family is None:
+            categorization.subtype = None
+    else:
+        categorization.product_family = (
+            categorization.product_family
+            if categorization.category == ProductCategory.UNDERWEAR
+            else None
+        )
+        categorization.subtype = None
+    return categorization
 
 
 def screen_product_image(client: OpenAI, data_url: str) -> ImageScreeningResult:
@@ -809,7 +836,8 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
 
         categorization = known_categorization or categorize_product_image(client, data_url)
         instructions = f"""Analyse this approved wearable fashion product photograph for an ecommerce catalogue.
-    The separate categorization step identified the product as category '{categorization.category}' and type '{categorization.product_type}'. Use those values unless the image clearly disproves them.
+    The separate categorization step identified the product as category '{categorization.category}', family '{categorization.product_family or "not established"}', and type '{categorization.product_type}'. Use those values unless the image clearly disproves them.
+    For underwear and bottoms, preserve the supplied product family when supported. For bottoms, preserve the supplied subtype and family; do not change the system-controlled family. Populate only applicable details and use not_applicable for irrelevant fields. A null family is valid when the image does not support a confident family assignment.
 
     Return only the requested structured fields.
     - Generate a concise, human-friendly product name of no more than 5 words, such as 'Pink cotton shirt', 'Black leather jacket', or 'White low-top trainers'. Include the dominant visible colour and product type when useful. Do not use placeholders such as 'Unconfirmed product'.
@@ -823,7 +851,7 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
     - Distinguish observed product properties from properties hidden by a model, pose, cropping, lighting or image quality. Mark a property uncertain only when it is genuinely hidden, obstructed, cropped or impossible to assess. Do not mark a clearly visible neckline, collar, sleeve, seam, graphic or surface feature as uncertain merely because its exact measurement is unavailable.
     - Populate global_details completely. Include every colour, material, construction, functional detail, callout, branding and uncertainty field. Do not shorten, summarise or truncate long construction or functional detail lists.
     - Set global_details.source_rotation_degrees to the clockwise rotation required to make the photographed product upright after normal image metadata has been applied. Use only 0, 90, 180 or 270. Judge orientation from the neckline, shoulders, sleeves and hem rather than trusting camera metadata.
-    - Populate category_details using the complete schema for the detected category. Include every applicable field and list every visible detail; use visible_uncertainties for fields that cannot be determined.
+    - Populate category_details using the complete schema for the detected category. Include every applicable field and list every visible detail; use visible_uncertainties for fields that cannot be determined. For underwear and bottoms, set category_details.family to the same family as product_family when supplied, and leave irrelevant or uncertain family-specific details null or not_applicable.
     - Populate confidence_details for every section. Scores must reflect visible evidence, not general model certainty. Include evidence and uncertainties for every score. Use not_visible when an attribute cannot be assessed. Never give high confidence to inferred size, hidden construction, exact fibre composition or unconfirmed branding. A graphic subject being recognisable is not enough for high branding or identity confidence; use high confidence only when the artwork's exact visible geometry and details have been captured.
     - In confidence_details.gender, use source='user' only when a user-confirmed gender was supplied. A user-confirmed gender is authoritative over any assumed gender.
     - In global_details.gender, keep assumed and user_confirmed separate. user_confirmed must remain null unless the user explicitly supplied a gender. If a user-confirmed value exists, it is authoritative and must override assumed.
@@ -840,6 +868,16 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
                 if response.output_parsed is None:
                     raise ValueError("AI returned no structured product analysis")
                 analysis = response.output_parsed
+                if analysis.category not in (ProductCategory.UNDERWEAR, ProductCategory.BOTTOMS) and analysis.product_family is not None:
+                    raise ValueError("product_family is only valid for categories with rendering families")
+                if analysis.category == ProductCategory.BOTTOMS:
+                    # Bottoms categorization is authoritative, including an
+                    # intentional null when subtype/family is uncertain.
+                    analysis.product_family = categorization.product_family
+                elif analysis.category == ProductCategory.UNDERWEAR and categorization.product_family is not None:
+                    # Categorization is the family authority; detailed analysis
+                    # must not silently broaden or change the template family.
+                    analysis.product_family = categorization.product_family
                 if analysis.colour_details is None or analysis.global_details is None:
                     raise ValueError("colour_details and global_details are required for product analysis")
                 if analysis.confidence_details is not None and analysis.confidence_details.gender.source == "user" and analysis.global_details.gender.user_confirmed is None:
@@ -849,6 +887,10 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
                     if analysis.category_details is None:
                         raise ValueError("category_details are required for product analysis")
                     analysis.category_details = category_model.model_validate(analysis.category_details)
+                    if analysis.category == ProductCategory.UNDERWEAR and analysis.product_family is not None:
+                        analysis.category_details.family = analysis.product_family
+                    if analysis.category == ProductCategory.BOTTOMS:
+                        analysis.category_details.family = analysis.product_family
                 if analysis.category == ProductCategory.TOPS and analysis.tops_details is None:
                     raise ValueError("tops_details is required for tops analysis")
                 words = analysis.description.split()

@@ -1,5 +1,6 @@
 """Small persistence helpers for the first single-generation workflow."""
 from datetime import datetime, timedelta, timezone
+import os
 from uuid import uuid4
 
 from sqlalchemy import select
@@ -22,6 +23,22 @@ from .models import (
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def planned_image_provider(*, total_jobs: int, job_index: int) -> str:
+    """Assign large runs across both provider queues deterministically."""
+    default = os.environ.get("IMAGE_GENERATION_PROVIDER", "openai").strip().lower()
+    if default not in {"openai", "gemini"}:
+        default = "openai"
+    if total_jobs >= 10:
+        return "openai" if job_index % 2 == 0 else "gemini"
+    return default
+
+
+def image_provider_model(provider: str) -> str:
+    if provider == "gemini":
+        return os.environ.get("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-lite-image")
+    return os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-2-2026-04-21")
 
 
 def recalculate_generation_run(db: Session, run_id: str) -> GenerationRun:
@@ -99,9 +116,11 @@ def create_generation_run(
             raise ValueError("Product has no category")
         assets = db.scalars(select(SourceAsset).where(SourceAsset.product_id == product.id)).all()
         channel = selection.get("channel", "ecommerce")
+        category_details = product.category_details if isinstance(product.category_details, dict) else {}
         template = validate_generation_template(
             selection["template_id"], category=product.category, channel=channel,
-            subtype=(product.category_details or {}).get("subtype") if isinstance(product.category_details, dict) else None,
+            subtype=category_details.get("subtype"),
+            product_family=category_details.get("family"),
         )
         if enforce_evidence:
             if not assets:
@@ -117,10 +136,11 @@ def create_generation_run(
     jobs: list[GenerationJob] = []
     for job_index, (product, template) in enumerate(validated):
         job_id = str(uuid4())
+        provider = planned_image_provider(total_jobs=len(validated), job_index=job_index)
         job = GenerationJob(
             id=job_id, graph_thread_id=f"generation-job-{job_id}", generation_run_id=run.id,
             workspace_id=workspace_id, job_index=job_index, product_id=product.id, template_id=template.id,
-            template_version=template.version,
+            template_version=template.version, provider=provider, provider_model=image_provider_model(provider),
         )
         db.add(job)
         jobs.append(job)
@@ -179,11 +199,13 @@ def create_single_generation_run(
     if not product.category:
         raise ValueError("Product has no category")
     assets = db.scalars(select(SourceAsset).where(SourceAsset.product_id == product.id)).all()
+    category_details = product.category_details if isinstance(product.category_details, dict) else {}
     template = validate_generation_template(
         template_id,
         category=product.category,
         channel=channel,
-        subtype=(product.category_details or {}).get("subtype") if isinstance(product.category_details, dict) else None,
+        subtype=category_details.get("subtype"),
+        product_family=category_details.get("family"),
     )
     if enforce_evidence:
         if not assets:

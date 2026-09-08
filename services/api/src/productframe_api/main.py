@@ -819,6 +819,7 @@ def list_products(
             "id": product.id,
             "name": product.name,
             "category": product.category,
+            "product_family": (product.category_details or {}).get("family") if isinstance(product.category_details, dict) else None,
             "created_at": product.created_at.isoformat(),
             "image_url": previews[0]["image_url"] if previews else None,
             "preview_images": previews,
@@ -849,6 +850,7 @@ def get_product(
         "id": product.id,
         "name": product.name,
         "category": product.category,
+        "product_family": (product.category_details or {}).get("family") if isinstance(product.category_details, dict) else None,
         "created_at": product.created_at.isoformat(),
         "uploads": [{
             "id": asset.id,
@@ -893,7 +895,13 @@ def get_output_readiness(
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     evidence = [asset.media_evidence for asset in product.source_assets]
-    templates = list_generation_templates(category=product.category, channel="ecommerce") if product.category else []
+    category_details = product.category_details if isinstance(product.category_details, dict) else {}
+    family = category_details.get("family")
+    templates = [] if product.category == "underwear" and not family else list_generation_templates(
+        category=product.category,
+        channel="ecommerce",
+        product_family=family,
+    ) if product.category else []
     return {"product_id": product.id, "templates": [evaluate_template(template, evidence) for template in templates]}
 
 

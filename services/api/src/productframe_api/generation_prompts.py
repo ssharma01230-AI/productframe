@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .category_registry import validate_category_details
-from .generation_templates import GenerationTemplate, validate_generation_template
+from .generation_templates import GenerationTemplate, get_bottoms_family_policy, validate_generation_template
 
 
 ReferenceRole = Literal["product_reference", "template_reference"]
@@ -141,12 +141,15 @@ def _path_exists(product: ProductContext, path: str) -> bool:
 def compile_generation_prompt(request: GenerationRequest) -> GenerationPrompt:
     """Compile a deterministic prompt with product identity taking priority."""
     product = request.product
-    subtype = (_as_dict(product.category_details) or {}).get("subtype")
+    category_details = _as_dict(product.category_details) or {}
+    subtype = category_details.get("subtype")
+    product_family = category_details.get("family")
     template = validate_generation_template(
         request.template_id,
         category=product.category,
         channel=request.channel,
         subtype=str(subtype) if subtype else None,
+        product_family=str(product_family) if product_family else None,
     )
     if not request.product_reference_images:
         raise PromptCompilationError("At least one product reference image is required")
@@ -179,6 +182,8 @@ def compile_generation_prompt(request: GenerationRequest) -> GenerationPrompt:
             "If a property is not observable, leave it uncertain rather than inventing a conventional ecommerce replacement.",
         ])
     fidelity_rules = "\n".join(f"- {rule}" for rule in category_fidelity_rules) or "- Preserve all observed product-specific details."
+    family_policy = get_bottoms_family_policy(str(product_family) if product.category == "bottoms" and product_family else None) if product.category == "bottoms" else None
+    family_policy_section = f"\nBOTTOMS FAMILY RENDERING POLICY\n- {family_policy}\n" if family_policy else ""
 
     prompt = f"""Create an ecommerce image using the supplied product reference image as the primary visual authority.
 
@@ -214,7 +219,7 @@ CONFIDENCE AND UNCERTAINTY
 
 PRODUCT FIDELITY PRESERVATION
 {fidelity_rules}
-
+{family_policy_section}
 TEMPLATE PRESENTATION
 {template.prompt_instructions}
 

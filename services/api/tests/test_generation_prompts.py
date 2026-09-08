@@ -93,6 +93,64 @@ def test_prompt_carries_artwork_geometry_and_template_policy(tops_request):
     assert result.artwork_surface_mode == "flat"
 
 
+def test_underwear_prompt_requires_the_lower_body_family_for_boxer_templates():
+    product = ProductContext(
+        name="Grey boxer briefs", category="underwear",
+        product_type="Men's boxer briefs", colours="Grey",
+        materials="Stretch jersey", features=("Covered elastic waistband",),
+        description="Grey stretch boxer briefs with a covered elastic waistband and close fit.",
+        category_details={
+            "family": "lower_body_underwear",
+            "subtype": "boxers",
+            "coverage": "mid-thigh",
+            "waist_height": "mid-rise",
+            "rise": "standard",
+            "elastic_details": "covered elastic",
+            "fabric_appearance": "soft stretch jersey",
+            "fit_and_silhouette": "close fit",
+        },
+    )
+    request = GenerationRequest(
+        template_id="ecommerce-underwear-front-product", channel="ecommerce",
+        product=product,
+        product_reference_images=(ReferenceImage(role="product_reference", object_key="boxers.png", asset_id="boxers"),),
+    )
+    result = build_generation_prompt(request)
+    assert result.template_id == "ecommerce-underwear-front-product"
+    assert "lower_body_underwear" in result.prompt
+
+    product.category_details["family"] = "bra"
+    with pytest.raises(ValueError, match="product family"):
+        build_generation_prompt(request)
+
+
+def test_bottoms_prompt_applies_family_policy_without_extra_request():
+    product = ProductContext(
+        name="Black leggings", category="bottoms",
+        product_type="Black high-waisted leggings", colours="Black",
+        materials="Stretch jersey", features=("High waistband", "Close fit"),
+        description="Black high-waisted stretch leggings with a close-fitting silhouette.",
+        category_details={
+            "family": "leggings", "subtype": "leggings",
+            "waist_height": "high", "waistband_type": "elastic",
+            "fly_or_closure": "not applicable", "leg_shape": "close-fitting",
+            "leg_width": "close", "garment_length": "ankle length",
+            "hem_details": "plain hem", "pocket_details": [],
+            "pleats_or_darts": [], "belt_loops": "not applicable",
+            "panel_or_seam_details": ["side seams"],
+            "fit_and_silhouette": "close-fitting", "visible_uncertainties": [],
+        },
+    )
+    result = build_generation_prompt(GenerationRequest(
+        template_id="ecommerce-bottoms-front-view", channel="ecommerce",
+        product=product,
+        product_reference_images=(ReferenceImage(role="product_reference", object_key="leggings.png"),),
+    ))
+
+    assert "BOTTOMS FAMILY RENDERING POLICY" in result.prompt
+    assert "Do not assume a fly, belt loops, rigid denim" in result.prompt
+
+
 def test_prompt_rejects_wrong_category(tops_request):
     product = ProductContext(
         name=tops_request.product.name,

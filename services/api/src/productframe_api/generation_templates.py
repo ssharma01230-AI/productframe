@@ -21,6 +21,7 @@ class GenerationTemplate:
     reference_object_key: str | None = None
     version: int = 1
     applicable_subtypes: tuple[str, ...] = ()
+    applicable_families: tuple[str, ...] = ()
     required_product_fields: tuple[str, ...] = ()
     optional_product_fields: tuple[str, ...] = ()
     prompt_format_rules: tuple[str, ...] = ()
@@ -278,6 +279,45 @@ _OUTERWEAR_SUBTYPES = ("coat", "jacket", "blazer", "waistcoat", "parka", "gilet"
 _FOOTWEAR_SUBTYPES = ("heels", "trainers", "sandals", "crocs", "boots", "loafers", "flats", "sliders", "mules")
 _SOCKS_SUBTYPES = ("normal", "running", "ankle", "trainer", "crew", "knee-high", "stockings", "compression", "thermal")
 _BOTTOMS_SUBTYPES = ("shorts", "skirt", "leggings", "trousers", "jeans", "cargo trousers", "joggers", "chinos")
+_BOTTOMS_FAMILIES = ("structured_bottoms", "casual_bottoms", "leggings", "skirts")
+
+BOTTOMS_FAMILY_POLICIES: Final[dict[str, str]] = {
+    "structured_bottoms": (
+        "Preserve the waistband, rise, closure, belt loops, pockets, pleats, darts, "
+        "panels, leg shape, leg width and hem when visible. For construction details, "
+        "prioritise the most distinctive supported pocket, panel, seam, closure or "
+        "fastening; do not assume five-pocket denim construction."
+    ),
+    "casual_bottoms": (
+        "Preserve elastic waistbands, drawcords, soft or stretch fabric, cuffs, "
+        "casual fit and visible pockets or panels. Do not introduce belt loops, a "
+        "rigid denim surface, a tailored crease or a trouser fly unless visible."
+    ),
+    "leggings": (
+        "Preserve the close fit, stretch or compression appearance, waistband, seams, "
+        "panels, gusset when visible, and ankle or cropped hem. Show a pocket or side "
+        "construction detail only when supported. Do not assume a fly, belt loops, "
+        "rigid denim, trouser seat or five-pocket construction."
+    ),
+    "skirts": (
+        "Preserve the waistband, waist height, closure, silhouette, pleats, panels, "
+        "drape, length, hem and slit when visible. Interpret lower construction as "
+        "hem and lower-skirt detail. Do not use leg shape, leg width, trouser rise, "
+        "seat or trouser-fly assumptions."
+    ),
+}
+
+_GENERIC_BOTTOMS_FAMILY_POLICY = (
+    "Use only visibly supported bottoms construction. Preserve the observed waistband, "
+    "silhouette, proportions, closures, seams, pockets and hem. Do not assume whether "
+    "the product is structured, elasticated, close-fitting or skirt-shaped."
+)
+
+
+def get_bottoms_family_policy(family: str | None) -> str:
+    """Return the conservative or family-specific bottoms rendering policy."""
+    return BOTTOMS_FAMILY_POLICIES.get(family or "", _GENERIC_BOTTOMS_FAMILY_POLICY)
+
 
 OUTERWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = tuple(
     _support_template("outerwear", template_id, name, description, instruction, _OUTERWEAR_SUBTYPES)
@@ -393,6 +433,7 @@ def _bottoms_template(
         output_presentation=output_presentation,
         artwork_visibility=artwork_visibility,
         artwork_surface_mode=artwork_surface_mode,
+        applicable_families=_BOTTOMS_FAMILIES,
     )
 
 
@@ -531,6 +572,7 @@ def _underwear_template(
         description=description, prompt_instructions=instructions,
         negative_prompt=_UNDERWEAR_NEGATIVE, aspect_ratio="1:1",
         applicable_subtypes=_UNDERWEAR_SUBTYPES,
+        applicable_families=("lower_body_underwear",),
         required_product_fields=_UNDERWEAR_REQUIRED_FIELDS + required,
         optional_product_fields=_UNDERWEAR_OPTIONAL_FIELDS,
         prompt_format_rules=_UNDERWEAR_RULES, reference_mode="product_only",
@@ -594,7 +636,13 @@ UNDERWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
 # not one rigid upload requirement per template.
 _FRONT_EVIDENCE = ("front_view",)
 _REAR_EVIDENCE = ("rear_view",)
+# Bottoms intentionally use only front/rear evidence for every family. More
+# specialised evidence can be added later without changing template IDs.
+_BOTTOMS_FRONT_EVIDENCE = ("front_view",)
+_BOTTOMS_REAR_EVIDENCE = ("rear_view",)
 _FRONT_REAR_EVIDENCE = ("front_view", "rear_view")
+_UNDERWEAR_FRONT_EVIDENCE = ("front_view",)
+_UNDERWEAR_REAR_EVIDENCE = ("rear_view",)
 
 
 def _evidence_for_template(template: GenerationTemplate) -> tuple[str, ...]:
@@ -615,12 +663,15 @@ def _evidence_for_template(template: GenerationTemplate) -> tuple[str, ...]:
         return _FRONT_EVIDENCE
     if template.category == "bottoms":
         if "back" in template_id:
-            return _REAR_EVIDENCE
-        return _FRONT_EVIDENCE
+            return _BOTTOMS_REAR_EVIDENCE
+        return _BOTTOMS_FRONT_EVIDENCE
     if template.category == "underwear":
+        # The current pack is intentionally lower-body only. Its evidence
+        # vocabulary stays limited to front/rear views; future family packs
+        # can define their own rules without changing this mapping.
         if "back" in template_id or "rear" in template_id:
-            return _REAR_EVIDENCE
-        return _FRONT_EVIDENCE
+            return _UNDERWEAR_REAR_EVIDENCE
+        return _UNDERWEAR_FRONT_EVIDENCE
     if template.category == "tops":
         if "back" in template_id or "over-the-shoulder" in template_id:
             return _REAR_EVIDENCE
@@ -641,7 +692,7 @@ def get_generation_template(template_id: str) -> GenerationTemplate | None:
     return _TEMPLATES.get(template_id) or _LEGACY_TEMPLATES.get(template_id)
 
 
-def validate_generation_template(template_id: str, *, category: str, channel: str, subtype: str | None = None) -> GenerationTemplate:
+def validate_generation_template(template_id: str, *, category: str, channel: str, subtype: str | None = None, product_family: str | None = None) -> GenerationTemplate:
     """Load a template and ensure it is valid for the requested product."""
     template = get_generation_template(template_id)
     if template is None:
@@ -650,6 +701,13 @@ def validate_generation_template(template_id: str, *, category: str, channel: st
         raise ValueError(f"Template {template_id} is not available for category {category}")
     if template.channel != channel.strip().lower():
         raise ValueError(f"Template {template_id} is not available for channel {channel}")
+    if template.applicable_families:
+        # Bottoms templates are shared composition primitives, so an unknown
+        # bottoms family may use the conservative generic policy. A known
+        # family must still be one explicitly supported by the template.
+        unknown_bottoms_family = template.category == "bottoms" and product_family is None
+        if not unknown_bottoms_family and product_family not in template.applicable_families:
+            raise ValueError(f"Template {template_id} is not available for product family {product_family or 'unclassified'}")
     # applicable_subtypes documents the taxonomy examples a template was
     # designed around; it is not a binary allow-list. Recognition strings are
     # descriptive and may contain new or qualified product types. Category and
@@ -658,13 +716,16 @@ def validate_generation_template(template_id: str, *, category: str, channel: st
     return template
 
 
-def list_generation_templates(*, category: str | None = None, channel: str | None = None, subtype: str | None = None) -> list[GenerationTemplate]:
-    """List active templates, optionally filtered by category and channel."""
+def list_generation_templates(*, category: str | None = None, channel: str | None = None, subtype: str | None = None, product_family: str | None = None) -> list[GenerationTemplate]:
+    """List active templates, optionally filtered by category, channel, and family."""
     templates = list(_TEMPLATES.values())
     if category is not None:
         templates = [template for template in templates if template.category == category.strip().lower()]
     if channel is not None:
         templates = [template for template in templates if template.channel == channel.strip().lower()]
+    if product_family is not None:
+        family = product_family.strip().lower()
+        templates = [template for template in templates if not template.applicable_families or family in template.applicable_families]
     # subtype is intentionally not used to hide templates; it is descriptive
     # context for prompt compilation and future ranking.
     return templates

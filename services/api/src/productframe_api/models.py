@@ -177,7 +177,10 @@ class GenerationJob(Base):
     job_index: Mapped[int] = mapped_column(default=0)
     graph_thread_id: Mapped[str] = mapped_column(String(120), unique=True)
     preview_object_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    provider: Mapped[str | None] = mapped_column(String(30), nullable=True, index=True)
+    provider_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
     provider_request_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    provider_fallback_count: Mapped[int] = mapped_column(default=0)
     next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String(30), default=GenerationJobStatus.PENDING.value, index=True)
     attempt_count: Mapped[int] = mapped_column(default=0)
@@ -225,6 +228,9 @@ class Product(Base):
     materials: Mapped[str | None] = mapped_column(String(300), nullable=True)
     features: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     global_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Category details remain nullable JSON so new system-controlled family
+    # fields can be added without a database migration; legacy products may
+    # continue to have no family until they are re-analysed.
     category_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     confidence_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     description: Mapped[str | None] = mapped_column(String(320), nullable=True)

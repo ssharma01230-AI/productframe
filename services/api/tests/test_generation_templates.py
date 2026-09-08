@@ -1,3 +1,5 @@
+import pytest
+
 from productframe_api.generation_templates import (
     TOPS_CLEAN_PRODUCT_SHOT,
     TOPS_FRONT_VIEW,
@@ -75,13 +77,52 @@ def test_underwear_templates_cover_the_seven_ecommerce_views():
     assert templates[6].artwork_surface_mode == "detail"
     assert "category_details.elastic_details" in templates[6].required_product_fields
     assert "category_details.fabric_appearance" in templates[6].required_product_fields
-    for subtype in ("boxers", "briefs", "bra", "bralette"):
+    assert validate_generation_template(
+        "ecommerce-underwear-front-product",
+        category="underwear",
+        channel="ecommerce",
+        subtype="boxers",
+        product_family="lower_body_underwear",
+    ).category == "underwear"
+    for family in (None, "bra", "lingerie", "base_layer", "underwear_set"):
+        try:
+            validate_generation_template(
+                "ecommerce-underwear-front-product",
+                category="underwear",
+                channel="ecommerce",
+                product_family=family,
+            )
+        except ValueError as error:
+            assert "product family" in str(error)
+        else:
+            raise AssertionError("Expected lower-body template validation to fail")
+
+
+def test_bottoms_templates_accept_known_families_and_generic_fallback():
+    template_id = "ecommerce-bottoms-front-view"
+
+    for family in ("structured_bottoms", "casual_bottoms", "leggings", "skirts", None):
         assert validate_generation_template(
-            "ecommerce-underwear-front-product",
-            category="underwear",
+            template_id,
+            category="bottoms",
             channel="ecommerce",
-            subtype=subtype,
-        ).category == "underwear"
+            product_family=family,
+        ).category == "bottoms"
+
+    with pytest.raises(ValueError, match="product family"):
+        validate_generation_template(
+            template_id,
+            category="bottoms",
+            channel="ecommerce",
+            product_family="underwear_set",
+        )
+
+
+def test_underwear_readiness_uses_only_front_and_rear_evidence():
+    templates = {template.id: template for template in list_generation_templates(category="underwear", channel="ecommerce")}
+    assert templates["ecommerce-underwear-front-product"].required_evidence == ("front_view",)
+    assert templates["ecommerce-underwear-back-flat-lay"].required_evidence == ("rear_view",)
+    assert templates["ecommerce-underwear-waistband-detail"].required_evidence == ("front_view",)
 
 
 def test_tops_templates_define_artwork_visibility_and_surface_policy():
@@ -121,6 +162,26 @@ def test_bottoms_templates_cover_all_subtypes_and_keep_folded_flat_lay_policy():
     assert "category_details.panel_or_seam_details" in templates[7].required_product_fields
     assert templates[8].artwork_surface_mode == "detail"
     assert get_generation_template("ecommerce-bottoms-fabric-surface-detail") is None
+
+
+def test_bottoms_evidence_is_front_or_rear_only_for_every_family():
+    expected_front = {
+        "ecommerce-bottoms-front-view", "ecommerce-bottoms-side-angle-product",
+        "ecommerce-bottoms-folded-product-flat-lay", "ecommerce-bottoms-front-model",
+        "ecommerce-bottoms-waistband-closure-detail", "ecommerce-bottoms-pocket-panel-detail",
+        "ecommerce-bottoms-hem-leg-detail",
+    }
+    expected_rear = {"ecommerce-bottoms-back-view", "ecommerce-bottoms-back-model"}
+
+    for family in ("structured_bottoms", "casual_bottoms", "leggings", "skirts", None):
+        templates = {
+            template.id: template
+            for template in list_generation_templates(
+                category="bottoms", channel="ecommerce", product_family=family,
+            )
+        }
+        assert {template_id for template_id, template in templates.items() if template.required_evidence == ("front_view",)} == expected_front
+        assert {template_id for template_id, template in templates.items() if template.required_evidence == ("rear_view",)} == expected_rear
 
     for subtype in ("shorts", "skirt", "leggings", "trousers", "jeans", "cargo trousers", "joggers", "chinos"):
         assert validate_generation_template(
