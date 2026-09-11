@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from .category_registry import get_tops_family_for_subtype
 from .generation_templates import validate_generation_template
 from .output_readiness import evaluate_template
 from .models import (
@@ -26,13 +27,10 @@ def _now() -> datetime:
 
 
 def planned_image_provider(*, total_jobs: int, job_index: int) -> str:
-    """Assign large runs across both provider queues deterministically."""
-    default = os.environ.get("IMAGE_GENERATION_PROVIDER", "openai").strip().lower()
-    if default not in {"openai", "gemini"}:
-        default = "openai"
+    """Use GPT for small runs; split large runs deterministically across providers."""
     if total_jobs >= 10:
         return "openai" if job_index % 2 == 0 else "gemini"
-    return default
+    return "openai"
 
 
 def image_provider_model(provider: str) -> str:
@@ -117,10 +115,16 @@ def create_generation_run(
         assets = db.scalars(select(SourceAsset).where(SourceAsset.product_id == product.id)).all()
         channel = selection.get("channel", "ecommerce")
         category_details = product.category_details if isinstance(product.category_details, dict) else {}
+        family = category_details.get("family")
+        if not family and product.category == "tops":
+            family = get_tops_family_for_subtype(category_details.get("subtype") or product.product_type)
+            if family:
+                category_details = {**category_details, "family": family}
+                product.category_details = category_details
         template = validate_generation_template(
             selection["template_id"], category=product.category, channel=channel,
             subtype=category_details.get("subtype"),
-            product_family=category_details.get("family"),
+            product_family=family,
         )
         if enforce_evidence:
             if not assets:
@@ -140,7 +144,7 @@ def create_generation_run(
         job = GenerationJob(
             id=job_id, graph_thread_id=f"generation-job-{job_id}", generation_run_id=run.id,
             workspace_id=workspace_id, job_index=job_index, product_id=product.id, template_id=template.id,
-            template_version=template.version, provider=provider, provider_model=image_provider_model(provider),
+            presentation=selection.get("presentation"), template_version=template.version, provider=provider, provider_model=image_provider_model(provider),
         )
         db.add(job)
         jobs.append(job)
@@ -225,6 +229,7 @@ def create_single_generation_run(
         workspace_id=workspace_id,
         product_id=product.id,
         template_id=template.id,
+        presentation=None,
         template_version=template.version,
     )
     db.add(job)

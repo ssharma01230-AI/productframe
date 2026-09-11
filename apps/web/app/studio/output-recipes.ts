@@ -716,10 +716,15 @@ const TOPS_FAMILY_EXAMPLES: Record<string, readonly string[]> = {
     'front-invisible-mannequin', 'hem-fit-detail-model', 'folded-product', 'front-model', 'side-three-quarter-product',
     'rear-model', 'front-product', 'rear-product', 'fabric-knit-texture-detail', 'side-three-quarter-model',
   ][index]}.png`),
-  'sleeveless-tops': Array.from({ length: 7 }, (_, index) => `/output-examples/tops/sleeveless/sleeveless-ecom-${String(index + 1).padStart(2, '0')}-${[
-    'rear-model', 'front-model', 'three-quarter-product', 'flat-lay-full-product', 'three-quarter-headless-mannequin',
-    'front-product', 'styled-model-no-face',
-  ][index]}.png`),
+  'sleeveless-tops': [
+    '/output-examples/tops/sleeveless/sleeveless-ecom-01-rear-model.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-02-front-model.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-03-three-quarter-product.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-04-flat-lay-full-product.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-05-three-quarter-headless-mannequin.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-06-front-product.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-07-styled-model-no-face.png',
+  ],
   knitwear: Array.from({ length: 11 }, (_, index) => `/output-examples/tops/knitwear/knitwear-ecom-${String(index + 1).padStart(2, '0')}-${[
     'folded-product', 'neckline-detail', 'front-model', 'front-product', 'rear-three-quarter-model', 'knit-fabric-detail',
     'seated-styled-model', 'flat-lay-full-product', 'rear-invisible-mannequin', 'front-invisible-mannequin', 'styled-model',

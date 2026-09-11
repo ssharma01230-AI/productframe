@@ -252,3 +252,19 @@ def test_wrong_template_category_is_rejected(db):
             template_id="ecommerce-tops-front-view",
             channel="lifestyle",
         )
+
+
+def test_small_generation_runs_always_use_openai():
+    from productframe_api.generation_persistence import planned_image_provider
+
+    for total_jobs in (1, 2, 9):
+        assert planned_image_provider(total_jobs=total_jobs, job_index=0) == "openai"
+        assert planned_image_provider(total_jobs=total_jobs, job_index=8) == "openai"
+
+
+def test_large_generation_runs_split_between_providers():
+    from productframe_api.generation_persistence import planned_image_provider
+
+    assert [planned_image_provider(total_jobs=10, job_index=index) for index in range(4)] == [
+        "openai", "gemini", "openai", "gemini",
+    ]

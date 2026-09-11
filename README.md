@@ -13,7 +13,7 @@ The current application builds successfully as of the latest handover:
 ```text
 pnpm typecheck:web   PASS
 pnpm build:web      PASS
-backend tests       270 PASS
+backend + worker tests       291 PASS
 ```
 
 The Next.js build completes for `/`, `/studio`, and `/products`. Build output contains existing Autoprefixer warnings about `start`/`end` flex values and a workspace-root warning caused by multiple lockfiles; these are non-fatal.
@@ -69,15 +69,19 @@ Implemented behaviour includes:
 
 ### Product categories and subtype routing
 
-Recognition currently supports these clothing and fashion-product categories:
+Recognition currently supports these canonical clothing and fashion-product categories:
 
 ```text
-tops, outerwear, bottoms, underwear, socks, footwear,
-headwear, scarves, gloves, rings, neckwear, watches,
-bracelets, earrings, belts
+tops, outerwear, bottoms, dresses, tailoring,
+sleepwear_loungewear, underwear, socks, footwear,
+jewellery, accessories
 ```
 
-`accessories` is not a global category. Similar products are grouped economically: scarves include shawls and stoles, gloves include mittens, and rings, bracelets and earrings are routed separately. Bags, backpacks, luggage and purses are intentionally rejected as outside the supported clothing scope. Unknown subtypes should preserve their raw recognised product type and fall back to a category-compatible route rather than being forced into an incorrect subtype.
+Legacy leaf categories remain accepted for backwards compatibility and should be
+migrated to `jewellery` or `accessories` during re-analysis. Bags, backpacks,
+luggage and purses remain intentionally unsupported.
+
+Accessories is now a canonical global category containing headwear, scarves, gloves, belts, ties and veils. Jewellery contains rings, bracelets, earrings, necklaces and watches. Bags, backpacks, luggage and purses are intentionally rejected as outside the supported clothing scope. Unknown subtypes should preserve their raw recognised product type and fall back to a category-compatible route rather than being forced into an incorrect subtype.
 
 ### Rendering families and output routing
 
@@ -88,6 +92,24 @@ category → family → subtype → product
 ```
 
 The category is system-controlled, the raw subtype is preserved for product identity, and the family is system-controlled as the rendering-routing layer. Families select compatible output policies while composition primitives remain reusable across related garments.
+
+The current Tops taxonomy is:
+
+```text
+tops
+├── shirts
+├── t-shirts-casual-tops
+├── sleeveless-tops
+├── knitwear: jumper, sweater, cardigan, sweatshirt
+└── hoodies: pullover hoodie, zip-through hoodie
+```
+
+Tops now have 55 family-specific Ecommerce reference templates: Shirts (15),
+T-Shirts & Casual Tops (10), Sleeveless Tops (7), Knitwear (11), and Hoodies
+(12). The backend keeps the ten generic Tops compositions as an unclassified
+fallback. Family examples are stored under
+`apps/web/public/output-examples/tops/` and are illustrative references only;
+no images are generated at build or test time.
 
 The current bottoms taxonomy is:
 
@@ -125,7 +147,7 @@ load generation job
 
 The order is deliberate. Recognition, prompt construction and generation receive no sharpened or saturation-adjusted input. Fidelity validation is disabled by default to avoid the extra vision-model request; set `OPENAI_IMAGE_FIDELITY_VALIDATION=true` to re-enable restoration and validation. The human reviewer sees the finished preview, and the approved final is the same reviewed image.
 
-Image generation supports OpenAI GPT Image 2 and Gemini `gemini-3.1-flash-lite-image` (Nano Banana). The default small-run provider is OpenAI (`gpt-image-2-2026-04-21`). For runs containing 10 or more jobs, assignments alternate between OpenAI and Gemini so both provider queues can process work concurrently. Provider-side failures (timeouts, transport errors, HTTP 408/409/429 or 5xx responses) trigger one failover attempt on the other provider; invalid requests, safety rejections, authentication errors and malformed responses do not. Provider, model, fallback count and request ID are persisted on each generation job. The frontend remains provider-neutral and continues polling the same generation-run endpoint.
+Image generation supports OpenAI GPT Image 2 and Gemini `gemini-3.1-flash-lite-image` (Nano Banana). Small runs (fewer than 10 jobs) always use OpenAI (`gpt-image-2-2026-04-21`). For runs containing 10 or more jobs, assignments alternate between OpenAI and Gemini so both provider queues can process work concurrently. Provider-side failures (timeouts, transport errors, HTTP 408/409/429 or 5xx responses) trigger one failover attempt on the other provider; invalid requests, safety rejections, authentication errors and malformed responses do not. Provider, model, fallback count and request ID are persisted on each generation job. The frontend remains provider-neutral and continues polling the same generation-run endpoint.
 
 Local tests showed strong reproduction for a printed navy T-shirt and an all-over patterned tunic. A difficult octopus graphic test exposed a limitation in the current colour-distance artwork mask: it correctly failed closed rather than publishing a contaminated rectangular source crop. Improve general artwork segmentation before treating that case as solved; do not add product-specific or octopus-specific schemas, prompts or scripts.
 
@@ -222,16 +244,17 @@ Requirements: Node.js 20+, pnpm, Python 3.12+, Docker Desktop, Clerk credentials
 ```bash
 cp .env.example .env
 # create/update apps/web/.env.local and service env files from their examples
-docker compose up -d
+docker compose -f compose.yaml up -d
 pnpm install
 ```
 
-Run the web app:
+Run the web app from the repository root:
 
 ```bash
 pnpm dev:web
 ```
 
+The web app is served at <http://localhost:3000>. Keep this terminal running.
 Run the API in a second terminal:
 
 ```bash
@@ -242,7 +265,8 @@ python -m venv .venv
 .venv/bin/uvicorn productframe_api.main:app --reload --port 8000
 ```
 
-Run the worker in a third terminal:
+Run the worker in a third terminal. The worker is required for analysis and
+image-generation jobs, but the web UI itself should still load without it:
 
 ```bash
 cd services/worker
@@ -274,7 +298,7 @@ The worker reads `services/worker/.env`; the standalone analyser reads the `.env
 | `GEMINI_REQUESTS_PER_MINUTE` | `4` | Gemini rolling request budget. |
 | `GEMINI_REQUESTS_PER_DAY` | `18` | Gemini daily request-attempt allowance. |
 | `ANALYSIS_QUOTA_DB` | `<repository>/.cache/analysis-quotas.sqlite3` | Optional override for the persisted Gemini daily ledger. |
-| `IMAGE_GENERATION_PROVIDER` | `openai` | Default provider for runs below 10 jobs; valid values are `openai` and `gemini`. Large runs use both providers. |
+| `IMAGE_GENERATION_PROVIDER` | `openai` | Legacy setting; small runs always use OpenAI, while runs with 10 or more jobs use deterministic OpenAI/Gemini alternation. |
 | `OPENAI_IMAGE_MODEL` | `gpt-image-2-2026-04-21` | OpenAI image-generation model used by the worker. |
 | `OPENAI_IMAGE_TIMEOUT_SECONDS` | `300` | Per-request timeout for the OpenAI image provider. |
 | `GEMINI_IMAGE_MODEL` | `gemini-3.1-flash-lite-image` | Gemini image-generation model used for large-run assignments and failover. |
@@ -292,7 +316,7 @@ Run **one worker process** for local development: analysis budgets and cooldowns
 Run the mocked API, pipeline, rate-limit, and worker regression checks without making paid model calls:
 
 ```bash
-PYTHONPATH=services/worker/src services/api/.venv/bin/python -m pytest services/api/tests services/worker/tests -q
+PYTHONPATH=services/api/src:services/worker/src services/api/.venv/bin/python -m pytest services/api/tests services/worker/tests -q
 ```
 
 Open:
@@ -304,7 +328,57 @@ Open:
 - Studio: <http://localhost:3000/studio>
 - Prototype: open [`index.html`](./index.html) directly
 
-If Next development enters a corrupted hot-reload state, stop it, remove `apps/web/.next`, and restart. Do not remove source files.
+### Localhost troubleshooting
+
+If <http://localhost:3000> does not load:
+
+```bash
+# from the repository root
+pnpm install
+rm -rf apps/web/.next
+pnpm dev:web
+```
+
+If the command says the port is already in use, identify and stop the stale
+process, then restart:
+
+```bash
+lsof -nP -iTCP:3000 -sTCP:LISTEN
+kill <PID>
+pnpm dev:web
+```
+
+If the page loads but API calls fail, verify the API separately:
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/ready
+```
+
+The frontend must have `apps/web/.env.local` with
+`NEXT_PUBLIC_API_URL=http://localhost:8000` and a Clerk publishable key. The
+API must have `services/api/.env` with `CORS_ORIGINS=http://localhost:3000`.
+Restart Next after changing `.env.local`; Next.js does not reliably apply
+runtime environment changes through hot reload.
+
+If `/ready` reports dependency failures, start infrastructure and check it:
+
+```bash
+docker compose -f compose.yaml up -d
+
+docker compose -f compose.yaml ps
+```
+
+Postgres, Redis and MinIO must be reachable on ports 5432, 6379 and 9000.
+Run database migrations before starting the API:
+
+```bash
+cd services/api
+.venv/bin/alembic upgrade head
+```
+
+If Next development enters a corrupted hot-reload state, stop it, remove
+`apps/web/.next`, and restart. Do not remove source files.
 
 ## Important API routes
 

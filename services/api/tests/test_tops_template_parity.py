@@ -14,11 +14,18 @@ def _key(match: tuple[str, ...]) -> str:
 
 def _frontend_family_counts(source: str) -> dict[str, int]:
     block = source.split("const TOPS_FAMILY_EXAMPLES", 1)[1].split("// Evidence is explicit", 1)[0]
-    matches = re.findall(
+    counts: dict[str, int] = {}
+    for match in re.finditer(
         r"(?:'([^']+)'|([A-Za-z][\w-]*)):\s*Array\.from\(\{\s*length:\s*(\d+)",
         block,
-    )
-    return {_key(match): int(match[2]) for match in matches}
+    ):
+        counts[_key(match.groups())] = int(match.group(3))
+    # Explicit arrays are allowed for a family whose visual order is not a
+    # simple generated filename sequence.
+    explicit = re.search(r"'sleeveless-tops':\s*\[(.*?)\n\s*\],", block, re.DOTALL)
+    assert explicit is not None
+    counts["sleeveless-tops"] = len(re.findall(r"/output-examples/tops/sleeveless/", explicit.group(1)))
+    return counts
 
 
 def _frontend_evidence(source: str) -> dict[str, tuple[str, ...]]:
