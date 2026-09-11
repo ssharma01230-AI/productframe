@@ -145,7 +145,7 @@ def test_tops_family_templates_follow_explicit_asset_compositions():
         assert all(template.applicable_families == (family,) for template in templates)
         assert all(template.required_evidence in (("front_view",), ("rear_view",)) for template in templates)
 
-    assert "product-only" in get_generation_template("ecommerce-tops-sleeveless-tops-04").prompt_instructions
+    assert "mannequin" in get_generation_template("ecommerce-tops-sleeveless-tops-04").prompt_instructions
     assert "side or three-quarter" in get_generation_template("ecommerce-tops-t-shirts-casual-tops-05").prompt_instructions
     assert "side or three-quarter angle" in get_generation_template("ecommerce-tops-hoodies-07").prompt_instructions
     assert get_generation_template("ecommerce-tops-sleeveless-tops-04").required_evidence == ("front_view",)
@@ -153,7 +153,10 @@ def test_tops_family_templates_follow_explicit_asset_compositions():
     assert get_generation_template("ecommerce-tops-hoodies-03").required_evidence == ("rear_view",)
 
     assert get_generation_template("ecommerce-tops-sleeveless-tops-04").output_presentation == "product_only"
+    assert get_generation_template("ecommerce-tops-sleeveless-tops-04").name == "Front Invisible Mannequin"
     assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-05").output_presentation == "product_only"
+    assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-10").required_evidence == ("rear_view",)
+    assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-10").name == "Rear Model"
     assert get_generation_template("ecommerce-tops-hoodies-07").output_presentation == "worn_product"
     assert get_generation_template("ecommerce-tops-hoodies-08").artwork_surface_mode == "rear"
     assert get_generation_template("ecommerce-tops-shirts-07").artwork_surface_mode == "detail"

@@ -8,6 +8,7 @@ export type OutputRecipe = {
   exampleImage: string;
   hoverExampleImage?: string;
   showProductThumbnail?: boolean;
+  requiredEvidence?: readonly string[];
 };
 
 // Reference images illustrate output types; they are never generated product assets.
@@ -703,6 +704,68 @@ const topsOutputRecipes: readonly OutputRecipe[] = [
   ...TOPS_ECOMMERCE_RECIPES,
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
 ];
+
+const TOPS_FAMILY_EXAMPLES: Record<string, readonly string[]> = {
+  shirts: Array.from({ length: 15 }, (_, index) => `/output-examples/tops/shirts/shirts-ecom-${String(index + 1).padStart(2, '0')}-${[
+    'lifestyle-seated-armchair', 'styled-front-model', 'folded-product-cuff-visible', 'flat-lay-full-product',
+    'front-model-studio', 'lifestyle-seated-model', 'detail-barrel-cuff', 'detail-poplin-fabric-fold',
+    'invisible-mannequin-front', 'detail-collar-button-placket', 'detail-cuff-adjustment', 'side-three-quarter-model',
+    'side-three-quarter-product', 'rear-product', 'rear-model',
+  ][index]}.png`),
+  't-shirts-casual-tops': Array.from({ length: 10 }, (_, index) => `/output-examples/tops/t-shirts-casual/t-shirts-casual-ecom-${String(index + 1).padStart(2, '0')}-${[
+    'front-invisible-mannequin', 'hem-fit-detail-model', 'folded-product', 'front-model', 'side-three-quarter-product',
+    'rear-model', 'front-product', 'rear-product', 'fabric-knit-texture-detail', 'side-three-quarter-model',
+  ][index]}.png`),
+  'sleeveless-tops': Array.from({ length: 7 }, (_, index) => `/output-examples/tops/sleeveless/sleeveless-ecom-${String(index + 1).padStart(2, '0')}-${[
+    'rear-model', 'front-model', 'three-quarter-product', 'flat-lay-full-product', 'three-quarter-headless-mannequin',
+    'front-product', 'styled-model-no-face',
+  ][index]}.png`),
+  knitwear: Array.from({ length: 11 }, (_, index) => `/output-examples/tops/knitwear/knitwear-ecom-${String(index + 1).padStart(2, '0')}-${[
+    'folded-product', 'neckline-detail', 'front-model', 'front-product', 'rear-three-quarter-model', 'knit-fabric-detail',
+    'seated-styled-model', 'flat-lay-full-product', 'rear-invisible-mannequin', 'front-invisible-mannequin', 'styled-model',
+  ][index]}.png`),
+  hoodies: Array.from({ length: 12 }, (_, index) => `/output-examples/tops/hoodies/hoodies-ecom-${String(index + 1).padStart(2, '0')}-${[
+    'flat-product', 'front-invisible-mannequin', 'back-invisible-mannequin', 'three-quarter-invisible-mannequin',
+    'front-model', 'back-model', 'three-quarter-model', 'back-model-adjusting-hood', 'front-model-adjusting-hood',
+    'model-hands-in-trouser-pockets', 'seated-three-quarter-model', 'full-length-model-face-excluded',
+  ][index]}.png`),
+};
+
+// Evidence is explicit per family asset. Family packs do not share the
+// generic Tops primitive ordering; the numeric suffix only identifies the
+// supplied preview asset.
+const TOPS_FAMILY_NAMES: Record<string, readonly string[]> = {
+  shirts: ['Seated Lifestyle', 'Styled Front Model', 'Folded Shirt', 'Flat-Lay Shirt', 'Front Model', 'Seated Model', 'Cuff Detail', 'Fabric Texture Detail', 'Front Invisible Mannequin', 'Collar & Button Placket Detail', 'Cuff Adjustment Detail', 'Side / Three-Quarter Model', 'Side / Three-Quarter Product', 'Rear Product', 'Rear Model'],
+  't-shirts-casual-tops': ['Front Invisible Mannequin', 'Hem & Fit Detail', 'Folded T-Shirt', 'Front Model', 'Side / Three-Quarter Product', 'Rear Model', 'Front Product', 'Rear Product', 'Fabric Texture Detail', 'Rear Model'],
+  'sleeveless-tops': ['Rear Model', 'Front Model', 'Three-Quarter Product', 'Front Invisible Mannequin', 'Three-Quarter Invisible Mannequin', 'Front Product', 'Styled Model'],
+  knitwear: ['Folded Knitwear', 'Neckline Detail', 'Front Model', 'Front Product', 'Rear Three-Quarter Model', 'Knit Fabric Detail', 'Seated Styled Model', 'Flat-Lay Knitwear', 'Rear Invisible Mannequin', 'Front Invisible Mannequin', 'Styled Model'],
+  hoodies: ['Flat Product', 'Front Invisible Mannequin', 'Rear Invisible Mannequin', 'Three-Quarter Invisible Mannequin', 'Front Model', 'Rear Model', 'Three-Quarter Model', 'Rear Model Adjusting Hood', 'Front Model Adjusting Hood', 'Model with Hands in Pockets', 'Seated Three-Quarter Model', 'Full-Length Model'],
+};
+
+const TOPS_FAMILY_EVIDENCE: Record<string, readonly string[]> = {
+  shirts: ['front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'rear_view'],
+  't-shirts-casual-tops': ['front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'rear_view', 'front_view', 'rear_view'],
+  'sleeveless-tops': ['rear_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view'],
+  knitwear: ['front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'front_view'],
+  hoodies: ['front_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'front_view', 'front_view'],
+};
+
+function topsTemplateEvidence(family: string, index: number): readonly string[] {
+  return TOPS_FAMILY_EVIDENCE[family]?.[index] ? [TOPS_FAMILY_EVIDENCE[family][index]] : ['front_view'];
+}
+
+const topsFamilyOutputRecipes: Record<string, readonly OutputRecipe[]> = Object.fromEntries(
+  Object.entries(TOPS_FAMILY_EXAMPLES).map(([family, files]) => [family, files.map((exampleImage, index) => ({
+    id: `ecommerce-tops-${family}-${String(index + 1).padStart(2, '0')}`,
+    category: 'Ecommerce' as const,
+    name: TOPS_FAMILY_NAMES[family]?.[index] ?? `${family.replaceAll('-', ' ')} template ${String(index + 1).padStart(2, '0')}`,
+    description: `Family-specific Ecommerce reference for ${family.replaceAll('-', ' ')}.`,
+    exampleImage,
+    showProductThumbnail: true,
+    requiredEvidence: topsTemplateEvidence(family, index),
+  }))])
+);
+
 const outerwearOutputRecipes: readonly OutputRecipe[] = [
   ...OUTERWEAR_ECOMMERCE_RECIPES,
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
@@ -721,7 +784,12 @@ const socksOutputRecipes: readonly OutputRecipe[] = [
 export function getOutputRecipes(productCategory?: string | null, productFamily?: string | null): readonly OutputRecipe[] {
   const category = productCategory?.trim().toLowerCase();
   const family = productFamily?.trim().toLowerCase();
-  if (category === 'tops') return topsOutputRecipes;
+  if (category === 'tops') {
+    const familyRecipes = family ? topsFamilyOutputRecipes[family] : undefined;
+    return familyRecipes
+      ? [...familyRecipes, ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce')]
+      : topsOutputRecipes;
+  }
   if (category === 'bottoms') return bottomsFamilyOutputRecipes[family ?? ''] ?? bottomsOutputRecipes;
   if (category === 'outerwear') return outerwearOutputRecipes;
   if (category === 'footwear') return footwearOutputRecipes;

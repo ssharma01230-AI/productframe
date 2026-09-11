@@ -691,8 +691,8 @@ _BASE_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
 # docs/tops-template-inventory.md.
 _TOPS_FAMILY_COMPOSITIONS: Final[dict[str, tuple[str, ...]]] = {
     "shirts": ("seated_model", "front_model", "folded", "flat_product", "front_model", "seated_model", "construction_detail", "fabric_detail", "front_mannequin", "construction_detail", "construction_detail", "angled_model", "angled_product", "rear_product", "rear_model"),
-    "t-shirts-casual-tops": ("front_mannequin", "hem_detail", "folded", "front_model", "angled_product", "rear_model", "flat_product", "rear_product", "fabric_detail", "angled_model"),
-    "sleeveless-tops": ("rear_model", "front_model", "angled_product", "flat_product", "angled_mannequin", "flat_product", "styled_model"),
+    "t-shirts-casual-tops": ("front_mannequin", "hem_detail", "folded", "front_model", "angled_product", "rear_model", "flat_product", "rear_product", "fabric_detail", "rear_model"),
+    "sleeveless-tops": ("rear_model", "front_model", "angled_product", "front_mannequin", "angled_mannequin", "flat_product", "styled_model"),
     "knitwear": ("folded", "neckline_detail", "front_model", "flat_product", "rear_angled_model", "fabric_detail", "seated_model", "flat_product", "rear_mannequin", "front_mannequin", "styled_model"),
     "hoodies": ("flat_product", "front_mannequin", "rear_mannequin", "angled_mannequin", "front_model", "rear_model", "angled_model", "rear_action", "front_action", "front_model", "seated_angled_model", "full_length_model"),
 }
@@ -720,6 +720,14 @@ _TOPS_FAMILY_PROFILE_BASES: Final[dict[str, str]] = {
     "hem_detail": "ecommerce-tops-close-up",
     "neckline_detail": "ecommerce-tops-close-up",
     "fabric_detail": "ecommerce-tops-fabric",
+}
+
+_TOPS_FAMILY_NAMES: Final[dict[str, tuple[str, ...]]] = {
+    "shirts": ("Seated Lifestyle", "Styled Front Model", "Folded Shirt", "Flat-Lay Shirt", "Front Model", "Seated Model", "Cuff Detail", "Fabric Texture Detail", "Front Invisible Mannequin", "Collar & Button Placket Detail", "Cuff Adjustment Detail", "Side / Three-Quarter Model", "Side / Three-Quarter Product", "Rear Product", "Rear Model"),
+    "t-shirts-casual-tops": ("Front Invisible Mannequin", "Hem & Fit Detail", "Folded T-Shirt", "Front Model", "Side / Three-Quarter Product", "Rear Model", "Front Product", "Rear Product", "Fabric Texture Detail", "Rear Model"),
+    "sleeveless-tops": ("Rear Model", "Front Model", "Three-Quarter Product", "Front Invisible Mannequin", "Three-Quarter Invisible Mannequin", "Front Product", "Styled Model"),
+    "knitwear": ("Folded Knitwear", "Neckline Detail", "Front Model", "Front Product", "Rear Three-Quarter Model", "Knit Fabric Detail", "Seated Styled Model", "Flat-Lay Knitwear", "Rear Invisible Mannequin", "Front Invisible Mannequin", "Styled Model"),
+    "hoodies": ("Flat Product", "Front Invisible Mannequin", "Rear Invisible Mannequin", "Three-Quarter Invisible Mannequin", "Front Model", "Rear Model", "Three-Quarter Model", "Rear Model Adjusting Hood", "Front Model Adjusting Hood", "Model with Hands in Pockets", "Seated Three-Quarter Model", "Full-Length Model"),
 }
 
 _TOPS_FAMILY_PROFILE_INSTRUCTIONS: Final[dict[str, str]] = {
@@ -777,7 +785,7 @@ def _tops_family_template(family: str, index: int, profile: str) -> GenerationTe
     return replace(
         base,
         id=f"ecommerce-tops-{family}-{index + 1:02d}",
-        name=f"{family} template {index + 1:02d}",
+        name=_TOPS_FAMILY_NAMES[family][index],
         description=f"Family-specific Ecommerce presentation for {family.replace('-', ' ')} ({profile.replace('_', ' ')}).",
         prompt_instructions=_TOPS_FAMILY_PROFILE_INSTRUCTIONS[profile],
         applicable_families=(family,),
