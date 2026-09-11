@@ -458,8 +458,8 @@ BOTTOMS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     _bottoms_template(
         template_id="ecommerce-bottoms-side-angle-product",
         name="Side / Three-Quarter Product",
-        description="A waist-down three-quarter view of the bottoms worn by a male model, showing front-side fit, rise, leg profile and full length.",
-        instructions="Show the complete bottoms worn by a real adult male model from a relaxed 30–45-degree side or three-quarter angle. Frame from the waist or lower midsection downward so the waistband, rise, fit, leg shape, garment length and hems remain clear; exclude the face, head, shoulders and chest. Keep styling neutral and secondary, and preserve the exact product construction.",
+        description="A waist-down three-quarter view of the bottoms worn by a model, showing front-side fit, rise, leg profile and full length.",
+        instructions="Show the complete bottoms worn by a real adult model from a relaxed 30–45-degree side or three-quarter angle. Frame from the waist or lower midsection downward so the waistband, rise, fit, leg shape, garment length and hems remain clear; exclude the face, head, shoulders and chest. Keep styling neutral and secondary, and preserve the exact product construction.",
         required=("category_details.waist_height", "category_details.leg_width", "category_details.garment_length", "category_details.fit_and_silhouette"),
         artwork_visibility="partial",
         artwork_surface_mode="angled",
@@ -477,8 +477,8 @@ BOTTOMS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     _bottoms_template(
         template_id="ecommerce-bottoms-front-model",
         name="Front Model",
-        description="A waist-down front view of the bottoms worn by a male model, showing fit, leg shape and full length without a face.",
-        instructions="Show the bottoms worn by a real adult male model in a simple straight-on front-facing ecommerce pose. Frame from the waist or lower midsection downward to below the hem; exclude the face, head, shoulders and chest. Keep styling neutral and secondary so the actual waistband, rise, fit, leg shape, length, pockets and hem remain clear. Do not add another pair of bottoms or obscure the product.",
+        description="A waist-down front view of the bottoms worn by a model, showing fit, leg shape and full length without a face.",
+        instructions="Show the bottoms worn by a real adult model in a simple straight-on front-facing ecommerce pose. Frame from the waist or lower midsection downward to below the hem; exclude the face, head, shoulders and chest. Keep styling neutral and secondary so the actual waistband, rise, fit, leg shape, length, pockets and hem remain clear. Do not add another pair of bottoms or obscure the product.",
         required=("category_details.garment_length", "category_details.fit_and_silhouette"),
         artwork_visibility="full",
         artwork_surface_mode="worn",
@@ -487,8 +487,8 @@ BOTTOMS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     _bottoms_template(
         template_id="ecommerce-bottoms-back-model",
         name="Back Model",
-        description="A waist-down rear view of the bottoms worn by a male model, showing the seat, back pockets, drape and full length.",
-        instructions="Show the bottoms worn by a real adult male model from the rear in a restrained straight-on ecommerce pose. Frame from the waist or lower midsection downward to below the hem; exclude the face, head, shoulders and chest. Preserve the actual back rise, seat, pockets, seams, leg shape, drape and hem, with no competing lower-body garment or styling that obscures the product.",
+        description="A waist-down rear view of the bottoms worn by a model, showing the seat, back pockets, drape and full length.",
+        instructions="Show the bottoms worn by a real adult model from the rear in a restrained straight-on ecommerce pose. Frame from the waist or lower midsection downward to below the hem; exclude the face, head, shoulders and chest. Preserve the actual back rise, seat, pockets, seams, leg shape, drape and hem, with no competing lower-body garment or styling that obscures the product.",
         required=("category_details.garment_length", "category_details.fit_and_silhouette"),
         artwork_visibility="reference_dependent",
         artwork_surface_mode="worn",
@@ -498,7 +498,7 @@ BOTTOMS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
         template_id="ecommerce-bottoms-waistband-closure-detail",
         name="Waistband & Closure Detail",
         description="A close model-worn waist-to-upper-thigh crop showing the waistband, closure, belt loops and upper pocket construction.",
-        instructions="Create a close ecommerce detail of the upper section of the bottoms worn by a real adult male model. Use a slight front-side angle similar to a premium construction reference and frame from the waist to the upper thigh, with no face, head, shoulders or chest. Show the actual waistband, waist height, rise, fly or closure, belt loops, drawcord, pleats or darts that are visible in the product references. Keep any plain neutral top edge and partial hand secondary; never obscure the product. If a listed feature is absent, focus on the other supported upper construction instead of inventing it.",
+        instructions="Create a close ecommerce detail of the upper section of the bottoms worn by a real adult model. Use a slight front-side angle similar to a premium construction reference and frame from the waist to the upper thigh, with no face, head, shoulders or chest. Show the actual waistband, waist height, rise, fly or closure, belt loops, drawcord, pleats or darts that are visible in the product references. Keep any plain neutral top edge and partial hand secondary; never obscure the product. If a listed feature is absent, focus on the other supported upper construction instead of inventing it.",
         required=("category_details.waist_height", "category_details.fly_or_closure", "category_details.belt_loops"),
         artwork_visibility="conditional",
         artwork_surface_mode="detail",
@@ -680,10 +680,120 @@ def _evidence_for_template(template: GenerationTemplate) -> tuple[str, ...]:
 
 
 # The old generic choice remains resolvable for existing saved selections.
-_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
+_BASE_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
     template.id: replace(template, required_evidence=_evidence_for_template(template))
     for template in TOPS_ECOMMERCE_TEMPLATES + OUTERWEAR_ECOMMERCE_TEMPLATES + FOOTWEAR_ECOMMERCE_TEMPLATES + SOCKS_ECOMMERCE_TEMPLATES + BOTTOMS_ECOMMERCE_TEMPLATES + UNDERWEAR_ECOMMERCE_TEMPLATES
 }
+
+# Family packs are explicit compositions. The numeric suffix identifies the
+# supplied preview asset; it must never be used to select a prompt primitive.
+# Each entry below is reviewed against the asset inventory in
+# docs/tops-template-inventory.md.
+_TOPS_FAMILY_COMPOSITIONS: Final[dict[str, tuple[str, ...]]] = {
+    "shirts": ("seated_model", "front_model", "folded", "flat_product", "front_model", "seated_model", "construction_detail", "fabric_detail", "front_mannequin", "construction_detail", "construction_detail", "angled_model", "angled_product", "rear_product", "rear_model"),
+    "t-shirts-casual-tops": ("front_mannequin", "hem_detail", "folded", "front_model", "angled_product", "rear_model", "flat_product", "rear_product", "fabric_detail", "angled_model"),
+    "sleeveless-tops": ("rear_model", "front_model", "angled_product", "flat_product", "angled_mannequin", "flat_product", "styled_model"),
+    "knitwear": ("folded", "neckline_detail", "front_model", "flat_product", "rear_angled_model", "fabric_detail", "seated_model", "flat_product", "rear_mannequin", "front_mannequin", "styled_model"),
+    "hoodies": ("flat_product", "front_mannequin", "rear_mannequin", "angled_mannequin", "front_model", "rear_model", "angled_model", "rear_action", "front_action", "front_model", "seated_angled_model", "full_length_model"),
+}
+
+_TOPS_FAMILY_PROFILE_BASES: Final[dict[str, str]] = {
+    "folded": "ecommerce-tops-folded-view",
+    "flat_product": "ecommerce-tops-front-view",
+    "front_product": "ecommerce-tops-front-view",
+    "front_mannequin": "ecommerce-tops-front-view",
+    "rear_product": "ecommerce-tops-back",
+    "rear_mannequin": "ecommerce-tops-back",
+    "front_model": "ecommerce-tops-front-model",
+    "styled_model": "ecommerce-tops-front-model",
+    "seated_model": "ecommerce-tops-full-body-model",
+    "seated_angled_model": "ecommerce-tops-side-angle-model",
+    "full_length_model": "ecommerce-tops-full-body-model",
+    "rear_model": "ecommerce-tops-back-model",
+    "rear_angled_model": "ecommerce-tops-back-model",
+    "angled_model": "ecommerce-tops-side-angle-model",
+    "angled_product": "ecommerce-tops-front-view",
+    "angled_mannequin": "ecommerce-tops-front-view",
+    "front_action": "ecommerce-tops-front-model",
+    "rear_action": "ecommerce-tops-back-model",
+    "construction_detail": "ecommerce-tops-close-up",
+    "hem_detail": "ecommerce-tops-close-up",
+    "neckline_detail": "ecommerce-tops-close-up",
+    "fabric_detail": "ecommerce-tops-fabric",
+}
+
+_TOPS_FAMILY_PROFILE_INSTRUCTIONS: Final[dict[str, str]] = {
+    "folded": "Present the top neatly folded as a product-only ecommerce image. Arrange the fold so the visible colour, material, neckline or collar and distinctive construction remain clear.",
+    "flat_product": "Present the complete top as a product-only studio image, front-facing and fully visible from neckline to hem. Do not show a person, mannequin or body.",
+    "front_product": "Present the complete front of the top as a product-only studio image. Keep the full silhouette, neckline, sleeves and hem visible.",
+    "front_mannequin": "Present the complete front of the top on an invisible or headless mannequin. Keep the garment's silhouette and construction clear; do not show a face or visible body.",
+    "rear_product": "Present the complete rear of the top as a product-only studio image. Keep the back silhouette, shoulders, sleeves and hem fully visible.",
+    "rear_mannequin": "Present the complete rear of the top on an invisible or headless mannequin. Do not show a face or visible body.",
+    "front_model": "Show the top worn by a model in a simple front-facing studio presentation, cropped below the face. Keep styling minimal and make the garment fit, neckline, sleeves and hem clear.",
+    "styled_model": "Show the top worn by a minimally styled model with the face excluded. Keep the garment as the visual subject and preserve its complete visible silhouette.",
+    "seated_model": "Show the top worn by a seated model with the face excluded. Keep the pose simple and ensure the garment's neckline, silhouette, sleeves and visible length remain clear.",
+    "seated_angled_model": "Show the top worn by a seated model from a three-quarter angle, with the face excluded. Keep styling minimal and make the garment's depth and fit clear.",
+    "full_length_model": "Show the top worn by a model in a full-length composition, excluding the face. Keep the entire garment visible and styling minimal.",
+    "rear_model": "Show the top worn by a model from the rear, cropped to exclude the face. Clearly show the back, shoulders, sleeves and hem.",
+    "rear_angled_model": "Show the top worn by a model from a rear three-quarter angle, excluding the face. Clearly show the back construction, shoulder shape and drape.",
+    "angled_model": "Show the top worn by a model from a side or three-quarter angle, cropped below the face. Make the garment's depth, silhouette and fit clear.",
+    "angled_product": "Present the complete top as a product-only side or three-quarter studio view. Keep the silhouette, neckline, sleeves and hem visible.",
+    "angled_mannequin": "Present the top on a headless or invisible mannequin from a three-quarter angle. Keep the garment's construction and silhouette clear without showing a face.",
+    "front_action": "Show the top worn by a model from the front, cropped below the face, while the model naturally adjusts the hood. Keep the garment unobscured and preserve the hood construction.",
+    "rear_action": "Show the top worn by a model from the rear, excluding the face, while the model naturally adjusts the hood. Keep the back and hood construction visible.",
+    "construction_detail": "Create a tight ecommerce detail of the visible construction feature shown by the template, such as a cuff, collar, placket or fastening. Do not invent a feature.",
+    "hem_detail": "Create a close ecommerce detail showing the top's hem, fit and lower construction on the product or a model cropped to exclude the face. Do not lose the product identity.",
+    "neckline_detail": "Create a tight ecommerce detail of the neckline and surrounding knit or construction. Preserve the exact shape, material and visible texture.",
+    "fabric_detail": "Create a macro ecommerce detail of the actual fabric or knit texture. Preserve the product's true colour, weave, thickness and surface finish.",
+}
+
+
+_TOPS_FAMILY_WORN_PROFILES: Final[frozenset[str]] = frozenset({
+    "front_model", "styled_model", "seated_model", "seated_angled_model",
+    "full_length_model", "rear_model", "rear_angled_model", "angled_model",
+    "front_action", "rear_action",
+})
+_TOPS_FAMILY_DETAIL_PROFILES: Final[frozenset[str]] = frozenset({
+    "construction_detail", "hem_detail", "neckline_detail", "fabric_detail",
+})
+_TOPS_FAMILY_REAR_PROFILES: Final[frozenset[str]] = frozenset({
+    "rear_product", "rear_mannequin", "rear_model", "rear_angled_model", "rear_action",
+})
+_TOPS_FAMILY_ANGLED_PROFILES: Final[frozenset[str]] = frozenset({
+    "seated_angled_model", "rear_angled_model", "angled_model", "angled_product", "angled_mannequin",
+})
+
+
+def _tops_family_template(family: str, index: int, profile: str) -> GenerationTemplate:
+    base = _BASE_TEMPLATES[_TOPS_FAMILY_PROFILE_BASES[profile]]
+    artwork_surface_mode = (
+        "detail" if profile in _TOPS_FAMILY_DETAIL_PROFILES
+        else "folded" if profile == "folded"
+        else "rear" if profile in _TOPS_FAMILY_REAR_PROFILES
+        else "angled" if profile in _TOPS_FAMILY_ANGLED_PROFILES
+        else "worn" if profile in _TOPS_FAMILY_WORN_PROFILES
+        else "flat"
+    )
+    return replace(
+        base,
+        id=f"ecommerce-tops-{family}-{index + 1:02d}",
+        name=f"{family} template {index + 1:02d}",
+        description=f"Family-specific Ecommerce presentation for {family.replace('-', ' ')} ({profile.replace('_', ' ')}).",
+        prompt_instructions=_TOPS_FAMILY_PROFILE_INSTRUCTIONS[profile],
+        applicable_families=(family,),
+        output_presentation="worn_product" if profile in _TOPS_FAMILY_WORN_PROFILES else "product_only",
+        artwork_surface_mode=artwork_surface_mode,
+        required_evidence=("rear_view",) if profile in _TOPS_FAMILY_REAR_PROFILES else ("front_view",),
+    )
+
+
+_TOPS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
+    template.id: template
+    for family, profiles in _TOPS_FAMILY_COMPOSITIONS.items()
+    for index, profile in enumerate(profiles)
+    for template in (_tops_family_template(family, index, profile),)
+}
+_TEMPLATES: Final[dict[str, GenerationTemplate]] = {**_BASE_TEMPLATES, **_TOPS_FAMILY_TEMPLATES}
 _LEGACY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {TOPS_CLEAN_PRODUCT_SHOT.id: TOPS_CLEAN_PRODUCT_SHOT}
 
 
@@ -725,7 +835,9 @@ def list_generation_templates(*, category: str | None = None, channel: str | Non
         templates = [template for template in templates if template.channel == channel.strip().lower()]
     if product_family is not None:
         family = product_family.strip().lower()
-        templates = [template for template in templates if not template.applicable_families or family in template.applicable_families]
+        # Once a family is known, expose only the locked family pack. Generic
+        # category templates remain available when family is unconfirmed.
+        templates = [template for template in templates if template.applicable_families and family in template.applicable_families]
     # subtype is intentionally not used to hide templates; it is descriptive
     # context for prompt compilation and future ranking.
     return templates

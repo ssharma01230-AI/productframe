@@ -47,7 +47,13 @@ def test_template_rejects_wrong_category_or_channel():
 
 def test_listing_filters_templates():
     templates = list_generation_templates(category="tops", channel="ecommerce")
-    assert len(templates) == 10
+    assert len(templates) == 65
+    assert {family: len(list_generation_templates(category="tops", channel="ecommerce", product_family=family)) for family in (
+        "shirts", "t-shirts-casual-tops", "sleeveless-tops", "knitwear", "hoodies",
+    )} == {
+        "shirts": 15, "t-shirts-casual-tops": 10, "sleeveless-tops": 7,
+        "knitwear": 11, "hoodies": 12,
+    }
     listed_front = next(template for template in templates if template.id == TOPS_FRONT_VIEW.id)
     assert listed_front.id == TOPS_FRONT_VIEW.id
     assert listed_front.required_evidence == ("front_view",)
@@ -123,6 +129,35 @@ def test_underwear_readiness_uses_only_front_and_rear_evidence():
     assert templates["ecommerce-underwear-front-product"].required_evidence == ("front_view",)
     assert templates["ecommerce-underwear-back-flat-lay"].required_evidence == ("rear_view",)
     assert templates["ecommerce-underwear-waistband-detail"].required_evidence == ("front_view",)
+
+
+def test_tops_family_templates_follow_explicit_asset_compositions():
+    expected = {
+        "shirts": (15, "front_view", "rear_view"),
+        "t-shirts-casual-tops": (10, "front_view", "rear_view"),
+        "sleeveless-tops": (7, "front_view", "rear_view"),
+        "knitwear": (11, "front_view", "rear_view"),
+        "hoodies": (12, "front_view", "rear_view"),
+    }
+    for family, (count, _, _) in expected.items():
+        templates = list_generation_templates(category="tops", channel="ecommerce", product_family=family)
+        assert len(templates) == count
+        assert all(template.applicable_families == (family,) for template in templates)
+        assert all(template.required_evidence in (("front_view",), ("rear_view",)) for template in templates)
+
+    assert "product-only" in get_generation_template("ecommerce-tops-sleeveless-tops-04").prompt_instructions
+    assert "side or three-quarter" in get_generation_template("ecommerce-tops-t-shirts-casual-tops-05").prompt_instructions
+    assert "side or three-quarter angle" in get_generation_template("ecommerce-tops-hoodies-07").prompt_instructions
+    assert get_generation_template("ecommerce-tops-sleeveless-tops-04").required_evidence == ("front_view",)
+    assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-06").required_evidence == ("rear_view",)
+    assert get_generation_template("ecommerce-tops-hoodies-03").required_evidence == ("rear_view",)
+
+    assert get_generation_template("ecommerce-tops-sleeveless-tops-04").output_presentation == "product_only"
+    assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-05").output_presentation == "product_only"
+    assert get_generation_template("ecommerce-tops-hoodies-07").output_presentation == "worn_product"
+    assert get_generation_template("ecommerce-tops-hoodies-08").artwork_surface_mode == "rear"
+    assert get_generation_template("ecommerce-tops-shirts-07").artwork_surface_mode == "detail"
+    assert get_generation_template("ecommerce-tops-knitwear-01").artwork_surface_mode == "folded"
 
 
 def test_tops_templates_define_artwork_visibility_and_surface_policy():
