@@ -62,6 +62,8 @@ def test_missing_middle_source_preserves_original_image_associations(monkeypatch
         return sources.get(record_id)
 
     def get_image(query):
+        if query.column_descriptions[0]["entity"].__name__ == "ImageAnalysisCache":
+            return None
         assert query.column_descriptions[0]["entity"] is AnalysisJobImage
         parameters = query.compile().params
         assert parameters["job_id_1"] == job.id
@@ -88,7 +90,7 @@ def test_missing_middle_source_preserves_original_image_associations(monkeypatch
         colours="white", materials="cotton", features=["collar"], description="A white cotton shirt", confidence=0.9,
     )
 
-    def analyze(image_bytes, progress_callback):
+    def analyze(image_bytes, progress_callback, cached_stage_results=None, stage_result_callback=None, cached_stage_state=None, stage_state_callback=None):
         assert image_bytes == [b"image-1.jpg", b"image-3.jpg", b"image-4.jpg"]
         progress_callback("screening", "Screening images", 3, 3, 40)
         return SimpleNamespace(

@@ -11,6 +11,7 @@ import io
 import os
 from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
+from contextvars import copy_context
 from contextvars import ContextVar
 from enum import StrEnum
 from threading import Event, Lock
@@ -21,8 +22,13 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .analysis_limits import AnalysisBudgetError, AnalysisLimits, RateLimiter, estimate_request_tokens, retry_delay
-from .category_registry import get_bottoms_family_for_subtype
-from .category_schemas import CATEGORY_DETAIL_MODELS, BottomsFamily, CategoryDetails, UnderwearFamily
+from .category_registry import get_bottoms_family_for_subtype, get_tops_family_for_subtype
+from .description_utils import concise_product_description
+from .category_schemas import (
+    AccessoriesFamily, BottomsFamily, CATEGORY_DETAIL_MODELS, CategoryDetails, DressFamily, FootwearFamily,
+    JewelleryFamily, OuterwearFamily, SleepwearFamily, SocksFamily, TailoringFamily,
+    TopsFamily, UnderwearFamily,
+)
 from .analysis_router import AnalysisRouter, AnalysisSafetyError
 from .image_processing import normalize_image_orientation
 
@@ -144,15 +150,23 @@ class ProductCategory(StrEnum):
     EARRINGS = "earrings"
     WATCHES = "watches"
     BELTS = "belts"
-    NECKWEAR = "neckwear"
+    NECKWEAR = "neckwear"  # legacy leaf category
+    DRESSES = "dresses"
+    TAILORING = "tailoring"
+    SLEEPWEAR_LOUNGEWEAR = "sleepwear_loungewear"
+    JEWELLERY = "jewellery"
+    ACCESSORIES = "accessories"
+
+
+ProductFamily = (TopsFamily | OuterwearFamily | BottomsFamily | UnderwearFamily |
+                 DressFamily | TailoringFamily | SleepwearFamily | SocksFamily |
+                 FootwearFamily | JewelleryFamily | AccessoriesFamily)
 
 
 class ProductCategorization(BaseModel):
     category: ProductCategory
-    # Product family is system-controlled for categories that use rendering
-    # families. Null is deliberate when the image does not support a confident
-    # family assignment.
-    product_family: UnderwearFamily | BottomsFamily | None = None
+    # Null is deliberate when the family cannot be established confidently.
+    product_family: ProductFamily | None = None
     subtype: str | None = None
     product_type: str = Field(min_length=5, max_length=120)
     confidence: float = Field(ge=0, le=1)
@@ -277,7 +291,10 @@ class BrandingDescription(BaseModel):
 
 
 class GenderDescription(BaseModel):
-    assumed: str = Field(min_length=3, max_length=120)
+    assumed: Literal["female", "male", "unisex", "not_determinable"]
+    confidence: float = Field(ge=0, le=1)
+    evidence: list[str] = Field(min_length=1)
+    basis: Literal["wearer", "garment_design", "both", "unclear"]
     user_confirmed: str | None = Field(default=None, max_length=120)
 
 
@@ -365,9 +382,8 @@ class TopGarmentDetails(BaseModel):
 class ProductAnalysis(BaseModel):
     product_name: str = Field(min_length=3, max_length=160)
     category: ProductCategory
-    # Populated for categories with rendering families; null means the family
-    # could not be established confidently and conservative fallback is used.
-    product_family: UnderwearFamily | BottomsFamily | None = None
+    # Null means the family could not be established confidently.
+    product_family: ProductFamily | None = None
 
     @field_validator("product_name")
     @classmethod
@@ -445,13 +461,12 @@ def categorize_product_image(client: OpenAI, data_url: str) -> ProductCategoriza
     response = _parse_response(client,
         model=_vision_model(),
         input=[{"role": "user", "content": [{"type": "input_text", "text": """Categorize this already-approved wearable fashion product.
-Choose exactly one category: outerwear, tops, bottoms, socks, footwear, underwear, headwear, scarves, gloves, rings, neckwear, watches, bracelets, earrings, belts.
-Never return bags; bags are outside the supported clothing product scope and must be rejected.
-For category underwear, set product_family to exactly one of: lower_body_underwear, bra, lingerie, base_layer, underwear_set. Set it to null when the family cannot be established confidently. Use underwear_set for a coordinated multi-piece product; use bra for bras or bralettes; use lower_body_underwear for boxers, briefs or bikini briefs; use base_layer for vests, undershirts or camisoles; use lingerie for slips, bodysuits, corsets or decorative lingerie-led pieces.
-For category bottoms, return subtype as exactly one of: shorts, skirt, leggings, trousers, jeans, cargo trousers, joggers, chinos. Set product_family to exactly one of: structured_bottoms, casual_bottoms, leggings, skirts, matching the subtype mapping. Set both subtype and product_family to null when the bottoms subtype cannot be established confidently.
-For all other categories, product_family and subtype must be null.
-Return a highly specific product_type, such as '3/4 length dark green leather jacket with a belted waist'.
-Do not describe colours, materials, features, or write a long description yet."""}, _image_input(data_url, detail="high")]}],
+Return exactly one canonical category from the supported category list.
+Reject or exclude bags and unsupported product types.
+Return the matching canonical product_family when confidently visible; otherwise null. Use the canonical family values defined by the system registry.
+Return a specific physical subtype. Keep colour, material, pattern, occasion, length and function as attributes rather than subtype values.
+Return a specific product_type.
+Do not return detailed colours, materials, features or a catalogue description."""}, _image_input(data_url, detail="high")]}],
         text_format=ProductCategorization,
     )
     if response.output_parsed is None:
@@ -464,13 +479,30 @@ Do not describe colours, materials, features, or write a long description yet.""
         categorization.product_family = family
         if family is None:
             categorization.subtype = None
+    elif categorization.category == ProductCategory.TOPS:
+        # Tops use the approved family tree: sweatshirts belong to Knitwear,
+        # while pullover and zip-through hoodies belong to Hoodies.
+        categorization.product_family = get_tops_family_for_subtype(categorization.subtype)
+        if categorization.product_family is None:
+            categorization.subtype = None
     else:
-        categorization.product_family = (
-            categorization.product_family
-            if categorization.category == ProductCategory.UNDERWEAR
-            else None
-        )
-        categorization.subtype = None
+        # Canonical categories carry their family through to detailed analysis;
+        # legacy leaf categories remain accepted for old callers but do not
+        # participate in the new family routing until migrated.
+        categorization.product_family = categorization.product_family if categorization.category in {
+            ProductCategory.TOPS, ProductCategory.OUTERWEAR, ProductCategory.BOTTOMS,
+            ProductCategory.DRESSES, ProductCategory.TAILORING,
+            ProductCategory.SLEEPWEAR_LOUNGEWEAR, ProductCategory.UNDERWEAR,
+            ProductCategory.SOCKS, ProductCategory.FOOTWEAR,
+            ProductCategory.JEWELLERY, ProductCategory.ACCESSORIES,
+        } else None
+        categorization.subtype = categorization.subtype if categorization.category in {
+            ProductCategory.TOPS, ProductCategory.OUTERWEAR, ProductCategory.BOTTOMS,
+            ProductCategory.DRESSES, ProductCategory.TAILORING,
+            ProductCategory.SLEEPWEAR_LOUNGEWEAR, ProductCategory.UNDERWEAR,
+            ProductCategory.SOCKS, ProductCategory.FOOTWEAR,
+            ProductCategory.JEWELLERY, ProductCategory.ACCESSORIES,
+        } else None
     return categorization
 
 
@@ -483,7 +515,7 @@ Pass only when the image clearly shows a wearable clothing or fashion product in
 
 Reject when the main subject is an unrelated object, food, animal, vehicle, furniture, room, landscape, person without a clearly identifiable fashion product, promotional graphic, poster, advertisement, text design, website screenshot, app screenshot, collage, or image where the product cannot be identified. A screenshot or file containing a simple label is allowed when the main content is a clear product photograph; reject only when the screenshot/UI/graphic is the main content. Do not pass an image merely because it contains a person or text. A person wearing a clearly identifiable fashion product may pass. A clear back, side, rear, folded, hanging, or detail view of a recognizable single product may also pass; a front view is not required. Reject only when the product itself cannot be identified from the image.
 
-Return passed=false with a short, specific reason for anything rejected. Return passed=true only when exactly one candidate fashion product is clearly identifiable. Count distinct candidate products, not a person, body parts, or incidental background details. A model's supporting clothes are styling when one product is clearly emphasised by framing, focus, graphic visibility or composition; do not count those supporting clothes as submitted products. Set supporting_clothing_is_styling=true in that case. For example, trousers or a skirt worn beneath a prominently framed shirt are styling, while a balanced outfit image that promotes the top and bottom equally contains multiple candidate products. Reject flat lays, wardrobes, outfit collages, or scenes where multiple products are equally plausible as the submitted item. Set primary_item_clear=true only when one product is clearly the intended subject."""}, _image_input(data_url, detail="high")]}],
+Return passed=false with a short, specific reason for anything rejected. Return passed=true only when exactly one candidate fashion product is clearly identifiable. Count distinct candidate products, not a person, body parts, or incidental background details. If the product generally comes as a pair or set, such as footwear or jewellery, count a clearly matching pair or set presented as one purchasable product as one candidate product. Do not reject it merely because multiple physical pieces are visible. A model's supporting clothes are styling when one product is clearly emphasised by framing, focus, graphic visibility or composition; do not count those supporting clothes as submitted products. Set supporting_clothing_is_styling=true in that case. For example, trousers or a skirt worn beneath a prominently framed shirt are styling, while a balanced outfit image that promotes the top and bottom equally contains multiple candidate products. Reject flat lays, wardrobes, outfit collages, or scenes where multiple products are equally plausible as the submitted item. Set primary_item_clear=true only when one product is clearly the intended subject."""}, _image_input(data_url, detail="high")]}],
         text_format=ImageScreeningResult,
     )
     if response.output_parsed is None:
@@ -506,13 +538,15 @@ class BatchAnalysisResult(BaseModel):
     # Original image number -> model-derived media coverage. Keeping this at
     # image level lets readiness explain exactly which upload supports a card.
     image_evidence: dict[str, dict[str, object]] = Field(default_factory=dict)
+    # Original image number -> completed reusable stage payloads.
+    stage_results: dict[str, dict[str, object]] = Field(default_factory=dict)
     reason: str = Field(min_length=10, max_length=300)
 
 
 def identify_product_image(client: OpenAI, data_url: str) -> ProductIdentity:
     response = _parse_response(client,
         model=_vision_model(),
-        input=[{"role": "user", "content": [{"type": "input_text", "text": "Describe this single fashion product image for identity matching across a batch. Record only visible evidence. Identify the specific product type, dominant colour or colourway, pattern or finish, and a concise visual signature covering distinctive shape, construction, closures, panels, trims, hardware or other details. Also classify every clearly visible media view using only: front_view, rear_view, top_view, side_view, sole_or_underside, flat_lay, detail, worn, unknown. Record concrete visible evidence relevant to template readiness, such as rear_pockets, waistband, outsole_tread, heel, cuff, print, pattern, toe_shape, or fabric_texture. Do not claim a view or detail that is hidden, obstructed or not visible. Do not identify the model, background, photography style, brand, SKU or hidden information."}, _image_input(data_url, detail="high")]}],
+        input=[{"role": "user", "content": [{"type": "input_text", "text": "Identify this single fashion product using visible evidence only. Return its specific product type, dominant colour/colourway, pattern or finish and concise visual signature. Return clearly visible media views using only: front_view, rear_view, top_view, side_view, sole_or_underside, flat_lay, detail, worn, unknown. Return concrete readiness evidence such as pockets, waistband, outsole tread, heel, cuff, print, toe shape or fabric texture. Do not claim hidden details or identify the model, background, brand, SKU or photography style."}, _image_input(data_url, detail="high")]}],
         text_format=ProductIdentity,
     )
     if response.output_parsed is None:
@@ -657,7 +691,7 @@ def group_product_images(client: OpenAI, data_urls: list[str], identities: list[
     return BatchScreeningResult(passed=True, unique_product_count=len(groups), groups=groups, reason="All images were grouped using token-bounded comparisons.")
 
 
-def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | None = None, model: str | None = None, run_safety_check: bool = True, progress_callback: Callable[[str, str, int, int, int], None] | None = None, max_concurrency: int | None = None) -> BatchAnalysisResult:
+def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | None = None, model: str | None = None, run_safety_check: bool = True, progress_callback: Callable[[str, str, int, int, int], None] | None = None, max_concurrency: int | None = None, cached_stage_results: dict[str, dict[str, object]] | None = None, stage_result_callback: Callable[[str, dict[str, object]], None] | None = None, cached_stage_state: dict[str, object] | None = None, stage_state_callback: Callable[[str, dict[str, object]], None] | None = None) -> BatchAnalysisResult:
     """Screen a batch and report how many unique fashion products it contains."""
     if not image_bytes_list:
         raise ValueError("at least one image is required")
@@ -695,33 +729,52 @@ def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | Non
         router = _analysis_router.get()
         selected_model = _vision_model()
 
-        def image_steps(data_url: str):
+        def image_steps(data_url: str, image_number: int):
             # Only independent images overlap. Every image must pass each gate in order.
+            stages = dict((cached_stage_results or {}).get(str(image_number), {}))
             _check_cancelled()
             if run_safety_check:
-                moderation = _moderate_image(client, data_url)
-                if moderation.results[0].flagged:
-                    return None, None, "Image did not pass the safety check."
+                moderation_result = stages.get("moderation")
+                if moderation_result is None:
+                    moderation = _moderate_image(client, data_url)
+                    moderation_result = {"flagged": bool(moderation.results[0].flagged)}
+                    stages["moderation"] = moderation_result
+                if bool(moderation_result.get("flagged")):
+                    return None, None, "Image did not pass the safety check.", stages
             _check_cancelled()
-            screening = screen_product_image(client, data_url)
-            acceptable_styled_product = (
-                screening.primary_item_clear
-                and screening.item_count == 2
-            )
+            screening = ImageScreeningResult.model_validate(stages["screening"]) if "screening" in stages else screen_product_image(client, data_url)
+            stages["screening"] = screening.model_dump(mode="json")
+            acceptable_styled_product = screening.primary_item_clear and screening.item_count == 2
             if (not screening.passed or screening.item_count != 1 or not screening.primary_item_clear) and not acceptable_styled_product:
-                return None, None, screening.reason
+                return None, None, screening.reason, stages
             _check_cancelled()
-            identity = identify_product_image(client, data_url)
-            _check_cancelled()
-            category = categorize_product_image(client, data_url)
-            return identity, category, None
+            identity = ProductIdentity.model_validate(stages["identity"]) if "identity" in stages else None
+            category = ProductCategorization.model_validate(stages["classification"]) if "classification" in stages else None
+            missing_identity = identity is None
+            missing_category = category is None
+            if missing_identity or missing_category:
+                # Identity and classification are independent after screening.
+                # Copy the context separately because a Context cannot run
+                # concurrently in two threads, while preserving cancellation,
+                # routing and rate-limiter context for each provider call.
+                with ThreadPoolExecutor(max_workers=2, thread_name_prefix="image-analysis-stage") as stage_executor:
+                    identity_future = stage_executor.submit(copy_context().run, identify_product_image, client, data_url) if missing_identity else None
+                    category_future = stage_executor.submit(copy_context().run, categorize_product_image, client, data_url) if missing_category else None
+                    if identity_future is not None:
+                        identity = identity_future.result()
+                    if category_future is not None:
+                        category = category_future.result()
+            assert identity is not None and category is not None
+            stages["identity"] = identity.model_dump(mode="json")
+            stages["classification"] = category.model_dump(mode="json")
+            return identity, category, None, stages
 
-        def check_image(data_url: str):
+        def check_image(data_url: str, image_number: int):
             context = _analysis_cancel.set(cancel_event)
             model_context = _analysis_model.set(selected_model)
             router_context = _analysis_router.set(router)
             try:
-                return image_steps(data_url)
+                return image_steps(data_url, image_number)
             except AnalysisSafetyError as exc:
                 return None, None, str(exc)
             finally:
@@ -731,10 +784,13 @@ def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | Non
 
         checked = {}
         with ThreadPoolExecutor(max_workers=concurrency, thread_name_prefix="image-analysis") as executor:
-            futures = {executor.submit(check_image, data_url): index for index, data_url in enumerate(data_urls)}
+            futures = {executor.submit(check_image, data_url, validated_numbers[index]): index for index, data_url in enumerate(data_urls)}
             try:
                 for completed, future in enumerate(as_completed(futures), start=1):
                     checked[futures[future]] = future.result()
+                    image_index = futures[future]
+                    if stage_result_callback:
+                        stage_result_callback(str(validated_numbers[image_index]), checked[image_index][3])
                     # SQLAlchemy-backed progress callbacks stay on the coordinator thread.
                     report("analysis", f"Analysed image {completed} of {len(data_urls)}", completed, len(data_urls), 15 + round(completed / len(data_urls) * 45))
             except Exception:
@@ -746,7 +802,7 @@ def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | Non
         # Completion order must never change image numbers or the grouping annotations.
         for index, data_url in enumerate(data_urls):
             number = validated_numbers[index]
-            identity, category, rejection_reason = checked[index]
+            identity, category, rejection_reason, _stages = checked[index]
             if rejection_reason:
                 rejected.append(RejectedImage(image_number=number, reason=rejection_reason))
                 continue
@@ -758,7 +814,13 @@ def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | Non
         if not accepted_data_urls:
             return BatchAnalysisResult(passed=False, unique_product_count=0, rejected_images=rejected, reason="No images passed validation and product screening.")
         report("grouping", "Comparing analysed images and finding product groups", 0, len(accepted_data_urls), 62)
-        grouping = group_product_images(client, accepted_data_urls, identities, categories)
+        saved_grouping = (cached_stage_state or {}).get("grouping")
+        if saved_grouping:
+            grouping = BatchScreeningResult.model_validate(saved_grouping)
+        else:
+            grouping = group_product_images(client, accepted_data_urls, identities, categories)
+            if stage_state_callback:
+                stage_state_callback("grouping", grouping.model_dump(mode="json"))
         report("grouping", f"Found {len(grouping.groups)} product groups", len(accepted_data_urls), len(accepted_data_urls), 75)
         accepted_bytes = [image_bytes_list[number - 1] for number in accepted_numbers]
 
@@ -768,14 +830,19 @@ def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | Non
             router_context = _analysis_router.set(router)
             client_context = _analysis_client.set(client)
             try:
+                saved_synthesis = (cached_stage_state or {}).get("synthesis", {})
+                saved_product = saved_synthesis.get(str(group.product_number)) if isinstance(saved_synthesis, dict) else None
+                if saved_product:
+                    return IdentifiedProduct.model_validate(saved_product)
                 _check_cancelled()
                 local_numbers = group.image_numbers
                 original_numbers = [accepted_numbers[number - 1] for number in local_numbers]
                 representative = accepted_bytes[local_numbers[0] - 1]
+                representative_data_url = accepted_data_urls[local_numbers[0] - 1]
                 member_categories = [categories[number - 1].category for number in local_numbers]
                 group_category = max(set(member_categories), key=member_categories.count)
                 representative_category = next((categories[number - 1] for number in local_numbers if categories[number - 1].category == group_category), categories[local_numbers[0] - 1])
-                analysis = analyze_product_image(representative, api_key=api_key, model=model, run_safety_check=False, screen_already=True, known_categorization=representative_category)
+                analysis = analyze_product_image(representative, api_key=api_key, model=model, run_safety_check=False, screen_already=True, known_categorization=representative_category, prepared_data_url=representative_data_url)
                 analysis.category = group_category
                 return IdentifiedProduct(product_number=group.product_number, image_numbers=original_numbers, grouping_reason=group.reason, analysis=analysis)
             finally:
@@ -790,7 +857,10 @@ def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | Non
             futures = {executor.submit(synthesize_group, group): index for index, group in enumerate(grouping.groups)}
             try:
                 for completed, future in enumerate(as_completed(futures), start=1):
-                    synthesized[futures[future]] = future.result()
+                    product_index = futures[future]
+                    synthesized[product_index] = future.result()
+                    if stage_state_callback:
+                        stage_state_callback(f"synthesis:{grouping.groups[product_index].product_number}", synthesized[product_index].model_dump(mode="json"))
                     report("synthesis", f"Preparing product details {completed} of {len(grouping.groups)}", completed, len(grouping.groups), 75 + round(completed / len(grouping.groups) * 25))
             except Exception:
                 cancel_event.set()
@@ -805,16 +875,16 @@ def _analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | Non
             }
             for number, identity in zip(accepted_numbers, identities)
         }
-        return BatchAnalysisResult(passed=True, unique_product_count=len(products), products=products, rejected_images=rejected, image_evidence=image_evidence, reason="Accepted images were grouped and analysed; rejected images were omitted.")
+        return BatchAnalysisResult(passed=True, unique_product_count=len(products), products=products, rejected_images=rejected, image_evidence=image_evidence, stage_results={str(validated_numbers[index]): checked[index][3] for index in range(len(data_urls))}, reason="Accepted images were grouped and analysed; rejected images were omitted.")
 
 
-def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, model: str | None = None, run_safety_check: bool = True, screen_already: bool = False, known_categorization: ProductCategorization | None = None) -> ProductAnalysis:
+def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, model: str | None = None, run_safety_check: bool = True, screen_already: bool = False, known_categorization: ProductCategorization | None = None, prepared_data_url: str | None = None) -> ProductAnalysis:
     """Screen and analyse one product image using an OpenAI vision model."""
-    image = prescreen_image(image_bytes)
+    image = None if prepared_data_url else prescreen_image(image_bytes)
     with _analysis_session(api_key, model):
         model = _vision_model()
         client = _analysis_client.get()
-        data_url = _data_url(image)
+        data_url = prepared_data_url or _data_url(image)
         if run_safety_check:
             moderation = _moderate_image(client, data_url)
             if moderation.results[0].flagged:
@@ -837,7 +907,7 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
         categorization = known_categorization or categorize_product_image(client, data_url)
         instructions = f"""Analyse this approved wearable fashion product photograph for an ecommerce catalogue.
     The separate categorization step identified the product as category '{categorization.category}', family '{categorization.product_family or "not established"}', and type '{categorization.product_type}'. Use those values unless the image clearly disproves them.
-    For underwear and bottoms, preserve the supplied product family when supported. For bottoms, preserve the supplied subtype and family; do not change the system-controlled family. Populate only applicable details and use not_applicable for irrelevant fields. A null family is valid when the image does not support a confident family assignment.
+    Preserve the supplied canonical category, family and subtype when supported; do not change the system-controlled routing values. Populate only applicable details and use not_applicable for irrelevant fields. A null family is valid when the image does not support a confident family assignment.
 
     Return only the requested structured fields.
     - Generate a concise, human-friendly product name of no more than 5 words, such as 'Pink cotton shirt', 'Black leather jacket', or 'White low-top trainers'. Include the dominant visible colour and product type when useful. Do not use placeholders such as 'Unconfirmed product'.
@@ -849,15 +919,15 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
     - List every visible commercial feature: pattern, pockets, zips, buttons, seams, straps, laces, sole, collar, cuffs, hardware, and so on. Treat every print, illustration, logo, embroidery and appliqué as identity-critical artwork. Describe its exact subject and topology: component count, shapes, relative positions, orientation, linework, internal details, colour boundaries and relationship to seams, as well as any text, numbers, placement, scale, spacing, fading, distress and edge quality. Never reduce distinctive artwork to only a generic subject label.
     - For every visible identity-critical artwork, populate global_details.branding.artwork_regions. source_bounds must be a tight normalized [x, y, width, height] rectangle after applying global_details.source_rotation_degrees. garment_relative_bounds must be the same artwork rectangle relative to the visible garment's own bounding rectangle after that rotation. Exclude the model, skin, other clothes and background from the rectangle. Include transparent or base-fabric gaps within the artwork itself. extraction_confidence measures whether the artwork boundary and pixels are sufficiently clear to reuse; lower it for obstruction, blur, severe folds or cropping. Do not create artwork_regions for ordinary fabric patterns that cover the whole garment.
     - Distinguish observed product properties from properties hidden by a model, pose, cropping, lighting or image quality. Mark a property uncertain only when it is genuinely hidden, obstructed, cropped or impossible to assess. Do not mark a clearly visible neckline, collar, sleeve, seam, graphic or surface feature as uncertain merely because its exact measurement is unavailable.
-    - Populate global_details completely. Include every colour, material, construction, functional detail, callout, branding and uncertainty field. Do not shorten, summarise or truncate long construction or functional detail lists.
+    - Populate every applicable global_details colour, material, construction, functional, branding and uncertainty field. Do not omit visible details.
     - Set global_details.source_rotation_degrees to the clockwise rotation required to make the photographed product upright after normal image metadata has been applied. Use only 0, 90, 180 or 270. Judge orientation from the neckline, shoulders, sleeves and hem rather than trusting camera metadata.
-    - Populate category_details using the complete schema for the detected category. Include every applicable field and list every visible detail; use visible_uncertainties for fields that cannot be determined. For underwear and bottoms, set category_details.family to the same family as product_family when supplied, and leave irrelevant or uncertain family-specific details null or not_applicable.
-    - Populate confidence_details for every section. Scores must reflect visible evidence, not general model certainty. Include evidence and uncertainties for every score. Use not_visible when an attribute cannot be assessed. Never give high confidence to inferred size, hidden construction, exact fibre composition or unconfirmed branding. A graphic subject being recognisable is not enough for high branding or identity confidence; use high confidence only when the artwork's exact visible geometry and details have been captured.
+    - Populate category_details using the complete schema for the detected category. Include every applicable field and list every visible detail; use visible_uncertainties for fields that cannot be determined. Set category_details.family to the same family as product_family when supplied, and leave irrelevant or uncertain family-specific details null or not_applicable.
+    - Populate confidence_details for every section using visible evidence. Include evidence and uncertainties for every score; use not_visible when needed. Do not give high confidence to inferred size, hidden construction, exact fibre composition or unconfirmed branding.
     - In confidence_details.gender, use source='user' only when a user-confirmed gender was supplied. A user-confirmed gender is authoritative over any assumed gender.
-    - In global_details.gender, keep assumed and user_confirmed separate. user_confirmed must remain null unless the user explicitly supplied a gender. If a user-confirmed value exists, it is authoritative and must override assumed.
+    - In global_details.gender, return assumed exactly as one of female, male, unisex, or not_determinable; include confidence, at least one evidence item, and basis exactly as wearer, garment_design, both, or unclear. Keep assumed and user_confirmed separate. user_confirmed must remain null unless the user explicitly supplied a gender. If a user-confirmed value exists, it is authoritative and must override assumed. First use a clearly visible wearer's presentation gender; otherwise infer from visible product design, construction, cut, proportions, sizing cues and category conventions. Do not use colour, a single graphic, or background. Use unisex or not_determinable only when evidence is genuinely insufficient.
     - For tops, populate tops_details with the neckline type and depth, collar thickness/width/rigidity, sleeve type/length/width, shoulder shape/drop, body width relative to length, silhouette volume, neck binding, hem shape/position, fit, garment length, drape, rigidity, wrinkle visibility, surface softness, fabric body, wash treatment, fade level, graphic condition/scale/placement/edge quality, material appearance, apparent weight, surface texture, finish, construction details and visible uncertainties. When the neckline and collar are visible, describe their actual visible construction rather than returning 'not_visible'. These fields must describe this product, not a generic example of its category. Resolve shoulder and sleeve terminology clearly; describe dropped or relaxed shoulders and loose sleeves explicitly when visible.
     - Record what is not visible or cannot be determined in visible_uncertainties. Never infer numeric size, hidden construction, brand or fibre composition.
-    - Write a factual, specific 45–60 word description using only visible evidence. Do not invent brand, size, price, or hidden features.
+    - Write a factual 45–60 word description using visible evidence only; do not invent brand, size, price or hidden features.
     - Confidence must reflect how clearly the image supports the result, from 0 to 1.
     """
         content = [{"type": "input_text", "text": instructions}, _image_input(data_url, detail="high")]
@@ -868,16 +938,28 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
                 if response.output_parsed is None:
                     raise ValueError("AI returned no structured product analysis")
                 analysis = response.output_parsed
-                if analysis.category not in (ProductCategory.UNDERWEAR, ProductCategory.BOTTOMS) and analysis.product_family is not None:
-                    raise ValueError("product_family is only valid for categories with rendering families")
-                if analysis.category == ProductCategory.BOTTOMS:
-                    # Bottoms categorization is authoritative, including an
-                    # intentional null when subtype/family is uncertain.
+                canonical_categories = {
+                    ProductCategory.TOPS, ProductCategory.OUTERWEAR, ProductCategory.BOTTOMS,
+                    ProductCategory.DRESSES, ProductCategory.TAILORING,
+                    ProductCategory.SLEEPWEAR_LOUNGEWEAR, ProductCategory.UNDERWEAR,
+                    ProductCategory.SOCKS, ProductCategory.FOOTWEAR,
+                    ProductCategory.JEWELLERY, ProductCategory.ACCESSORIES,
+                }
+                if analysis.category not in canonical_categories and analysis.product_family is not None:
+                    raise ValueError("product_family is only valid for canonical categories")
+                if analysis.category in canonical_categories:
+                    # Classification supplies the initial route. If it left the
+                    # family unresolved, recover it from the validated detailed
+                    # subtype/product type instead of losing a clear route.
                     analysis.product_family = categorization.product_family
-                elif analysis.category == ProductCategory.UNDERWEAR and categorization.product_family is not None:
-                    # Categorization is the family authority; detailed analysis
-                    # must not silently broaden or change the template family.
-                    analysis.product_family = categorization.product_family
+                    if analysis.product_family is None:
+                        detail_subtype = getattr(analysis.category_details, "subtype", None) if analysis.category_details else None
+                        detail_subtype = detail_subtype or analysis.product_type
+                        if analysis.category == ProductCategory.BOTTOMS:
+                            analysis.product_family = get_bottoms_family_for_subtype(detail_subtype)
+                        elif analysis.category == ProductCategory.TOPS:
+                            analysis.product_family = get_tops_family_for_subtype(detail_subtype)
+
                 if analysis.colour_details is None or analysis.global_details is None:
                     raise ValueError("colour_details and global_details are required for product analysis")
                 if analysis.confidence_details is not None and analysis.confidence_details.gender.source == "user" and analysis.global_details.gender.user_confirmed is None:
@@ -887,16 +969,11 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
                     if analysis.category_details is None:
                         raise ValueError("category_details are required for product analysis")
                     analysis.category_details = category_model.model_validate(analysis.category_details)
-                    if analysis.category == ProductCategory.UNDERWEAR and analysis.product_family is not None:
-                        analysis.category_details.family = analysis.product_family
-                    if analysis.category == ProductCategory.BOTTOMS:
+                    if analysis.category in canonical_categories and hasattr(analysis.category_details, "family"):
                         analysis.category_details.family = analysis.product_family
                 if analysis.category == ProductCategory.TOPS and analysis.tops_details is None:
                     raise ValueError("tops_details is required for tops analysis")
-                words = analysis.description.split()
-                if len(words) < 45:
-                    words.extend("The product is presented as a wearable fashion item for catalogue use with details based only on visible evidence.".split())
-                analysis.description = " ".join(words[:60])
+                analysis.description = concise_product_description(analysis)
                 return analysis
             except (ValidationError, ValueError) as exc:
                 last_error = exc
@@ -913,13 +990,22 @@ def analyze_media_evidence(image_bytes: bytes, *, api_key: str | None = None, mo
 
 
 def analyze_product_images(image_bytes_list: list[bytes], *, api_key: str | None = None, model: str | None = None,
-                           run_safety_check: bool = True, progress_callback=None, max_concurrency: int | None = None) -> BatchAnalysisResult:
+                           run_safety_check: bool = True, progress_callback=None, max_concurrency: int | None = None,
+                           cached_stage_results: dict[str, dict[str, object]] | None = None,
+                           stage_result_callback: Callable[[str, dict[str, object]], None] | None = None,
+                           cached_stage_state: dict[str, object] | None = None,
+                           stage_state_callback: Callable[[str, dict[str, object]], None] | None = None) -> BatchAnalysisResult:
     return _analyze_product_images(image_bytes_list, api_key=api_key, model=model,
-                                  run_safety_check=run_safety_check, progress_callback=progress_callback, max_concurrency=max_concurrency)
+                                  run_safety_check=run_safety_check, progress_callback=progress_callback,
+                                  max_concurrency=max_concurrency, cached_stage_results=cached_stage_results,
+                                  stage_result_callback=stage_result_callback, cached_stage_state=cached_stage_state,
+                                  stage_state_callback=stage_state_callback)
 
 
 def analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, model: str | None = None,
                           run_safety_check: bool = True, screen_already: bool = False,
-                          known_categorization: ProductCategorization | None = None) -> ProductAnalysis:
+                          known_categorization: ProductCategorization | None = None,
+                          prepared_data_url: str | None = None) -> ProductAnalysis:
     return _analyze_product_image(image_bytes, api_key=api_key, model=model, run_safety_check=run_safety_check,
-                                 screen_already=screen_already, known_categorization=known_categorization)
+                                 screen_already=screen_already, known_categorization=known_categorization,
+                                 prepared_data_url=prepared_data_url)

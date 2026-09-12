@@ -29,8 +29,10 @@ def multi_api(monkeypatch):
             WorkspaceMembership(user_id="user", workspace_id="workspace"),
             Product(id="top", workspace_id="workspace", name="Blue top", category="tops"),
             Product(id="socks", workspace_id="workspace", name="Striped socks", category="socks"),
+            Product(id="shoe", workspace_id="workspace", name="Red pumps", category="footwear", product_type="pointed pumps", category_details={"family": "heels", "subtype": "pumps"}),
             SourceAsset(id="top-source", product_id="top", object_key="top/source.jpg", filename="source.jpg", content_type="image/jpeg", media_evidence={"views": ["front_view"]}),
             SourceAsset(id="sock-source", product_id="socks", object_key="socks/source.jpg", filename="source.jpg", content_type="image/jpeg", media_evidence={"views": ["flat_lay"]}),
+            SourceAsset(id="shoe-source", product_id="shoe", object_key="shoe/source.jpg", filename="source.jpg", content_type="image/jpeg", media_evidence={"views": ["front_view"]}),
         ])
         db.commit()
 
@@ -67,13 +69,28 @@ def test_multi_selection_creation_queues_ordered_jobs_and_is_idempotent(multi_ap
     assert len(first_payload["jobs"]) == 2
     assert first_payload["jobs"][0]["id"] != first_payload["jobs"][1]["id"]
     assert redis.xadd.call_count == 4
-    assert db.query(Product).count() == 2
+    assert db.query(Product).count() == 3
 
     snapshot = client.get(f"/generation-runs/{first_payload['run_id']}")
     assert snapshot.status_code == 200
     jobs = snapshot.json()["jobs"]
     assert [job["product"]["id"] for job in jobs] == ["top", "socks"]
     assert snapshot.json()["counts"]["in_progress"] == 2
+
+
+def test_explicit_missing_evidence_override_queues_and_persists_warning(multi_api):
+    client, db, redis = multi_api
+    response = client.post("/generation-runs", json={
+        "selections": [{"product_id": "shoe", "template_id": "ecommerce-footwear-three-quarter-product", "channel": "ecommerce", "evidence_override": True}],
+        "idempotency_key": "evidence-override-1",
+    })
+    assert response.status_code == 200
+    job = db.query(main.GenerationJob).one()
+    assert job.evidence_override is True
+    assert job.missing_evidence == ["side_view"]
+    snapshot = client.get(f"/generation-runs/{response.json()['run_id']}").json()
+    assert snapshot["jobs"][0]["evidence_override"] is True
+    assert "missing_evidence" in snapshot["jobs"][0]
 
 
 def test_multi_selection_validation_is_atomic(multi_api):

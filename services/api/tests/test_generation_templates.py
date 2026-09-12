@@ -21,6 +21,21 @@ def test_tops_ecommerce_template_is_registered():
     assert template.negative_prompt
 
 
+def test_all_footwear_templates_forbid_multi_image_outputs():
+    footwear = [template for template in list_generation_templates() if template.category == "footwear"]
+    assert footwear
+    for template in footwear:
+        negative = template.negative_prompt.lower()
+        assert "single-frame photograph only" in negative
+        assert "collages" in negative
+        assert "multiple views" in negative
+    assert "camera angle" in get_generation_template("ecommerce-footwear-sole-view").prompt_instructions
+    rear = get_generation_template("ecommerce-footwear-rear-view").prompt_instructions.lower()
+    assert "strictly straight-on" in rear
+    assert "optical axis perpendicular" in rear
+    assert "no outer or inner side profile" in rear
+
+
 def test_template_can_be_validated_for_tops_ecommerce():
     template = validate_generation_template(
         "ecommerce-clean-product-shot",
@@ -47,20 +62,23 @@ def test_template_rejects_wrong_category_or_channel():
 
 def test_listing_filters_templates():
     templates = list_generation_templates(category="tops", channel="ecommerce")
-    assert len(templates) == 65
+    assert len(templates) == 63
     assert {family: len(list_generation_templates(category="tops", channel="ecommerce", product_family=family)) for family in (
         "shirts", "t-shirts-casual-tops", "sleeveless-tops", "knitwear", "hoodies",
     )} == {
-        "shirts": 15, "t-shirts-casual-tops": 10, "sleeveless-tops": 7,
+            "shirts": 15, "t-shirts-casual-tops": 9, "sleeveless-tops": 6,
         "knitwear": 11, "hoodies": 12,
     }
     listed_front = next(template for template in templates if template.id == TOPS_FRONT_VIEW.id)
     assert listed_front.id == TOPS_FRONT_VIEW.id
     assert listed_front.required_evidence == ("front_view",)
     assert len(list_generation_templates(category="outerwear", channel="ecommerce")) == 10
-    assert len(list_generation_templates(category="footwear", channel="ecommerce")) == 10
+    assert len(list_generation_templates(category="footwear", channel="ecommerce")) == 9
     assert len(list_generation_templates(category="socks", channel="ecommerce")) == 8
-    assert len(list_generation_templates(category="bottoms", channel="ecommerce")) == 9
+    assert len(list_generation_templates(category="bottoms", channel="ecommerce")) == 41
+    assert len(list_generation_templates(category="bottoms", channel="ecommerce", product_family="leggings")) == 8
+    assert len(list_generation_templates(category="bottoms", channel="ecommerce", product_family="shorts")) == 9
+    assert len(list_generation_templates(category="bottoms", channel="ecommerce", product_family="casual_bottoms")) == 9
     assert get_generation_template("ecommerce-footwear-sole-view").category == "footwear"
     assert get_generation_template("ecommerce-socks-knit-texture").category == "socks"
 
@@ -107,7 +125,7 @@ def test_underwear_templates_cover_the_seven_ecommerce_views():
 def test_bottoms_templates_accept_known_families_and_generic_fallback():
     template_id = "ecommerce-bottoms-front-view"
 
-    for family in ("structured_bottoms", "casual_bottoms", "leggings", "skirts", None):
+    for family in ("structured_bottoms", None):
         assert validate_generation_template(
             template_id,
             category="bottoms",
@@ -115,6 +133,13 @@ def test_bottoms_templates_accept_known_families_and_generic_fallback():
             product_family=family,
         ).category == "bottoms"
 
+    assert validate_generation_template(
+        "ecommerce-bottoms-shorts-01", category="bottoms", channel="ecommerce", product_family="shorts",
+    ).version == 2
+    shorts_templates = list_generation_templates(category="bottoms", channel="ecommerce", product_family="shorts")
+    for template in shorts_templates[4:8]:
+        assert "T-shirt" in template.prompt_instructions or "T-shirt" in template.prompt_instructions
+    assert "shirtless" in get_generation_template("ecommerce-bottoms-shorts-07").prompt_instructions
     with pytest.raises(ValueError, match="product family"):
         validate_generation_template(
             template_id,
@@ -134,8 +159,8 @@ def test_underwear_readiness_uses_only_front_and_rear_evidence():
 def test_tops_family_templates_follow_explicit_asset_compositions():
     expected = {
         "shirts": (15, "front_view", "rear_view"),
-        "t-shirts-casual-tops": (10, "front_view", "rear_view"),
-        "sleeveless-tops": (7, "front_view", "rear_view"),
+        "t-shirts-casual-tops": (9, "front_view", "rear_view"),
+        "sleeveless-tops": (6, "front_view", "rear_view"),
         "knitwear": (11, "front_view", "rear_view"),
         "hoodies": (12, "front_view", "rear_view"),
     }
@@ -146,7 +171,7 @@ def test_tops_family_templates_follow_explicit_asset_compositions():
         assert all(template.required_evidence in (("front_view",), ("rear_view",)) for template in templates)
 
     assert "mannequin" in get_generation_template("ecommerce-tops-sleeveless-tops-04").prompt_instructions
-    assert "side or three-quarter" in get_generation_template("ecommerce-tops-t-shirts-casual-tops-05").prompt_instructions
+    assert "side or three-quarter" in get_generation_template("ecommerce-tops-t-shirts-casual-tops-08").prompt_instructions
     assert "side or three-quarter angle" in get_generation_template("ecommerce-tops-hoodies-07").prompt_instructions
     assert get_generation_template("ecommerce-tops-sleeveless-tops-04").required_evidence == ("front_view",)
     assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-06").required_evidence == ("rear_view",)
@@ -156,7 +181,37 @@ def test_tops_family_templates_follow_explicit_asset_compositions():
     assert get_generation_template("ecommerce-tops-sleeveless-tops-04").name == "Front Invisible Mannequin"
     assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-05").output_presentation == "product_only"
     assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-10").required_evidence == ("rear_view",)
-    assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-10").name == "Rear Model"
+    assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-10").name == "Rear Invisible Mannequin"
+    assert get_generation_template("ecommerce-tops-t-shirts-casual-tops-07") is None
+
+
+def test_tshirt_family_templates_follow_the_frontend_benchmark_contract():
+    templates = list_generation_templates(
+        category="tops", channel="ecommerce", product_family="t-shirts-casual-tops",
+    )
+    assert [template.name for template in templates] == [
+        "Front Product (Shaped)", "Hem & Fit Detail", "Folded T-Shirt", "Front Model (Hand in Pocket)",
+        "Front Invisible Mannequin", "Rear Model", "Side / Three-Quarter Invisible Mannequin",
+        "Fabric Texture Detail", "Rear Invisible Mannequin",
+    ]
+    assert [template.version for template in templates] == [2] * 9
+    assert [template.output_presentation for template in templates] == [
+        "product_only", "worn_product", "product_only", "worn_product", "product_only",
+        "worn_product", "product_only", "product_only", "product_only",
+    ]
+    assert "naturally three-dimensionally shaped" in templates[0].prompt_instructions
+    assert "hem and fit" in templates[1].prompt_instructions
+    assert "neatly folded" in templates[2].prompt_instructions
+    assert "one hand resting inside a trouser pocket" in templates[3].prompt_instructions
+    assert "complete T-shirt" in templates[4].prompt_instructions
+    assert "invisible/headless mannequin" in templates[4].prompt_instructions
+    assert "rear-facing" in templates[5].prompt_instructions
+    assert "invisible/headless mannequin" in templates[6].prompt_instructions
+    assert "side or three-quarter" in templates[6].prompt_instructions
+    assert "actual T-shirt's fabric surface" in templates[7].prompt_instructions
+    assert "slight controlled twist" in templates[7].prompt_instructions
+    assert "invisible/headless mannequin" in templates[8].prompt_instructions
+    assert "complete rear" in templates[8].prompt_instructions
     assert get_generation_template("ecommerce-tops-hoodies-07").output_presentation == "worn_product"
     assert get_generation_template("ecommerce-tops-hoodies-08").artwork_surface_mode == "rear"
     assert get_generation_template("ecommerce-tops-shirts-07").artwork_surface_mode == "detail"
@@ -171,11 +226,14 @@ def test_tops_templates_define_artwork_visibility_and_surface_policy():
     assert templates["ecommerce-tops-side-angle-model"].artwork_visibility == "partial"
     assert templates["ecommerce-tops-back"].artwork_visibility == "none"
     assert templates["ecommerce-tops-back-model"].artwork_visibility == "none"
-    assert templates["ecommerce-tops-fabric"].artwork_visibility == "conditional"
+    fabric = templates["ecommerce-tops-fabric"]
+    assert fabric.artwork_visibility == "conditional"
+    assert "ONE single-frame" in fabric.prompt_instructions
+    assert "collage" in fabric.negative_prompt
 
 
 def test_bottoms_templates_cover_all_subtypes_and_keep_folded_flat_lay_policy():
-    templates = list_generation_templates(category="bottoms", channel="ecommerce")
+    templates = list_generation_templates(category="bottoms", channel="ecommerce", product_family="structured_bottoms")
     assert [template.name for template in templates] == [
         "Front View",
         "Back View",
@@ -211,7 +269,7 @@ def test_bottoms_evidence_is_front_or_rear_only_for_every_family():
     }
     expected_rear = {"ecommerce-bottoms-back-view", "ecommerce-bottoms-back-model"}
 
-    for family in ("structured_bottoms", "casual_bottoms", "leggings", "skirts", None):
+    for family in ("structured_bottoms", None):
         templates = {
             template.id: template
             for template in list_generation_templates(
@@ -220,6 +278,15 @@ def test_bottoms_evidence_is_front_or_rear_only_for_every_family():
         }
         assert {template_id for template_id, template in templates.items() if template.required_evidence == ("front_view",)} == expected_front
         assert {template_id for template_id, template in templates.items() if template.required_evidence == ("rear_view",)} == expected_rear
+
+    joggers = list_generation_templates(category="bottoms", channel="ecommerce", product_family="casual_bottoms")
+    assert len(joggers) == 9
+    assert joggers[3].artwork_surface_mode == "rear"
+    assert joggers[8].artwork_surface_mode == "folded"
+    leggings = list_generation_templates(category="bottoms", channel="ecommerce", product_family="leggings")
+    assert len(leggings) == 8
+    assert leggings[2].artwork_surface_mode == "rear"
+    assert leggings[5].artwork_surface_mode == "folded"
 
     for subtype in ("shorts", "skirt", "leggings", "trousers", "jeans", "cargo trousers", "joggers", "chinos"):
         assert validate_generation_template(

@@ -21,6 +21,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from .auth import current_user
+from .category_registry import controlled_subtype_label, get_bottoms_family_for_subtype, get_tops_family_for_subtype
 from .config import Settings, get_settings
 from .db import get_db
 from .generation_persistence import create_generation_run as create_generation_run_persistence
@@ -159,10 +160,13 @@ def _generation_run_payload(db: Session, run: GenerationRun) -> dict[str, Any]:
             "preview_url": _signed_generation_url(client, output_key),
             "error_message": job.error_message,
             "review_decision": decision,
+            "evidence_override": job.evidence_override,
+            "missing_evidence": job.missing_evidence or [],
             "product": {
                 "id": product.id if product is not None else job.product_id,
                 "name": product.name if product is not None else "Product",
                 "category": product.category if product is not None else None,
+                "gender": job.presentation if job.presentation in {"male", "female", "unisex"} else (assumed_gender(product.global_details) if product is not None else "unisex"),
                 "image_url": _signed_generation_url(client, source.object_key) if source is not None else None,
             },
             "asset": ({
@@ -254,6 +258,8 @@ class GenerationSelection(BaseModel):
     product_id: str = Field(min_length=1, max_length=36)
     template_id: str = Field(min_length=1, max_length=160)
     channel: str = Field(default="ecommerce", min_length=1, max_length=30)
+    presentation: Literal["male", "female", "unisex"] | None = None
+    evidence_override: bool = False
 
 
 class GenerationRunCreate(BaseModel):
@@ -271,12 +277,12 @@ class GenerationRunCreate(BaseModel):
             raise ValueError("At least one generation selection is required")
         return selections
 
-    def normalized_selections(self) -> list[dict[str, str]]:
+    def normalized_selections(self) -> list[dict[str, object]]:
         if self.selections is not None:
             return [selection.model_dump() for selection in self.selections]
         if self.product_id is None or self.template_id is None:
             raise ValueError("Either selections or the legacy product_id and template_id fields are required")
-        return [{"product_id": self.product_id, "template_id": self.template_id, "channel": self.channel}]
+        return [{"product_id": self.product_id, "template_id": self.template_id, "channel": self.channel, "evidence_override": False}]
 
 
 class GenerationReview(BaseModel):
@@ -312,11 +318,32 @@ def assumed_gender(global_details: Any) -> str:
     gender = global_details.get("gender") if isinstance(global_details, dict) else None
     value = gender.get("user_confirmed") or gender.get("assumed") if isinstance(gender, dict) else gender
     text = str(value or "").lower()
-    if any(word in text for word in ("female", "woman", "women", "womens", "girl")):
+    if text == "female":
         return "female"
-    if any(word in text for word in ("male", "man", "men", "mens", "boy")):
+    if text == "male":
         return "male"
     return "unisex"
+
+
+def product_classification(product: Product) -> dict[str, str]:
+    category = str(product.category or "Product")
+    family = product_family(product)
+    details = product.category_details if isinstance(product.category_details, dict) else {}
+    subtype = details.get("subtype") or product.product_type
+    label = controlled_subtype_label(category=category, family=family, subtype=str(subtype) if subtype else None, product_type=product.product_type)
+    return {"global_category": category, "controlled_subtype": label, "label": f"{category.title()} · {label}"}
+
+
+def product_family(product: Product) -> str | None:
+    """Return persisted family data, with routing fallback for older products."""
+    details = product.category_details if isinstance(product.category_details, dict) else {}
+    family = details.get("family")
+    subtype = details.get("subtype") or product.product_type
+    if product.category == "tops":
+        return get_tops_family_for_subtype(subtype) or (str(family) if family else None)
+    if product.category == "bottoms":
+        return get_bottoms_family_for_subtype(subtype) or (str(family) if family else None)
+    return str(family) if family else None
 
 
 class ProductApprovalDraft(ProductReviewDraft):
@@ -750,7 +777,7 @@ def get_analysis_results(
         "unique_product_count": job.unique_product_count,
         "progress": {"stage": job.progress_stage, "message": job.progress_message, "completed": job.progress_completed, "total": job.progress_total, "percent": job.progress_percent},
         "images": [{"id": image.id, "image_number": image.image_number, "filename": (db.get(SourceAsset, image.source_asset_id).filename if image.source_asset_id and db.get(SourceAsset, image.source_asset_id) else None), "image_url": (s3.generate_presigned_url("get_object", Params={"Bucket": settings.minio_bucket, "Key": db.get(SourceAsset, image.source_asset_id).object_key}, ExpiresIn=900) if image.source_asset_id and db.get(SourceAsset, image.source_asset_id) else None), "status": image.status, "passed": image.passed, "product_number": image.product_number, "rejection_reason": image.rejection_reason} for image in images],
-        "products": [{"id": analysis.id, "final_product_id": analysis.final_product_id, "product_number": analysis.product_number, "product_name": analysis.product_name, "category": analysis.category, "product_type": analysis.product_type, "colours": analysis.colours, "materials": analysis.materials, "features": analysis.features, "description": analysis.description, "confidence": analysis.confidence, "confirmation_status": analysis.confirmation_status, "gender": assumed_gender(analysis.global_details)} for analysis in analyses],
+        "products": [{"id": analysis.id, "final_product_id": analysis.final_product_id, "product_number": analysis.product_number, "product_name": analysis.product_name, "category": analysis.category, "product_family": (analysis.category_details or {}).get("family") if isinstance(analysis.category_details, dict) else None, "subtype": (analysis.category_details or {}).get("subtype") if isinstance(analysis.category_details, dict) else None, "controlled_subtype": controlled_subtype_label(category=analysis.category, family=((analysis.category_details or {}).get("family") if isinstance(analysis.category_details, dict) else None), subtype=((analysis.category_details or {}).get("subtype") if isinstance(analysis.category_details, dict) else None), product_type=analysis.product_type), "product_type": analysis.product_type, "colours": analysis.colours, "materials": analysis.materials, "features": analysis.features, "description": analysis.description, "confidence": analysis.confidence, "confirmation_status": analysis.confirmation_status, "gender": assumed_gender(analysis.global_details)} for analysis in analyses],
     }
 
 
@@ -819,11 +846,15 @@ def list_products(
             "id": product.id,
             "name": product.name,
             "category": product.category,
-            "product_family": (product.category_details or {}).get("family") if isinstance(product.category_details, dict) else None,
+            "product_type": product.product_type,
+            "product_family": product_family(product),
+            "classification": product_classification(product),
+            "gender": assumed_gender(product.global_details),
             "created_at": product.created_at.isoformat(),
             "image_url": previews[0]["image_url"] if previews else None,
             "preview_images": previews,
             "media_evidence": [asset.media_evidence for asset in sorted(product.source_assets, key=lambda source: (source.created_at, source.id), reverse=True) if asset.media_evidence],
+            "media_evidence_pending": any(asset.media_evidence is None for asset in product.source_assets),
             "upload_count": len(product.source_assets),
             "generated_count": len(approved_assets),
         })
@@ -850,7 +881,9 @@ def get_product(
         "id": product.id,
         "name": product.name,
         "category": product.category,
-        "product_family": (product.category_details or {}).get("family") if isinstance(product.category_details, dict) else None,
+        "product_family": product_family(product),
+        "classification": product_classification(product),
+        "media_evidence_pending": any(asset.media_evidence is None for asset in assets),
         "created_at": product.created_at.isoformat(),
         "uploads": [{
             "id": asset.id,
@@ -895,8 +928,7 @@ def get_output_readiness(
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     evidence = [asset.media_evidence for asset in product.source_assets]
-    category_details = product.category_details if isinstance(product.category_details, dict) else {}
-    family = category_details.get("family")
+    family = product_family(product)
     templates = [] if product.category == "underwear" and not family else list_generation_templates(
         category=product.category,
         channel="ecommerce",

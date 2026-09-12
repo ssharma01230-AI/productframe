@@ -85,6 +85,8 @@ def test_library_summaries_keep_approval_scope_and_real_asset_counts(library):
     shirt = products["shirt"]
     assert shirt["name"] == "Cotton shirt"
     assert shirt["category"] == "apparel"
+    assert shirt["classification"] == {"global_category": "apparel", "controlled_subtype": "Unclassified", "label": "Apparel · Unclassified"}
+    assert "product_type" not in shirt["classification"]["label"]
     assert shirt["created_at"]
     assert shirt["image_url"] == "https://assets.test/shirt/back.png"
     assert shirt["upload_count"] == 2

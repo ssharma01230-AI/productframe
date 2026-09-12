@@ -17,6 +17,14 @@ function titleCase(value: string) {
   return value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : 'Product';
 }
 
+function singularCategory(value: string | null) {
+  const category = value?.trim().toLowerCase();
+  if (category === 'bottoms') return 'Bottom';
+  if (category === 'tops') return 'Top';
+  if (category === 'socks') return 'Sock';
+  return titleCase(category || 'product');
+}
+
 function responseError(payload: unknown, fallback: string) {
   return payload && typeof payload === 'object' && 'detail' in payload && typeof payload.detail === 'string' ? payload.detail : fallback;
 }
@@ -47,8 +55,7 @@ function GenerationCard({ job, busy, onDecision, onRetry, onDelete }: {
     <div className="pf-generation-card-media">
       {imageUrl ? <Image src={imageUrl} alt={`${job.product.name} — ${job.template_name}`} fill sizes="(max-width: 520px) 100vw, (max-width: 900px) 50vw, 280px" unoptimized />
         : failed ? <div className="pf-generation-card-error"><span aria-hidden="true">!</span><strong>We couldn’t create this image</strong><p>{job.error_message || 'Something interrupted the generation.'}</p></div>
-          : <div className="pf-generation-loading"><span className="pf-generation-orb" aria-hidden="true"/><strong>In progress</strong><span>Your image is currently being generated</span></div>}
-      <span className="pf-generation-card-phase">{titleCase(job.template_channel)}</span>
+          : <div className="pf-generation-loading"><span className="pf-generation-orb" aria-hidden="true"/><strong>In progress</strong></div>}
       <button type="button" className="pf-generation-card-delete" onClick={() => onDelete(job)} disabled={busy || job.status === 'generating'} aria-label={`Delete ${job.template_name}`} title="Delete output"><span aria-hidden="true">×</span></button>
     </div>
     <div className="pf-generation-card-footer"><div><span>{titleCase(job.template_channel)}</span><h3>{job.template_name}</h3></div></div>
@@ -226,7 +233,7 @@ export default function GenerationGallery({ runId }: { runId: string }) {
       <header className="pf-generation-product-heading">
         <div className="pf-generation-product-identity">
           <span className="pf-generation-product-thumb">{group.product.image_url ? <Image src={group.product.image_url} alt="" fill sizes="49px" unoptimized/> : <span aria-hidden="true">P</span>}</span>
-          <div><p>PRODUCT {String(groupIndex + 1).padStart(2, '0')} · {titleCase(group.product.category || 'product')}</p><h2 id={`pf-generation-product-${group.product.id}`}>{group.product.name}</h2><span>{countLabel(group.jobs.length, 'image')}</span></div>
+          <div><p>{String(groupIndex + 1).padStart(2, '0')} · {singularCategory(group.product.category)} · {titleCase(group.product.gender || 'unisex')}</p><h2 id={`pf-generation-product-${group.product.id}`}>{group.product.name}</h2><span>{countLabel(group.jobs.length, 'image')}</span></div>
         </div>
         <span className="pf-generation-product-status">{groupStatus(group.jobs)}</span>
       </header>

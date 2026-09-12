@@ -136,7 +136,9 @@ _TOPS_NEGATIVE = (
     "and collar. Do not change the product colour treatment, sleeves, proportions, "
     "texture, pattern or graphics. Do not reinterpret, simplify, replace or redraw visible artwork. Do not smooth, sharpen, clean up or standardise "
     "the garment. Do not add text, logos, watermarks, props, extra garments or "
-    "another product. Do not invent hidden details."
+    "another product. Do not invent hidden details. Do not create a collage, grid, "
+    "split-screen, montage, inset, duplicate view or multiple panels; output one "
+    "single photograph only."
 )
 
 
@@ -239,7 +241,15 @@ TOPS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
         template_id="ecommerce-tops-fabric",
         name="Fabric Shot",
         description="A macro view of the top's material, highlighting texture, weave, surface finish and colour.",
-        instructions="Create a macro ecommerce detail of the product material. Show the actual visible texture, knit or weave, thickness appearance, surface finish and colour from the product references. Keep the detail faithful and do not invent a different fabric.",
+        instructions=(
+            "Create ONE single-frame photorealistic macro ecommerce photograph of the "
+            "actual top fabric. Fill the entire frame with one continuous area of the "
+            "material, showing its true knit or weave, fibre scale, thickness, surface "
+            "finish and colour from the product reference. Use a tight close-up with "
+            "shallow natural depth of field; do not show the full t-shirt, model, "
+            "mannequin, garment layout or separate fabric samples. This is a material "
+            "texture photograph, not a presentation board or set of views."
+        ),
         required=("global_details.materials", "global_details.colour"),
         artwork_visibility="conditional",
         artwork_surface_mode="detail",
@@ -249,7 +259,37 @@ TOPS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
 # Category-specific ecommerce templates mirrored by the frontend recipe choices.
 # Their text controls presentation only; product identity always comes from the
 # product reference images and category schema.
+def _support_required_evidence(category: str, template_id: str) -> tuple[str, ...]:
+    if category != "footwear":
+        return ()
+    if "sole" in template_id:
+        return ("sole_or_underside",)
+    if "rear" in template_id:
+        return ("rear_view",)
+    if "top" in template_id:
+        return ("top_view",)
+    if any(token in template_id for token in ("outer-side", "inner-side", "three-quarter", "side-on-feet")):
+        return ("side_view",)
+    return ("front_view",)
+
+
+_FOOTWEAR_COMMON_PRESENTATION = (
+    "Create one finished ecommerce photograph, not a design board or contact sheet. "
+    "Use the supplied product reference image as the sole authority for the footwear's "
+    "identity, colour, material, construction, proportions and visible details. "
+    "Preserve the exact product while changing only the requested viewpoint and presentation. "
+    "Use a clean warm-white or very light neutral studio background, soft diffuse directional "
+    "lighting, realistic contact shadow and restrained product-photography styling. Keep the "
+    "footwear as the only subject and make it large, sharp and clearly readable in the frame. "
+    "Do not add props, labels, logos, extra footwear or invented construction. "
+    "Output one continuous full-frame photograph only: no collage, grid, split screen, montage, "
+    "contact sheet, inset, panel, duplicate product or alternate views."
+)
+
+
 def _support_template(category: str, template_id: str, name: str, description: str, instruction: str, subtypes: tuple[str, ...]) -> GenerationTemplate:
+    if category == "footwear":
+        instruction = _FOOTWEAR_COMMON_PRESENTATION + " " + instruction
     return GenerationTemplate(
         id=template_id,
         channel="ecommerce",
@@ -261,6 +301,12 @@ def _support_template(category: str, template_id: str, name: str, description: s
             "Do not fabricate or alter visible product construction, proportions, "
             "colour, texture, graphics, closures, hardware or material details. "
             "Do not invent hidden details, extra products, labels, logos or props."
+            + (
+                " Output exactly one single-frame photograph only. Do not create "
+                "multiple images, collages, grids, split screens, montages, "
+                "contact sheets, insets, panels or multiple views in one output."
+                if category == "footwear" else ""
+            )
         ),
         aspect_ratio="1:1",
         applicable_subtypes=subtypes,
@@ -273,13 +319,14 @@ def _support_template(category: str, template_id: str, name: str, description: s
         ),
         reference_mode="product_only",
         output_presentation="product_only" if "model" not in template_id and "feet" not in template_id else "worn_product",
+        required_evidence=_support_required_evidence(category, template_id),
     )
 
 _OUTERWEAR_SUBTYPES = ("coat", "jacket", "blazer", "waistcoat", "parka", "gilet", "bomber", "trench coat", "raincoat", "puffer", "hoodie", "sweatshirt", "fleece")
 _FOOTWEAR_SUBTYPES = ("heels", "trainers", "sandals", "crocs", "boots", "loafers", "flats", "sliders", "mules")
 _SOCKS_SUBTYPES = ("normal", "running", "ankle", "trainer", "crew", "knee-high", "stockings", "compression", "thermal")
 _BOTTOMS_SUBTYPES = ("shorts", "skirt", "leggings", "trousers", "jeans", "cargo trousers", "joggers", "chinos")
-_BOTTOMS_FAMILIES = ("structured_bottoms", "casual_bottoms", "leggings", "skirts")
+_BOTTOMS_FAMILIES = ("structured_bottoms",)
 
 BOTTOMS_FAMILY_POLICIES: Final[dict[str, str]] = {
     "structured_bottoms": (
@@ -288,10 +335,19 @@ BOTTOMS_FAMILY_POLICIES: Final[dict[str, str]] = {
         "prioritise the most distinctive supported pocket, panel, seam, closure or "
         "fastening; do not assume five-pocket denim construction."
     ),
+    "shorts": (
+        "Preserve the waistband, rise, leg opening, inseam length, pockets, closure, "
+        "panels and hem of the shorts. Do not extend them into trousers or assume "
+        "a specific cargo, denim or tailored construction unless visible. Whenever "
+        "a Shorts template includes a model, the model must wear a plain grey "
+        "crew-neck T-shirt covering the torso; never render the model shirtless or "
+        "with an exposed bare upper body."
+    ),
     "casual_bottoms": (
-        "Preserve elastic waistbands, drawcords, soft or stretch fabric, cuffs, "
-        "casual fit and visible pockets or panels. Do not introduce belt loops, a "
-        "rigid denim surface, a tailored crease or a trouser fly unless visible."
+        "Preserve elastic waistbands, drawcords, soft or stretch fabric, relaxed or "
+        "tapered legs, ribbed cuffs and visible pockets or panels. Do not introduce "
+        "belt loops, a rigid denim surface, a tailored crease, cargo pockets, a "
+        "trouser fly or a different cuff construction unless visible."
     ),
     "leggings": (
         "Preserve the close fit, stretch or compression appearance, waistband, seams, "
@@ -342,10 +398,9 @@ FOOTWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = tuple(
         ("ecommerce-footwear-outer-side", "Outer Side", "A complete outer-side profile.", "Show the footwear's outer-side profile with its complete silhouette, upper construction and sole."),
         ("ecommerce-footwear-inner-side", "Inner Side", "A complete inner-side profile.", "Show the footwear's inner-side profile and visible medial construction without inventing hidden details."),
         ("ecommerce-footwear-front-view", "Front View", "A head-on footwear product view.", "Show the footwear head-on, preserving toe shape, front proportions and upper details."),
-        ("ecommerce-footwear-rear-view", "Rear View", "A straight-on rear footwear view.", "Show the rear heel construction and sole thickness without inventing unseen details."),
-        ("ecommerce-footwear-top-view", "Top View", "A direct overhead footwear view.", "Show the footwear from above, preserving toe-to-heel shape, opening and visible fastenings."),
-        ("ecommerce-footwear-sole-view", "Sole View", "A complete underside view.", "Show the actual outsole, tread and visible construction from heel to toe."),
-        ("ecommerce-footwear-material-and-detail", "Material and Detail", "A close material and construction crop.", "Create a close crop of actual footwear material, stitching and supported construction details."),
+        ("ecommerce-footwear-rear-view", "Rear View", "A straight-on rear footwear view.", "Show a strictly straight-on rear view of the footwear. Place the camera directly behind the heel, centered on the heel axis, with the optical axis perpendicular to the rear heel plane. Keep the heel counter and outsole parallel to the image plane; show no outer or inner side profile, toe, front opening or three-quarter angle. Center the product symmetrically and show only the rear heel construction and sole thickness that are visible in the references, without inventing unseen details."),
+        ("ecommerce-footwear-top-view", "Top View", "A direct overhead footwear view.", "Create one finished ecommerce photograph of the exact footwear from a true overhead camera angle, looking directly down at the product. Align the footwear vertically in the frame from toe to heel and show its complete top silhouette, opening, throat, visible fastening, upper panels and proportions supported by the reference. Keep the footwear centred on a clean light neutral studio surface with soft diffuse lighting and minimal shadow. Do not show a side or rear angle, add a second shoe, include a person or mannequin, or reveal the outsole."),
+        ("ecommerce-footwear-sole-view", "Sole View", "A complete underside view.", "Create one straight-on underside product photograph of the exact footwear with the shoe rotated or positioned so the outsole faces the camera directly. Align the footwear from toe to heel and let the complete outsole fill most of the frame. Show the actual outsole shape, tread pattern, heel area, forefoot, edges and visible sole construction supported by the reference. Use a centred orthographic-looking camera angle with minimal perspective distortion, a clean light neutral studio background and soft controlled lighting. Do not show the upper, top view, side view, second shoe, person, mannequin or alternate angle."),
         ("ecommerce-footwear-front-on-feet", "Front on Feet", "Footwear worn in a front-facing stance.", "Show the footwear worn by an adult from the front, cropped below the knees, with no extra footwear."),
         ("ecommerce-footwear-side-on-feet", "Side on Feet", "Footwear worn in a side stance.", "Show the footwear worn by an adult from the side, cropped below the knees, preserving fit and profile."),
     )
@@ -385,6 +440,10 @@ _BOTTOMS_OPTIONAL_FIELDS = (
     "category_details.pleats_or_darts",
     "category_details.belt_loops",
     "category_details.panel_or_seam_details",
+    "category_details.inseam_length",
+    "category_details.leg_opening",
+    "category_details.drawcord_details",
+    "category_details.shorts_length",
     "category_details.visible_uncertainties",
 )
 _BOTTOMS_RULES = (
@@ -581,6 +640,115 @@ def _underwear_template(
     )
 
 
+def _shorts_template(*, number: int, name: str, description: str, instructions: str, base_index: int, required: tuple[str, ...] = (), artwork_surface_mode: str = "flat", output_presentation: str = "product_only") -> GenerationTemplate:
+    base = BOTTOMS_ECOMMERCE_TEMPLATES[base_index]
+    return replace(
+        base,
+        id=f"ecommerce-bottoms-shorts-{number:02d}",
+        name=name,
+        description=description,
+        prompt_instructions=instructions,
+        required_product_fields=_BOTTOMS_REQUIRED_FIELDS + required,
+        applicable_families=("shorts",),
+        artwork_surface_mode=artwork_surface_mode,
+        output_presentation=output_presentation,
+        version=2,
+    )
+
+
+SHORTS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _shorts_template(number=1, name="Flat-Laid Product", description="A complete pair of shorts laid flat as a product-only studio photograph.", base_index=0, instructions="Create ONE photorealistic product-only studio photograph of the exact shorts laid flat and front-facing on a clean neutral surface. Show the complete waistband, elastic construction, drawcord, front closure seam, slanted pockets, leg shape, inseam and both hems. Preserve the exact colour, textured fabric and proportions. No model, mannequin, body, props, collage or multiple views."),
+    _shorts_template(number=2, name="Front Invisible Mannequin", description="A complete front view of the shorts shaped by an invisible mannequin.", base_index=0, instructions="Create ONE photorealistic straight front ecommerce photograph of the exact shorts shaped by an invisible or headless mannequin. Preserve natural waistband, rise, pocket, leg and hem volume, but show no mannequin, head, torso, legs or support. Show only the garment against a clean neutral studio background. No model, props, collage or multiple views."),
+    _shorts_template(number=3, name="Three-Quarter Invisible Mannequin", description="A three-quarter product view of the shorts shaped by an invisible mannequin.", base_index=2, instructions="Create ONE photorealistic three-quarter front product photograph of the exact shorts shaped by an invisible mannequin. Show the waistband, drawcord, nearest slanted pocket, side profile, leg opening and depth. Keep the mannequin completely invisible and preserve the exact textured fabric and construction. No person, support, props, collage or multiple views.", artwork_surface_mode="angled"),
+    _shorts_template(number=4, name="Rear Invisible Mannequin", description="A complete rear view of the shorts shaped by an invisible mannequin.", base_index=1, instructions="Create ONE photorealistic straight rear ecommerce photograph of the exact shorts shaped by an invisible or headless mannequin. Show the rear waistband, seat, centre-back seam, leg shape and both hems. Keep every body part and mannequin support invisible; do not invent rear pockets or labels. No person, props, collage or multiple views.", artwork_surface_mode="rear"),
+    _shorts_template(number=5, name="Front-Facing Model", description="A waist-down front-facing model view of the shorts.", base_index=4, instructions="Show the exact shorts worn by an adult model in a straight front-facing ecommerce pose. Frame from the lower torso to below both hems; exclude the face, head, shoulders and chest. Use a plain grey T-shirt and clean white low-top sneakers as restrained styling, matching the benchmark composition. Keep hands at the sides and show the waistband, drawcord, pockets, fit and hems clearly. No collage or multiple views.", required=("category_details.garment_length", "category_details.fit_and_silhouette"), artwork_surface_mode="worn", output_presentation="worn_product"),
+    _shorts_template(number=6, name="Three-Quarter Full-Length Model", description="A full-length three-quarter model view showing the shorts in outfit context.", base_index=2, instructions="Show the exact shorts worn by an adult model in a relaxed three-quarter stance, full length from the neck down to the feet, with the face and facial features excluded. Match the benchmark's plain grey T-shirt, white low-top sneakers, neutral studio background and restrained styling. Keep the shorts prominent and preserve the waistband, drawcord, pockets, textured fabric, leg shape and hems. One photograph only, no collage.", required=("category_details.garment_length", "category_details.fit_and_silhouette"), artwork_surface_mode="worn", output_presentation="worn_product"),
+    _shorts_template(number=7, name="Rear-Facing Model", description="A waist-down rear-facing model view of the shorts.", base_index=5, instructions="Show the exact shorts worn by an adult model facing directly away from the camera. Frame from the lower torso to below both hems; exclude the head and face. Match the neutral studio styling, including a plain grey crew-neck T-shirt covering the torso, and show the rear waistband, seat, centre-back seam, leg shape and hems clearly. The model must not be shirtless or show a bare upper body. Do not invent rear pockets or other construction. No collage or multiple views.", required=("category_details.garment_length", "category_details.fit_and_silhouette"), artwork_surface_mode="worn", output_presentation="worn_product"),
+    _shorts_template(number=8, name="Full-Length Front-Facing Model", description="A full-length straight-on model view showing the complete outfit and shorts fit.", base_index=4, instructions="Show the exact shorts worn by an adult model in a straight front-facing full-length ecommerce photograph from the neck down to the feet, with the face excluded. Match the benchmark's plain grey T-shirt, white low-top sneakers and neutral studio setting. Keep the shorts clearly readable and preserve the waistband, drawcord, pockets, rise, textured fabric, leg openings and hems. One photograph only, no collage.", required=("category_details.garment_length", "category_details.fit_and_silhouette"), artwork_surface_mode="worn", output_presentation="worn_product"),
+    _shorts_template(number=9, name="Waistband & Closure Detail", description="A close-up of the shorts waistband, drawcord, closure and upper front construction.", base_index=6, instructions="Create ONE tight photorealistic ecommerce construction detail of the exact shorts' upper front. Show the elastic waistband, white drawcord and metal tips, front closure seam, rise, upper pocket edge and textured fabric. Match the benchmark close-up framing and lighting. Do not show a face, full outfit, mannequin, invented fastenings, collage or inset; output one photograph only.", required=("category_details.waist_height", "category_details.fly_or_closure"), artwork_surface_mode="detail"),
+)
+
+def _joggers_template(*, number: int, name: str, description: str, instructions: str, base_index: int, required: tuple[str, ...] = (), artwork_surface_mode: str = "flat", output_presentation: str = "product_only") -> GenerationTemplate:
+    base = BOTTOMS_ECOMMERCE_TEMPLATES[base_index]
+    return replace(
+        base,
+        id=f"ecommerce-bottoms-joggers-{number:02d}",
+        name=name,
+        description=description,
+        prompt_instructions=instructions,
+        required_product_fields=_BOTTOMS_REQUIRED_FIELDS + required,
+        applicable_families=("casual_bottoms",),
+        artwork_surface_mode=artwork_surface_mode,
+        output_presentation=output_presentation,
+        version=2,
+    )
+
+
+JOGGERS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _joggers_template(number=1, name="Flat-Laid Product", description="Complete joggers laid flat showing the front shape, waistband, pockets and cuffs.", base_index=0, instructions="Create ONE photorealistic product-only studio photograph of the exact joggers laid flat and front-facing on a clean neutral surface. Show the full front shape, elastic waistband, drawcord, angled pockets, soft tapered legs and ribbed ankle cuffs. Preserve the exact cream colour, soft fabric texture, proportions and construction. No model, mannequin, body, props, collage or multiple views."),
+    _joggers_template(number=2, name="Front Invisible Mannequin", description="Front joggers view with natural garment volume and no visible mannequin.", base_index=0, instructions="Create ONE photorealistic straight front ecommerce photograph of the exact joggers shaped by an invisible or headless mannequin. Preserve natural waistband, drawcord, pocket, leg and cuff volume, but show no mannequin, head, torso, legs or support. Show only the garment against a clean neutral studio background. No model, props, collage or multiple views."),
+    _joggers_template(number=3, name="Three-Quarter Invisible Mannequin", description="Angled front joggers view highlighting the pocket, side profile and leg taper.", base_index=2, instructions="Create ONE photorealistic three-quarter front product photograph of the exact joggers shaped by an invisible mannequin. Highlight the nearest angled pocket, side profile, relaxed-to-tapered leg shape and ribbed ankle cuff while keeping the waistband and drawcord visible. Preserve the exact soft fabric texture and cream colour. Keep the mannequin completely invisible. No person, support, props, collage or multiple views.", artwork_surface_mode="angled"),
+    _joggers_template(number=4, name="Rear Invisible Mannequin", description="Rear joggers view showing the seat, waistband and cuffs with approximated rear details.", base_index=1, instructions="Create ONE photorealistic straight rear ecommerce photograph of the exact joggers shaped by an invisible or headless mannequin. Show the rear waistband, seat, centre-back construction, leg shape and ribbed ankle cuffs. Rear details are approximated only from the product references; do not invent rear pockets, labels or panels. Keep every body part and mannequin support invisible. No person, props, collage or multiple views.", artwork_surface_mode="rear"),
+    _joggers_template(number=5, name="Front-Facing Model", description="Lower-torso-to-feet model view showing the joggers' fit with neutral footwear.", base_index=4, instructions="Show the exact joggers worn by an adult model in a straight front-facing ecommerce pose. Frame from the lower torso to the feet; exclude the face, head, shoulders and chest. The model must wear a plain white T-shirt and neutral white low-top footwear. Show the waistband, drawcord, pockets, fit, leg taper and ribbed cuffs clearly. No collage or multiple views.", required=("category_details.garment_length", "category_details.fit_and_silhouette"), artwork_surface_mode="worn", output_presentation="worn_product"),
+    _joggers_template(number=6, name="Three-Quarter Model", description="Neck-to-feet angled model pose showing the joggers' fit and drape.", base_index=2, instructions="Show the exact joggers worn by an adult model in a relaxed three-quarter angled pose from the neck to the feet, with the face and facial features excluded. Match the benchmark styling: a plain white T-shirt, neutral white low-top footwear and a clean studio background. Preserve the joggers' waistband, drawcord, pockets, soft drape, leg taper and ribbed cuffs. Keep the product prominent. One photograph only, no collage.", required=("category_details.garment_length", "category_details.fit_and_silhouette"), artwork_surface_mode="worn", output_presentation="worn_product"),
+    _joggers_template(number=7, name="Rear-Facing Model", description="Rear model view showing the joggers' seat and leg fit with approximated rear details.", base_index=5, instructions="Show the exact joggers worn by an adult model facing directly away from the camera. Frame from the neck to the feet, excluding the head and face. The model must wear a plain white T-shirt and neutral white low-top footwear. Show the rear waistband, seat, leg fit, soft drape and ribbed ankle cuffs; approximate hidden rear details only from the references and do not invent pockets or panels. No collage or multiple views.", required=("category_details.garment_length", "category_details.fit_and_silhouette"), artwork_surface_mode="worn", output_presentation="worn_product"),
+    _joggers_template(number=8, name="Full-Length Front Model", description="Straight front model view from neck to feet with a plain white T-shirt.", base_index=4, instructions="Show the exact joggers worn by an adult model in a straight front-facing full-length ecommerce photograph from the neck to the feet, with the face excluded. The model must wear a plain white T-shirt and neutral white low-top footwear against a clean studio background. Preserve the waistband, drawcord, pockets, soft fabric, leg shape, taper and ribbed ankle cuffs. One photograph only, no collage.", required=("category_details.garment_length", "category_details.fit_and_silhouette"), artwork_surface_mode="worn", output_presentation="worn_product"),
+    _joggers_template(number=9, name="Folded Top-Down Product", description="Folded joggers photographed from above, showing the waistband, pockets and fabric.", base_index=3, instructions="Create ONE photorealistic top-down product photograph of the exact joggers neatly folded on a clean neutral surface. Keep the elastic waistband, drawcord, angled pocket edges, soft fabric texture and folded leg or cuff structure readable. Match the benchmark's compact folded composition and natural contact shadows. Do not show a model, mannequin, body, props, collage or multiple views.", artwork_surface_mode="folded"),
+)
+
+def _skirts_template(*, number: int, name: str, description: str, instructions: str, base_index: int, artwork_surface_mode: str = "flat", output_presentation: str = "product_only") -> GenerationTemplate:
+    base = BOTTOMS_ECOMMERCE_TEMPLATES[base_index]
+    return replace(
+        base,
+        id=f"ecommerce-bottoms-skirts-{number:02d}",
+        name=name,
+        description=description,
+        prompt_instructions=instructions,
+        required_product_fields=_BOTTOMS_REQUIRED_FIELDS,
+        applicable_families=("skirts",),
+        artwork_surface_mode=artwork_surface_mode,
+        output_presentation=output_presentation,
+        version=2,
+    )
+
+
+SKIRTS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _skirts_template(number=1, name="Front Product", description="Product-only close front view of the structured pleated skirt.", base_index=0, instructions="Create ONE photorealistic product-only close front studio photograph of the exact skirt against a clean white or neutral background. Show the structured waistband, belt loops, button and front-fly construction, vertical pleats or panels, flared silhouette and hem. Preserve the exact brown/taupe colour, material texture, proportions and stitching. No person, mannequin, body, props, collage or multiple views."),
+    _skirts_template(number=2, name="Back Product", description="Product-only close rear view of the structured pleated skirt.", base_index=1, instructions="Create ONE photorealistic product-only close rear studio photograph of the exact skirt against a clean white or neutral background. Show the rear waistband, belt loops, vertical panels or pleats, flared silhouette and hem. Do not invent rear pockets or hidden construction; approximate only what is supported by the references. No person, mannequin, body, props, collage or multiple views.", artwork_surface_mode="rear"),
+    _skirts_template(number=3, name="Front Model", description="Cropped straight front model view of the skirt.", base_index=4, instructions="Show the exact skirt worn by an adult female model in a cropped straight front-facing ecommerce pose. Exclude the face and head while keeping the waistband, button and front-fly construction, pleats, flared silhouette and hem visible. Match the benchmark styling with a fitted black short-sleeve top and black ballet flats. Keep the model's hands holding the skirt edges naturally. One photograph only, no collage.", artwork_surface_mode="worn", output_presentation="worn_product"),
+    _skirts_template(number=4, name="Back Model", description="Cropped straight rear model view of the skirt.", base_index=5, instructions="Show the exact skirt worn by an adult female model in a cropped straight rear-facing ecommerce pose, with the head and face excluded. Show the rear waistband, belt loops, back panels or pleats, fit, flare and hem clearly. Match the benchmark styling with a fitted black short-sleeve top and black ballet flats. Do not invent rear pockets or hidden construction. One photograph only, no collage.", artwork_surface_mode="worn", output_presentation="worn_product"),
+    _skirts_template(number=5, name="Full Three-Quarter Model", description="Full-length three-quarter model view showing the skirt's fit and drape.", base_index=2, instructions="Show the exact skirt worn by an adult female model in a relaxed full-length three-quarter pose from the neck to the feet, with the face excluded. Match the benchmark styling: fitted black short-sleeve top and black ballet flats. Preserve the waistband, belt loops, button and front-fly details, pleats, flared silhouette, fabric drape and hem. Keep the skirt prominent. One photograph only, no collage.", artwork_surface_mode="worn", output_presentation="worn_product"),
+    _skirts_template(number=6, name="Full Front Natural Model", description="Full-length straight front model view with natural relaxed arms.", base_index=4, instructions="Show the exact skirt worn by an adult female model in a full-length straight front-facing ecommerce photograph from the neck to the feet, with the face excluded. Match the benchmark styling with a fitted black short-sleeve top and black ballet flats. Keep both arms relaxed naturally at the sides. Preserve the waistband, belt loops, front button and fly, pleats, flared silhouette and hem. One photograph only, no collage.", artwork_surface_mode="worn", output_presentation="worn_product"),
+)
+
+
+def _leggings_template(*, number: int, name: str, description: str, instructions: str, base_index: int, artwork_surface_mode: str = "flat", output_presentation: str = "product_only") -> GenerationTemplate:
+    base = BOTTOMS_ECOMMERCE_TEMPLATES[base_index]
+    return replace(
+        base,
+        id=f"ecommerce-bottoms-leggings-{number:02d}",
+        name=name,
+        description=description,
+        prompt_instructions=instructions,
+        required_product_fields=_BOTTOMS_REQUIRED_FIELDS,
+        applicable_families=("leggings",),
+        artwork_surface_mode=artwork_surface_mode,
+        output_presentation=output_presentation,
+        version=2,
+    )
+
+
+LEGGINGS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _leggings_template(number=1, name="Cropped Front Model", description="Cropped straight front model view of fitted leggings.", base_index=4, instructions="Show the exact leggings worn by an adult female model in a straight front-facing ecommerce pose, cropped from the lower torso to the feet with the face, head, shoulders and chest excluded. Preserve the model's body proportions, plain white T-shirt, white footwear, relaxed hands outside the garment and the leggings' smooth opaque cream stretch fabric, high-rise waistband, close fit and narrow ankle hems. One photograph only, no collage.", artwork_surface_mode="worn", output_presentation="worn_product"),
+    _leggings_template(number=2, name="Front Flat-Lay Product", description="Product-only front flat-lay view of the complete leggings.", base_index=0, instructions="Create ONE photorealistic product-only front flat-lay photograph of the exact leggings on a clean neutral surface. Show the complete high-rise waistband, close-fitting hips and legs, narrow stitched ankle hems and minimal tonal seams. Preserve the warm pale cream-beige colour and opaque matte smooth stretch jersey. No body, model, mannequin, props, collage or multiple views."),
+    _leggings_template(number=3, name="Rear Invisible Mannequin", description="Straight rear product view on an invisible mannequin.", base_index=1, instructions="Create ONE photorealistic straight rear product photograph of the exact leggings on an invisible or headless mannequin. Show the high-rise waistband, centre-back seam, fitted seat, legs and narrow ankle hems. Rear details are approximated only from the product references. Make all mannequin body parts and support invisible. No person, props, collage or multiple views.", artwork_surface_mode="rear"),
+    _leggings_template(number=4, name="Three-Quarter Front Invisible Mannequin", description="Angled front product view on an invisible mannequin.", base_index=2, instructions="Create ONE photorealistic three-quarter front product photograph of the exact leggings on an invisible mannequin. Highlight the side seam, hip and leg silhouette, close fit and narrow ankle hem while preserving the high-rise waistband. Keep the mannequin completely invisible and preserve the smooth matte stretch jersey. No person, support, props, collage or multiple views.", artwork_surface_mode="angled"),
+    _leggings_template(number=5, name="Front Invisible Mannequin", description="Straight front product view with natural leggings volume.", base_index=0, instructions="Create ONE photorealistic straight front product photograph of the exact leggings shaped by an invisible or headless mannequin. Preserve natural high-rise waistband and close-fitting leg volume, but show no mannequin, head, torso, legs or support. Show only the leggings against a clean neutral studio background. No pockets, drawcord, ribbed cuffs, logos, props or multiple views."),
+    _leggings_template(number=6, name="Folded Top-Down Product", description="Neatly folded leggings photographed from directly above.", base_index=3, instructions="Create ONE photorealistic true top-down product photograph of the exact leggings neatly folded on a clean neutral surface. Show the broad smooth waistband, minimal tonal seams, opaque matte stretch fabric and plain folded ankle hems. Preserve the compact folded positioning and neutral backdrop. No person, mannequin, props, collage or multiple views.", artwork_surface_mode="folded"),
+    _leggings_template(number=7, name="Cropped Rear Model", description="Cropped straight rear model view of fitted leggings.", base_index=5, instructions="Show the exact leggings worn by an adult female model in a straight rear-facing ecommerce pose, cropped from the lower torso to the feet with the head and face excluded. Preserve the model's body proportions, plain white T-shirt, white footwear and relaxed hands outside the garment. Show the high-rise waistband, rear seam, fitted seat and narrow ankle hems. Rear details are approximated only from the references. One photograph only, no collage.", artwork_surface_mode="worn", output_presentation="worn_product"),
+    _leggings_template(number=8, name="Full-Length Front Model", description="Straight front model view from neck to feet.", base_index=4, instructions="Show the exact leggings worn by an adult female model in a straight front-facing full-length ecommerce photograph from the neck to the feet, with the face excluded. The model must wear a plain white T-shirt, white footwear and both hands relaxed outside the garment. Preserve the high-rise waistband, smooth opaque cream stretch jersey, close fit, minimal seams and narrow ankle hems. One photograph only, no collage.", artwork_surface_mode="worn", output_presentation="worn_product"),
+)
+
 UNDERWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     _underwear_template(
         template_id="ecommerce-underwear-front-model", name="Front with Model (No Face)",
@@ -652,11 +820,7 @@ def _evidence_for_template(template: GenerationTemplate) -> tuple[str, ...]:
         # current Socks output. Do not introduce an angle gate here.
         return ()
     if template.category == "footwear":
-        if "sole" in template_id or "underside" in template_id:
-            return ("sole_or_underside",)
-        if "rear" in template_id:
-            return ("rear_view",)
-        return ("top_view",)
+        return _support_required_evidence("footwear", template_id)
     if template.category == "outerwear":
         if "back" in template_id or "over-the-shoulder" in template_id:
             return _REAR_EVIDENCE
@@ -691,20 +855,31 @@ _BASE_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
 # docs/tops-template-inventory.md.
 _TOPS_FAMILY_COMPOSITIONS: Final[dict[str, tuple[str, ...]]] = {
     "shirts": ("seated_model", "front_model", "folded", "flat_product", "front_model", "seated_model", "construction_detail", "fabric_detail", "front_mannequin", "construction_detail", "construction_detail", "angled_model", "angled_product", "rear_product", "rear_model"),
-    "t-shirts-casual-tops": ("front_mannequin", "hem_detail", "folded", "front_model", "angled_product", "rear_model", "flat_product", "rear_product", "fabric_detail", "rear_model"),
-    "sleeveless-tops": ("rear_model", "front_model", "angled_product", "front_mannequin", "angled_mannequin", "flat_product", "styled_model"),
+    "t-shirts-casual-tops": ("front_product_shaped", "hem_fit_detail", "folded_product", "front_model_pocket", "front_invisible_mannequin", "rear_model", "angled_invisible_mannequin", "fabric_texture_detail", "rear_invisible_mannequin"),
+    "sleeveless-tops": ("rear_model", "front_model", "angled_product", "front_mannequin", "flat_product", "styled_model"),
     "knitwear": ("folded", "neckline_detail", "front_model", "flat_product", "rear_angled_model", "fabric_detail", "seated_model", "flat_product", "rear_mannequin", "front_mannequin", "styled_model"),
     "hoodies": ("flat_product", "front_mannequin", "rear_mannequin", "angled_mannequin", "front_model", "rear_model", "angled_model", "rear_action", "front_action", "front_model", "seated_angled_model", "full_length_model"),
 }
 
+_TOPS_FAMILY_TEMPLATE_NUMBERS: Final[dict[str, tuple[int, ...]]] = {
+    "t-shirts-casual-tops": (1, 2, 3, 4, 5, 6, 8, 9, 10),
+}
+
 _TOPS_FAMILY_PROFILE_BASES: Final[dict[str, str]] = {
     "folded": "ecommerce-tops-folded-view",
+    "folded_product": "ecommerce-tops-folded-view",
     "flat_product": "ecommerce-tops-front-view",
+    "front_product_shaped": "ecommerce-tops-front-view",
+    "front_product_straight_on": "ecommerce-tops-front-view",
     "front_product": "ecommerce-tops-front-view",
+    "front_invisible_mannequin": "ecommerce-tops-front-view",
+    "angled_invisible_mannequin": "ecommerce-tops-front-view",
     "front_mannequin": "ecommerce-tops-front-view",
     "rear_product": "ecommerce-tops-back",
+    "rear_invisible_mannequin": "ecommerce-tops-back",
     "rear_mannequin": "ecommerce-tops-back",
     "front_model": "ecommerce-tops-front-model",
+    "front_model_pocket": "ecommerce-tops-front-model",
     "styled_model": "ecommerce-tops-front-model",
     "seated_model": "ecommerce-tops-full-body-model",
     "seated_angled_model": "ecommerce-tops-side-angle-model",
@@ -718,31 +893,40 @@ _TOPS_FAMILY_PROFILE_BASES: Final[dict[str, str]] = {
     "rear_action": "ecommerce-tops-back-model",
     "construction_detail": "ecommerce-tops-close-up",
     "hem_detail": "ecommerce-tops-close-up",
+    "hem_fit_detail": "ecommerce-tops-close-up",
     "neckline_detail": "ecommerce-tops-close-up",
     "fabric_detail": "ecommerce-tops-fabric",
+    "fabric_texture_detail": "ecommerce-tops-fabric",
 }
 
 _TOPS_FAMILY_NAMES: Final[dict[str, tuple[str, ...]]] = {
     "shirts": ("Seated Lifestyle", "Styled Front Model", "Folded Shirt", "Flat-Lay Shirt", "Front Model", "Seated Model", "Cuff Detail", "Fabric Texture Detail", "Front Invisible Mannequin", "Collar & Button Placket Detail", "Cuff Adjustment Detail", "Side / Three-Quarter Model", "Side / Three-Quarter Product", "Rear Product", "Rear Model"),
-    "t-shirts-casual-tops": ("Front Invisible Mannequin", "Hem & Fit Detail", "Folded T-Shirt", "Front Model", "Side / Three-Quarter Product", "Rear Model", "Front Product", "Rear Product", "Fabric Texture Detail", "Rear Model"),
-    "sleeveless-tops": ("Rear Model", "Front Model", "Three-Quarter Product", "Front Invisible Mannequin", "Three-Quarter Invisible Mannequin", "Front Product", "Styled Model"),
+    "t-shirts-casual-tops": ("Front Product (Shaped)", "Hem & Fit Detail", "Folded T-Shirt", "Front Model (Hand in Pocket)", "Front Invisible Mannequin", "Rear Model", "Side / Three-Quarter Invisible Mannequin", "Fabric Texture Detail", "Rear Invisible Mannequin"),
+    "sleeveless-tops": ("Rear Model", "Front Model", "3/4 View Invisible Mannequin", "Front Invisible Mannequin", "Front Product", "Styled Model"),
     "knitwear": ("Folded Knitwear", "Neckline Detail", "Front Model", "Front Product", "Rear Three-Quarter Model", "Knit Fabric Detail", "Seated Styled Model", "Flat-Lay Knitwear", "Rear Invisible Mannequin", "Front Invisible Mannequin", "Styled Model"),
     "hoodies": ("Flat Product", "Front Invisible Mannequin", "Rear Invisible Mannequin", "Three-Quarter Invisible Mannequin", "Front Model", "Rear Model", "Three-Quarter Model", "Rear Model Adjusting Hood", "Front Model Adjusting Hood", "Model with Hands in Pockets", "Seated Three-Quarter Model", "Full-Length Model"),
 }
 
 _TOPS_FAMILY_PROFILE_INSTRUCTIONS: Final[dict[str, str]] = {
     "folded": "Present the top neatly folded as a product-only ecommerce image. Arrange the fold so the visible colour, material, neckline or collar and distinctive construction remain clear.",
-    "flat_product": "Present the complete top as a product-only studio image, front-facing and fully visible from neckline to hem. Do not show a person, mannequin or body.",
-    "front_product": "Present the complete front of the top as a product-only studio image. Keep the full silhouette, neckline, sleeves and hem visible.",
-    "front_mannequin": "Present the complete front of the top on an invisible or headless mannequin. Keep the garment's silhouette and construction clear; do not show a face or visible body.",
+    "folded_product": "Present ONE neatly folded T-shirt as a product-only ecommerce photograph on a clean studio surface. Keep the folded neckline, one sleeve edge and fabric surface clearly visible; do not show a model, mannequin, second garment, collage or multiple views.",
+    "flat_product": "Present the complete top as a single product-only studio image, front-facing and fully visible from neckline to hem. Use natural three-dimensional shaping and a subtle contact shadow, but do not show a person, mannequin or body. Do not create a collage, grid, split-screen, montage or multiple views.",
+    "front_product_shaped": "Present ONE complete T-shirt laid out as a product-only studio photograph. Keep it naturally three-dimensionally shaped with a subtle contact shadow, relaxed realistic fabric rather than a rigid technical flat lay, and the full neckline, sleeves and hem visible. No person, mannequin, props, second garment, collage or multiple views.",
+    "front_product_straight_on": "Photograph ONE complete T-shirt as a product-only, perfectly centered straight-on front view. The camera faces the garment squarely; keep the neckline, both sleeves and full hem symmetrically visible with modest margins. No model, mannequin, body, props, perspective angle, collage or multiple views.",
+    "front_product": "Present ONE complete T-shirt as a product-only front ecommerce photograph with the full silhouette from neckline to hem visible. Use a clean neutral studio background, natural garment volume and modest margins. No person, mannequin, props, second garment, collage or multiple views.",
+    "front_invisible_mannequin": "Present ONE complete T-shirt on an invisible/headless mannequin in a straight front ecommerce studio photograph. Preserve the filled shoulder, chest, sleeve and hem volume that the invisible mannequin provides, but make the mannequin, head, neck and body completely invisible. Show only the garment; no person, visible support, props, collage or multiple views.",
+    "angled_invisible_mannequin": "Present ONE complete T-shirt on an invisible/headless mannequin from a side or three-quarter product angle. Preserve the garment's natural shoulder, chest, sleeve and side volume while keeping the mannequin, head, neck and body completely invisible. Show only the garment; no person, visible support, props, collage or multiple views.",
+    "front_mannequin": "Present the complete front of the sleeveless top on the visible neutral headless mannequin shown in the reference composition. Keep the mannequin torso and shoulders visible behind the garment, with the product centered and fully framed from neckline to hem. Do not show a face, human model, hands, props or any other body.",
     "rear_product": "Present the complete rear of the top as a product-only studio image. Keep the back silhouette, shoulders, sleeves and hem fully visible.",
+    "rear_invisible_mannequin": "Present ONE complete rear T-shirt on an invisible/headless mannequin in a straight rear ecommerce studio photograph. Preserve the filled shoulder, back, sleeve and hem volume while making the mannequin, head, neck and body completely invisible. Show only the garment; no person, visible support, props, collage or multiple views.",
     "rear_mannequin": "Present the complete rear of the top on an invisible or headless mannequin. Do not show a face or visible body.",
-    "front_model": "Show the top worn by a model in a simple front-facing studio presentation, cropped below the face. Keep styling minimal and make the garment fit, neckline, sleeves and hem clear.",
-    "styled_model": "Show the top worn by a minimally styled model with the face excluded. Keep the garment as the visual subject and preserve its complete visible silhouette.",
+    "front_model": "Show the top worn by a model in a simple front-facing studio presentation with the face excluded, cropped below the face. Keep styling minimal and make the garment fit, neckline, sleeves and hem clear.",
+    "front_model_pocket": "Show the T-shirt worn by a model in a front-facing studio presentation with the face excluded. Pose the model naturally with one hand resting inside a trouser pocket and the other arm relaxed, while keeping the T-shirt front, neckline, sleeves and hem unobscured. Do not show the face or create a collage or multiple views.",
+    "styled_model": "Show the top worn by a minimally styled model with the face excluded. Use a natural relaxed pose with restrained styling; keep the garment as the visual subject and preserve its complete visible silhouette. Do not create a collage, grid, split-screen, montage or multiple views.",
     "seated_model": "Show the top worn by a seated model with the face excluded. Keep the pose simple and ensure the garment's neckline, silhouette, sleeves and visible length remain clear.",
     "seated_angled_model": "Show the top worn by a seated model from a three-quarter angle, with the face excluded. Keep styling minimal and make the garment's depth and fit clear.",
     "full_length_model": "Show the top worn by a model in a full-length composition, excluding the face. Keep the entire garment visible and styling minimal.",
-    "rear_model": "Show the top worn by a model from the rear, cropped to exclude the face. Clearly show the back, shoulders, sleeves and hem.",
+    "rear_model": "Show the top worn by a model in a rear-facing view with the face excluded. Crop below the head and clearly show the back, shoulders, sleeves and hem.",
     "rear_angled_model": "Show the top worn by a model from a rear three-quarter angle, excluding the face. Clearly show the back construction, shoulder shape and drape.",
     "angled_model": "Show the top worn by a model from a side or three-quarter angle, cropped below the face. Make the garment's depth, silhouette and fit clear.",
     "angled_product": "Present the complete top as a product-only side or three-quarter studio view. Keep the silhouette, neckline, sleeves and hem visible.",
@@ -751,24 +935,26 @@ _TOPS_FAMILY_PROFILE_INSTRUCTIONS: Final[dict[str, str]] = {
     "rear_action": "Show the top worn by a model from the rear, excluding the face, while the model naturally adjusts the hood. Keep the back and hood construction visible.",
     "construction_detail": "Create a tight ecommerce detail of the visible construction feature shown by the template, such as a cuff, collar, placket or fastening. Do not invent a feature.",
     "hem_detail": "Create a close ecommerce detail showing the top's hem, fit and lower construction on the product or a model cropped to exclude the face. Do not lose the product identity.",
+    "hem_fit_detail": "Create ONE close-up ecommerce photograph of the T-shirt's lower hem and fit while worn by an adult model. Crop out the entire face and head; show the shirt body, hem stitching, natural drape and the upper supporting outfit only as context. Do not show a full face, unrelated garment as the subject, collage or multiple views.",
     "neckline_detail": "Create a tight ecommerce detail of the neckline and surrounding knit or construction. Preserve the exact shape, material and visible texture.",
-    "fabric_detail": "Create a macro ecommerce detail of the actual fabric or knit texture. Preserve the product's true colour, weave, thickness and surface finish.",
+    "fabric_detail": "Create ONE single-frame photorealistic macro ecommerce photograph of the actual fabric or knit texture. Fill the frame edge-to-edge with one continuous area of the product material; preserve its true colour, weave, fibre scale, thickness and surface finish. Use a tight close-up with natural shallow depth of field. Do not show the full garment, model, mannequin, garment layout, fabric swatches, artwork collage, grid, split-screen, montage, inset, duplicate view or multiple panels. Output one photograph only.",
+    "fabric_texture_detail": "Create ONE single-frame photorealistic macro photograph of the actual T-shirt's fabric surface. Fill the frame with one continuous area of material and show the true observed jersey/knit texture at realistic fibre scale, colour and finish. Introduce a slight controlled twist or gentle fabric fold in that same material area to catch the light and accentuate the texture, without turning it into a knot, drape shot or separate fabric sample. Do not invent ribbing, a different weave or a pattern not visible in the product reference. No garment outline, model, mannequin, fabric swatches, collage, grid, split-screen, inset or multiple views; output one photograph only.",
 }
 
 
 _TOPS_FAMILY_WORN_PROFILES: Final[frozenset[str]] = frozenset({
-    "front_model", "styled_model", "seated_model", "seated_angled_model",
-    "full_length_model", "rear_model", "rear_angled_model", "angled_model",
+    "front_model", "front_model_pocket", "styled_model", "seated_model", "seated_angled_model",
+    "full_length_model", "rear_model", "rear_angled_model", "angled_model", "hem_fit_detail",
     "front_action", "rear_action",
 })
 _TOPS_FAMILY_DETAIL_PROFILES: Final[frozenset[str]] = frozenset({
-    "construction_detail", "hem_detail", "neckline_detail", "fabric_detail",
+    "construction_detail", "hem_detail", "hem_fit_detail", "neckline_detail", "fabric_detail", "fabric_texture_detail",
 })
 _TOPS_FAMILY_REAR_PROFILES: Final[frozenset[str]] = frozenset({
-    "rear_product", "rear_mannequin", "rear_model", "rear_angled_model", "rear_action",
+    "rear_product", "rear_mannequin", "rear_invisible_mannequin", "rear_model", "rear_angled_model", "rear_action",
 })
 _TOPS_FAMILY_ANGLED_PROFILES: Final[frozenset[str]] = frozenset({
-    "seated_angled_model", "rear_angled_model", "angled_model", "angled_product", "angled_mannequin",
+    "seated_angled_model", "rear_angled_model", "angled_model", "angled_product", "angled_mannequin", "angled_invisible_mannequin",
 })
 
 
@@ -776,7 +962,7 @@ def _tops_family_template(family: str, index: int, profile: str) -> GenerationTe
     base = _BASE_TEMPLATES[_TOPS_FAMILY_PROFILE_BASES[profile]]
     artwork_surface_mode = (
         "detail" if profile in _TOPS_FAMILY_DETAIL_PROFILES
-        else "folded" if profile == "folded"
+        else "folded" if profile in {"folded", "folded_product"}
         else "rear" if profile in _TOPS_FAMILY_REAR_PROFILES
         else "angled" if profile in _TOPS_FAMILY_ANGLED_PROFILES
         else "worn" if profile in _TOPS_FAMILY_WORN_PROFILES
@@ -784,13 +970,14 @@ def _tops_family_template(family: str, index: int, profile: str) -> GenerationTe
     )
     return replace(
         base,
-        id=f"ecommerce-tops-{family}-{index + 1:02d}",
+        id=f"ecommerce-tops-{family}-{_TOPS_FAMILY_TEMPLATE_NUMBERS.get(family, tuple(range(1, len(_TOPS_FAMILY_COMPOSITIONS[family]) + 1)))[index]:02d}",
         name=_TOPS_FAMILY_NAMES[family][index],
         description=f"Family-specific Ecommerce presentation for {family.replace('-', ' ')} ({profile.replace('_', ' ')}).",
         prompt_instructions=_TOPS_FAMILY_PROFILE_INSTRUCTIONS[profile],
         applicable_families=(family,),
         output_presentation="worn_product" if profile in _TOPS_FAMILY_WORN_PROFILES else "product_only",
         artwork_surface_mode=artwork_surface_mode,
+        version=2 if family == "t-shirts-casual-tops" else base.version,
         required_evidence=("rear_view",) if profile in _TOPS_FAMILY_REAR_PROFILES else ("front_view",),
     )
 
@@ -801,7 +988,19 @@ _TOPS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
     for index, profile in enumerate(profiles)
     for template in (_tops_family_template(family, index, profile),)
 }
-_TEMPLATES: Final[dict[str, GenerationTemplate]] = {**_BASE_TEMPLATES, **_TOPS_FAMILY_TEMPLATES}
+_SHORTS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
+    template.id: template for template in SHORTS_ECOMMERCE_TEMPLATES
+}
+_JOGGERS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
+    template.id: template for template in JOGGERS_ECOMMERCE_TEMPLATES
+}
+_LEGGINGS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
+    template.id: template for template in LEGGINGS_ECOMMERCE_TEMPLATES
+}
+_SKIRTS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
+    template.id: template for template in SKIRTS_ECOMMERCE_TEMPLATES
+}
+_TEMPLATES: Final[dict[str, GenerationTemplate]] = {**_BASE_TEMPLATES, **_TOPS_FAMILY_TEMPLATES, **_SHORTS_FAMILY_TEMPLATES, **_JOGGERS_FAMILY_TEMPLATES, **_LEGGINGS_FAMILY_TEMPLATES, **_SKIRTS_FAMILY_TEMPLATES}
 _LEGACY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {TOPS_CLEAN_PRODUCT_SHOT.id: TOPS_CLEAN_PRODUCT_SHOT}
 
 

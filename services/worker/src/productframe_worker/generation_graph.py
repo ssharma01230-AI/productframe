@@ -31,6 +31,20 @@ from .fidelity_validator import ProductFidelityError, finish_generated_image
 logger = logging.getLogger(__name__)
 
 
+def _resolve_presentation(job: GenerationJob, product: Product) -> str:
+    """Resolve explicit presentation, then confirmed/analysed product gender."""
+    if job.presentation in {"male", "female", "unisex"}:
+        return job.presentation
+    gender = (product.global_details or {}).get("gender", {}) if isinstance(product.global_details, dict) else {}
+    value = gender.get("user_confirmed") or gender.get("assumed") if isinstance(gender, dict) else gender
+    text = str(value or "").lower()
+    if any(word in text for word in ("female", "woman", "women", "womens", "girl")):
+        return "female"
+    if any(word in text for word in ("male", "man", "men", "mens", "boy")):
+        return "male"
+    return "unisex"
+
+
 class GenerationGraphState(TypedDict):
     request: GenerationRequest
     prompt: NotRequired[GenerationPrompt]
@@ -129,6 +143,7 @@ def create_persisted_generation_graph(
                 global_details=product.global_details,
                 category_details=product.category_details,
                 confidence_details=product.confidence_details,
+                presentation=_resolve_presentation(job, product),
             ),
             product_reference_images=tuple(
                 ReferenceImage(role="product_reference", object_key=asset.object_key, asset_id=asset.id)
@@ -145,6 +160,9 @@ def create_persisted_generation_graph(
         job.prompt = prompt.prompt
         job.negative_prompt = prompt.negative_prompt
         job.aspect_ratio = prompt.aspect_ratio
+        # Persist the definition actually used, so retries and reviews cannot
+        # silently appear to have been generated with an older template.
+        job.template_version = prompt.template_version
         db.commit()
         return {"status": "prompt_saved"}
 

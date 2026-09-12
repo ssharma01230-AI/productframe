@@ -66,6 +66,7 @@ export type GenerationProduct = {
   id: string;
   name: string;
   category: string | null;
+  gender?: GenerationPresentation;
   image_url: string | null;
 };
 
@@ -81,6 +82,8 @@ export type GenerationJobResponse = {
   template_name: string;
   template_channel: string;
   review_decision: 'approved' | 'rejected' | null;
+  evidence_override?: boolean;
+  missing_evidence?: string[];
   product: GenerationProduct;
   asset: GenerationAsset | null;
   progress?: GenerationProgress;

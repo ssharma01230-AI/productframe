@@ -13,7 +13,8 @@ The current application builds successfully as of the latest handover:
 ```text
 pnpm typecheck:web   PASS
 pnpm build:web      PASS
-backend + worker tests       291 PASS
+backend + worker tests       297 PASS
+frontend tests               6 PASS
 ```
 
 The Next.js build completes for `/`, `/studio`, and `/products`. Build output contains existing Autoprefixer warnings about `start`/`end` flex values and a workspace-root warning caused by multiple lockfiles; these are non-fatal.
@@ -64,7 +65,7 @@ Implemented behaviour includes:
 - Product folders with refresh-safe URLs, associated uploads, full-image previews, private folder links, and upload ZIP downloads.
 - A Gallery view reserved for approved generated outputs. Uploads remain inside product folders. Generated assets are persisted separately from source assets and can be stored in product folders and Gallery.
 - A Create view inside Studio based on the prototype, with new-product upload and existing-catalogue paths. Its typography, stacked sections, card borders, and responsive layout have been browser-verified. `/studio?view=create` opens this view directly.
-- Catalogue cards support selecting one or multiple products, then Choose outputs opens `/studio?view=create&step=outputs&product=<id>` (repeat `product` for multiple selections). Choices are resolved independently from each product's category and rendering family. Outerwear uses ten leather-jacket Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/outerwear/`, with the approved no-face model labels. Footwear uses ten white-trainer Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/footwear/`. Socks uses the eight user-approved cream ribbed crew-sock Ecommerce previews from `apps/web/public/output-examples/socks/`, in attachment order. Bottoms uses nine approved Ecommerce templates and local references, including the model-worn waist-down views, folded flat lay and construction details; the unapproved Fabric Surface Detail draft is excluded. Tops, Outerwear, Footwear, Socks and Bottoms all mirror their backend-owned Ecommerce IDs and names, while other categories retain the default catalogue choices. Reference previews are illustrative catalogue examples, not generated assets posted to a product's library. Review selection opens a centred popup with the same selected output thumbnails grouped by product; Back, Close, Escape and the backdrop dismiss it without losing choices. Product selections survive navigation in the URL; output choices remain in the current page session. For the current rollout, Continue submits one selected product/template with an idempotency key, polls the durable job, displays the signed preview URL for human review, and submits approval or rejection to the worker.
+- Catalogue cards support selecting one or multiple products, then Choose outputs opens `/studio?view=create&step=outputs&product=<id>` (repeat `product` for multiple selections). Choices are resolved independently from each product's category and rendering family. Outerwear uses ten leather-jacket Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/outerwear/`, with the approved no-face model labels. Footwear uses ten white-trainer Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/footwear/`. Socks uses the eight user-approved cream ribbed crew-sock Ecommerce previews from `apps/web/public/output-examples/socks/`, in attachment order. Bottoms uses family-specific approved Ecommerce templates and local benchmark references: 9 for Structured Bottoms, 9 for Shorts, 9 for Casual Bottoms, 8 for Leggings and 6 for Skirts; the unapproved Fabric Surface Detail draft is excluded. Tops, Outerwear, Footwear, Socks and Bottoms all mirror their backend-owned Ecommerce IDs and names, while other categories retain the default catalogue choices. Reference previews are illustrative catalogue examples, not generated assets posted to a product's library. Review selection opens a centred popup with the same selected output thumbnails grouped by product; Back, Close, Escape and the backdrop dismiss it without losing choices. Product selections survive navigation in the URL; output choices remain in the current page session. For the current rollout, Continue submits one selected product/template with an idempotency key, polls the durable job, displays the signed preview URL for human review, and submits approval or rejection to the worker.
 - The Outerwear, Footwear and Socks Ecommerce example images have the same conservative deterministic finishing profile applied in place: `1.055x` contrast, `1.075x` colour and an unsharp mask with radius `1.15`, strength `72%` and threshold `4`. All remain `1122x1402` PNGs. This is a presentation treatment for static template examples and does not make them generated product assets.
 
 ### Product categories and subtype routing
@@ -77,9 +78,11 @@ sleepwear_loungewear, underwear, socks, footwear,
 jewellery, accessories
 ```
 
-Legacy leaf categories remain accepted for backwards compatibility and should be
-migrated to `jewellery` or `accessories` during re-analysis. Bags, backpacks,
-luggage and purses remain intentionally unsupported.
+The registry also retains compatibility definitions for legacy leaf categories
+(`scarves`, `gloves`, `headwear`, `rings`, `bracelets`, `earrings`, `watches`,
+`belts` and `neckwear`). New recognition output routes these to the canonical
+`accessories` or `jewellery` categories. Bags, backpacks, luggage and purses
+remain intentionally unsupported.
 
 Accessories is now a canonical global category containing headwear, scarves, gloves, belts, ties and veils. Jewellery contains rings, bracelets, earrings, necklaces and watches. Bags, backpacks, luggage and purses are intentionally rejected as outside the supported clothing scope. Unknown subtypes should preserve their raw recognised product type and fall back to a category-compatible route rather than being forced into an incorrect subtype.
 
@@ -93,21 +96,27 @@ category → family → subtype → product
 
 The category is system-controlled, the raw subtype is preserved for product identity, and the family is system-controlled as the rendering-routing layer. Families select compatible output policies while composition primitives remain reusable across related garments.
 
+Current canonical family values are: Tops (`shirts`, `t-shirts-casual-tops`, `sleeveless-tops`, `knitwear`, `hoodies`); Outerwear (`jackets`, `coats`, `gilets-padded-vests`); Bottoms (`structured_bottoms`, `shorts`, `casual_bottoms`, `leggings`, `skirts`); Dresses (`dresses`); Tailoring (`tailored-jackets`, `waistcoats`, `suits`, `tuxedos`); Sleepwear/Loungewear (`pyjamas`, `nightwear`, `robes`); Underwear (`lower_body_underwear`, `bra`, `lingerie`, `base_layer`, `underwear_set`); Socks (`socks`); Footwear (`trainers`, `flats-loafers`, `sandals-open-shoes`, `boots`, `heels`); Jewellery (`rings`, `bracelets`, `earrings`, `necklaces`, `watches`); and Accessories (`headwear`, `scarves`, `gloves`, `belts`, `ties-neckwear`, `veils`).
+
 The current Tops taxonomy is:
 
 ```text
 tops
-├── shirts
-├── t-shirts-casual-tops
-├── sleeveless-tops
+├── shirts: shirt, button-down shirt, overshirt
+├── t-shirts-casual-tops: t-shirt, graphic tee, polo shirt, henley
+├── sleeveless-tops: tank top, camisole, tube top, vest top
 ├── knitwear: jumper, sweater, cardigan, sweatshirt
-└── hoodies: pullover hoodie, zip-through hoodie
+└── hoodies: pullover hoodie, zip-through hoodie, zip-up hoodie
 ```
 
-Tops now have 55 family-specific Ecommerce reference templates: Shirts (15),
-T-Shirts & Casual Tops (10), Sleeveless Tops (7), Knitwear (11), and Hoodies
-(12). The backend keeps the ten generic Tops compositions as an unclassified
-fallback. Family examples are stored under
+Tops currently have 54 family-specific Ecommerce reference templates: Shirts
+(15), T-Shirts & Casual Tops (9), Sleeveless Tops (6), Knitwear (11), and
+Hoodies (12). T-Shirt templates are version 2 and are benchmark-mapped to the
+frontend images. The duplicate straight-on front template 07 has been removed;
+template 04 specifies one hand in a trouser pocket, template 09 adds a slight
+fabric twist for texture emphasis, and templates 05, 08 and 10 use invisible-
+mannequin presentations. The backend keeps the ten generic Tops compositions as an
+unclassified fallback. Family examples are stored under
 `apps/web/public/output-examples/tops/` and are illustrative references only;
 no images are generated at build or test time.
 
@@ -115,13 +124,33 @@ The current bottoms taxonomy is:
 
 ```text
 bottoms
-├── structured_bottoms: jeans, trousers, chinos, cargo trousers, shorts
-├── casual_bottoms: joggers
+├── structured_bottoms: jeans, trousers, chinos, cargo trousers
+├── shorts: shorts
+├── casual_bottoms: joggers and other casual bottoms
 ├── leggings: leggings
 └── skirts: skirt
 ```
 
-Bottoms currently share nine Ecommerce compositions: Front View, Back View, Side / Three-Quarter Product, Folded Product Flat Lay, Front Model, Back Model, Waistband & Closure Detail, Pocket Panel Detail, and Hem & Leg Detail. Family policies adapt construction language and focus—for example, skirts use hem/drape language, leggings use stretch/seam language, and joggers use elastic/drawcord/cuff language—without copying jeans-specific assumptions. Bottoms currently require only `front_view` or `rear_view` evidence according to the selected composition. An unknown family falls back to conservative generic bottoms behaviour.
+Structured bottoms retain the shared nine Ecommerce compositions: Front View,
+Back View, Side / Three-Quarter Product, Folded Product Flat Lay, Front Model,
+Back Model, Waistband & Closure Detail, Pocket Panel Detail, and Hem & Leg Detail.
+Shorts now use a dedicated nine-image version-2 benchmark pack: Flat-Laid Product, Front/Three-Quarter/Rear Invisible
+Mannequin, Front-Facing Model, Three-Quarter Full-Length Model, Rear-Facing
+Model, Full-Length Front-Facing Model, and Waistband & Closure Detail. The Shorts
+pack is documented in `docs/bottoms-shorts-template-inventory.md`; the planned
+pocket/mid-front detail is intentionally not included yet. Casual bottoms (currently benchmarked with joggers) now use a
+dedicated nine-image version-2 pack documented in
+`docs/bottoms-joggers-template-inventory.md`: flat-laid, invisible mannequin
+front/three-quarter/rear, front/three-quarter/rear model, full-length front
+model and folded top-down. Leggings use the dedicated eight-template benchmark
+pack documented in `docs/bottoms-leggings-template-inventory.md`; Skirts use the
+dedicated six-template structured pleated-skirt pack documented in
+`docs/bottoms-skirts-template-inventory.md`. Family policies preserve the
+appropriate inseam, waist, drape, stretch, drawcord, tapered-leg, ribbed-cuff,
+pleat and hem construction without copying jeans-specific assumptions.
+Bottoms require only `front_view` or `rear_view` evidence according to the
+selected composition. An unknown family falls back to conservative generic
+bottoms behaviour.
 
 ### Image generation, fidelity and finishing
 
@@ -147,7 +176,7 @@ load generation job
 
 The order is deliberate. Recognition, prompt construction and generation receive no sharpened or saturation-adjusted input. Fidelity validation is disabled by default to avoid the extra vision-model request; set `OPENAI_IMAGE_FIDELITY_VALIDATION=true` to re-enable restoration and validation. The human reviewer sees the finished preview, and the approved final is the same reviewed image.
 
-Image generation supports OpenAI GPT Image 2 and Gemini `gemini-3.1-flash-lite-image` (Nano Banana). Small runs (fewer than 10 jobs) always use OpenAI (`gpt-image-2-2026-04-21`). For runs containing 10 or more jobs, assignments alternate between OpenAI and Gemini so both provider queues can process work concurrently. Provider-side failures (timeouts, transport errors, HTTP 408/409/429 or 5xx responses) trigger one failover attempt on the other provider; invalid requests, safety rejections, authentication errors and malformed responses do not. Provider, model, fallback count and request ID are persisted on each generation job. The frontend remains provider-neutral and continues polling the same generation-run endpoint.
+Image generation supports OpenAI GPT-Image-2.5 Flare and Gemini `gemini-3.1-flash-lite-image` (Nano Banana). Small runs (fewer than 10 jobs) always use OpenAI (`gpt-image-2.5-flare`). For runs containing 10 or more jobs, assignments alternate between OpenAI and Gemini so both provider queues can process work concurrently. Provider-side failures (timeouts, transport errors, HTTP 408/409/429 or 5xx responses) trigger one failover attempt on the other provider; invalid requests, safety rejections, authentication errors and malformed responses do not. Provider, model, fallback count and request ID are persisted on each generation job. The frontend remains provider-neutral and continues polling the same generation-run endpoint.
 
 Local tests showed strong reproduction for a printed navy T-shirt and an all-over patterned tunic. A difficult octopus graphic test exposed a limitation in the current colour-distance artwork mask: it correctly failed closed rather than publishing a contaminated rectangular source crop. Improve general artwork segmentation before treating that case as solved; do not add product-specific or octopus-specific schemas, prompts or scripts.
 
@@ -208,7 +237,7 @@ The test output was temporary and was deleted; it is not a persisted regression 
 │   ├── src/productframe_api/auth.py          Clerk token/JWKS authentication
 │   ├── src/productframe_api/config.py        Environment configuration
 │   ├── src/productframe_api/db.py            SQLAlchemy engine/session setup
-│   └── migrations/versions/                  Alembic migrations through 0015, including generation persistence, graph identity and provider routing
+│   └── migrations/versions/                  Alembic migrations through 0016, including generation persistence, graph identity, provider routing and presentation metadata
 ├── services/worker/
 │   ├── src/productframe_worker/worker.py      Redis Streams worker and analysis/generation execution
 │   ├── src/productframe_worker/generation_graph.py Durable LangGraph generation workflow
@@ -299,7 +328,7 @@ The worker reads `services/worker/.env`; the standalone analyser reads the `.env
 | `GEMINI_REQUESTS_PER_DAY` | `18` | Gemini daily request-attempt allowance. |
 | `ANALYSIS_QUOTA_DB` | `<repository>/.cache/analysis-quotas.sqlite3` | Optional override for the persisted Gemini daily ledger. |
 | `IMAGE_GENERATION_PROVIDER` | `openai` | Legacy setting; small runs always use OpenAI, while runs with 10 or more jobs use deterministic OpenAI/Gemini alternation. |
-| `OPENAI_IMAGE_MODEL` | `gpt-image-2-2026-04-21` | OpenAI image-generation model used by the worker. |
+| `OPENAI_IMAGE_MODEL` | `gpt-image-2.5-flare` | OpenAI image-generation model used by the worker. |
 | `OPENAI_IMAGE_TIMEOUT_SECONDS` | `300` | Per-request timeout for the OpenAI image provider. |
 | `GEMINI_IMAGE_MODEL` | `gemini-3.1-flash-lite-image` | Gemini image-generation model used for large-run assignments and failover. |
 | `GEMINI_IMAGE_TIMEOUT_SECONDS` | `300` | Per-request timeout for the Gemini image provider. |
@@ -418,7 +447,7 @@ Product Library reads preserve the existing product approval/visibility rules. P
 2. **Analysis throughput remains capacity-limited.** OpenAI/Gemini routing overlaps independent image and product-detail tasks, while each image's gates retain their order. Token/request budgets, Gemini's daily allowance, retries, and large sets of distinct products can still make a run slow. Active-job crash/requeue recovery remains unfinished.
 3. **Grouping is probabilistic.** It is safer to create an extra group than to merge visibly different products. More difficult fixture coverage is needed for colourways, patterns, footwear, lighting, folded/back/detail views, and near-identical garments.
 4. **Run history is not yet a dedicated UI.** Jobs are durable in the database and a run can be reopened through a job ID, but there is no finished Run History screen/navigation.
-5. **Subtype and category routing needs further hardening.** Bottoms family routing is implemented for structured bottoms, casual bottoms, leggings and skirts. Canonical aliases and family routing for additional categories still need to be fully wired into recognition and template selection. Bags remain intentionally unsupported.
+5. **Subtype and category routing needs further hardening.** Bottoms family routing is implemented for structured bottoms, shorts, casual bottoms, leggings and skirts. Canonical aliases and family routing for additional categories still need to be fully wired into recognition and template selection. Bags remain intentionally unsupported.
 6. **Catalogue/output identity needs hardening.** Output selection must use durable run-scoped product IDs and should not depend on array position or transient client state.
 7. **Generation observability can be expanded.** Provider request IDs and bounded retry messages are persisted, while a dedicated run-history screen and richer stage telemetry remain future work.
 8. **The current repository has uncommitted changes.** Preserve the work; inspect `git diff` and avoid broad cleanup until the new agent understands the implementation.

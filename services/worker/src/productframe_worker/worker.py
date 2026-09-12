@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import logging
 import os
@@ -9,9 +10,10 @@ from redis import Redis
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from productframe_api.analysis_cache import ANALYSIS_PROMPT_VERSION, ANALYSIS_SCHEMA_VERSION, load_cached_stages, normalized_image_hash, save_cached_stage
 from productframe_api.config import get_settings
 from productframe_api.db import SessionLocal
-from productframe_api.description_utils import concise_product_description
+from productframe_api.description_utils import bound_description, concise_product_description
 from productframe_api.generation_persistence import (
     image_provider_model,
     planned_image_provider,
@@ -98,6 +100,20 @@ def _read_upright_source_image(s3: Any, bucket: str, asset: SourceAsset) -> byte
     return normalized.content
 
 
+def _prepare_analysis_asset(asset: SourceAsset, settings: Any) -> tuple[bytes, str]:
+    """Download and normalize one asset without touching the coordinator session."""
+    from types import SimpleNamespace
+
+    s3 = boto3.client(
+        "s3", endpoint_url=settings.minio_endpoint,
+        aws_access_key_id=settings.minio_access_key,
+        aws_secret_access_key=settings.minio_secret_key, region_name="us-east-1",
+    )
+    detached_asset = SimpleNamespace(object_key=asset.object_key, content_type=getattr(asset, "content_type", ""))
+    content = _read_upright_source_image(s3, settings.minio_bucket, detached_asset)
+    return content, detached_asset.content_type
+
+
 def process_media_evidence(asset_id: str, db: Session | None = None) -> None:
     own_session = db is None
     db = db or SessionLocal()
@@ -139,9 +155,7 @@ def process_job(job_id: str, db: Session | None = None) -> None:
         job.started_at = _now()
         db.commit()
         job_images = db.scalars(select(AnalysisJobImage).where(AnalysisJobImage.job_id == job.id).order_by(AnalysisJobImage.image_number)).all()
-        s3 = boto3.client("s3", endpoint_url=settings.minio_endpoint, aws_access_key_id=settings.minio_access_key, aws_secret_access_key=settings.minio_secret_key, region_name="us-east-1")
-        image_bytes: list[bytes] = []
-        submitted_image_numbers: dict[int, int] = {}
+        assets_to_prepare: list[tuple[AnalysisJobImage, SourceAsset]] = []
         for item in job_images:
             asset = db.get(SourceAsset, item.source_asset_id) if item.source_asset_id else None
             if asset is None:
@@ -149,7 +163,25 @@ def process_job(job_id: str, db: Session | None = None) -> None:
                 item.passed = False
                 item.rejection_reason = "Source image record was not found."
                 continue
-            image_bytes.append(_read_upright_source_image(s3, settings.minio_bucket, asset))
+            assets_to_prepare.append((item, asset))
+        # MinIO I/O and image normalization are independent. Keep ORM writes on
+        # the coordinator thread because SQLAlchemy sessions are not thread-safe.
+        with ThreadPoolExecutor(max_workers=min(4, max(1, len(assets_to_prepare))), thread_name_prefix="asset-preparation") as executor:
+            prepared = list(executor.map(lambda pair: _prepare_analysis_asset(pair[1], settings), assets_to_prepare))
+        image_bytes: list[bytes] = []
+        image_hashes: dict[int, str] = {}
+        cached_stage_results: dict[str, dict[str, object]] = {}
+        submitted_image_numbers: dict[int, int] = {}
+        for (item, asset), (content, normalized_content_type) in zip(assets_to_prepare, prepared):
+            asset.content_type = normalized_content_type
+            image_bytes.append(content)
+            image_hashes[item.image_number] = normalized_image_hash(content)
+            cached_stage_results[str(item.image_number)] = dict(getattr(item, "stage_results", None) or {})
+            cached_stage_results[str(item.image_number)].update(load_cached_stages(
+                db, image_hash=image_hashes[item.image_number],
+                model=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"),
+                prompt_version=ANALYSIS_PROMPT_VERSION, schema_version=ANALYSIS_SCHEMA_VERSION,
+            ))
             # The analyzer numbers its supplied images from one. Missing sources
             # must not shift those results onto different original uploads.
             submitted_image_numbers[len(image_bytes)] = item.image_number
@@ -168,7 +200,44 @@ def process_job(job_id: str, db: Session | None = None) -> None:
         job.progress_message = "Checking uploaded images"
         job.progress_total = job.total_images
         db.commit()
-        result = analyze_product_images(image_bytes, progress_callback=report_progress)
+        cached_stage_state = dict(getattr(job, "stage_state", None) or {})
+
+        def checkpoint_stage(image_number: str, stages: dict[str, object]) -> None:
+            # The analysis coordinator owns the main session; this checkpoint
+            # uses a short independent session so completed work survives an
+            # interruption before the final product transaction.
+            with SessionLocal() as checkpoint_db:
+                checkpoint = checkpoint_db.scalar(select(AnalysisJobImage).where(
+                    AnalysisJobImage.job_id == job.id,
+                    AnalysisJobImage.image_number == int(image_number),
+                ))
+                if checkpoint is not None:
+                    checkpoint.stage_results = stages
+                    checkpoint.image_hash = image_hashes.get(int(image_number))
+                    checkpoint_db.commit()
+
+        def checkpoint_job_stage(stage: str, value: dict[str, object]) -> None:
+            with SessionLocal() as checkpoint_db:
+                checkpoint_job = checkpoint_db.get(AnalysisJob, job.id)
+                if checkpoint_job is None:
+                    return
+                state = dict(checkpoint_job.stage_state or {})
+                if stage == "grouping":
+                    state["grouping"] = value
+                elif stage.startswith("synthesis:"):
+                    synthesis = dict(state.get("synthesis") or {})
+                    synthesis[stage.split(":", 1)[1]] = value
+                    state["synthesis"] = synthesis
+                checkpoint_job.stage_state = state
+                checkpoint_db.commit()
+
+        result = analyze_product_images(
+            image_bytes, progress_callback=report_progress,
+            cached_stage_results=cached_stage_results,
+            stage_result_callback=checkpoint_stage,
+            cached_stage_state=cached_stage_state,
+            stage_state_callback=checkpoint_job_stage,
+        )
         job.status = AnalysisJobStatus.ANALYSING.value
         job.progress_stage = "complete"
         job.progress_message = "Analysis complete — ready for review"
@@ -177,6 +246,17 @@ def process_job(job_id: str, db: Session | None = None) -> None:
         job.progress_percent = 100
         job.processed_images = job.total_images
         job.unique_product_count = result.unique_product_count
+        cache_model = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
+        for image_number, stages in getattr(result, "stage_results", {}).items():
+            image_hash = image_hashes.get(int(image_number))
+            if not image_hash:
+                continue
+            for stage, stage_result in stages.items():
+                save_cached_stage(
+                    db, image_hash=image_hash, model=cache_model, stage=stage,
+                    result=stage_result, prompt_version=ANALYSIS_PROMPT_VERSION,
+                    schema_version=ANALYSIS_SCHEMA_VERSION,
+                )
         for supplied_number, evidence in getattr(result, "image_evidence", {}).items():
             image_number = submitted_image_numbers.get(int(supplied_number))
             if image_number is None:
@@ -218,7 +298,7 @@ def process_job(job_id: str, db: Session | None = None) -> None:
                 global_details=(getattr(analysis, "global_details", None).model_dump(mode="json") if getattr(analysis, "global_details", None) else None),
                 category_details=(getattr(analysis, "category_details", None).model_dump(mode="json") if hasattr(getattr(analysis, "category_details", None), "model_dump") else getattr(analysis, "category_details", None)),
                 confidence_details=(getattr(analysis, "confidence_details", None).model_dump(mode="json") if getattr(analysis, "confidence_details", None) else None),
-                description=concise_product_description(analysis),
+                description=bound_description(concise_product_description(analysis)),
                 confidence=analysis.confidence,
             ))
         job.status = AnalysisJobStatus.AWAITING_CONFIRMATION.value if result.products else AnalysisJobStatus.FAILED.value

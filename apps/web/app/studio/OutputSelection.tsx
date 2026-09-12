@@ -10,7 +10,7 @@ import type { GenerationPresentation, GenerationRunRequest, GenerationRunRespons
 import './output-selection.css';
 
 type MediaEvidence = { views?: string[]; evidence?: string[] };
-export type OutputProduct = { id: string; name: string; category: string | null; product_family?: string | null; image_url: string | null; media_evidence?: MediaEvidence[] };
+export type OutputProduct = { id: string; name: string; category: string | null; product_type?: string | null; product_family?: string | null; gender?: GenerationPresentation; image_url: string | null; media_evidence?: MediaEvidence[]; media_evidence_pending?: boolean };
 
 const generationSliceEnabled = process.env.NEXT_PUBLIC_ENABLE_GENERATION_SLICE !== 'false';
 
@@ -38,7 +38,7 @@ function renderRecipeImage(recipe: OutputRecipe) {
 
 export default function OutputSelection({ products, onBack, selection, onSelectionChange }: Props) {
   const [activeProductId, setActiveProductId] = useState(products[0]?.id ?? '');
-  const [presentationByProduct, setPresentationByProduct] = useState<Record<string, GenerationPresentation>>(() => Object.fromEntries(products.map(product => [product.id, 'unisex'])));
+  const [presentationByProduct, setPresentationByProduct] = useState<Record<string, GenerationPresentation>>(() => Object.fromEntries(products.map(product => [product.id, product.gender ?? 'unisex'])));
   const [reviewOpen, setReviewOpen] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const reviewDialog = useRef<HTMLDialogElement>(null);
@@ -58,19 +58,21 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
   const [submissionKey, setSubmissionKey] = useState<string | null>(null);
   const activeProduct = products.find(product => product.id === activeProductId) ?? products[0];
   const activeCategory = activeProduct?.category?.trim().toLowerCase();
-  const recipesByProduct = new Map(products.map(product => [product.id, getOutputRecipes(product.category, product.product_family)]));
+  const recipesByProduct = new Map(products.map(product => [product.id, getOutputRecipes(product.category, product.product_family, product.product_type)]));
   const activeRecipes = activeProduct ? recipesByProduct.get(activeProduct.id) ?? [] : [];
   const availableEvidence = new Set((activeProduct?.media_evidence ?? []).flatMap(item => [...(item.views ?? []), ...(item.evidence ?? [])]));
-  const requiresEvidence = (recipe: { id: string }) => {
-    if (!generationSliceEnabled) return false;
-    const required = recipeEvidence(recipe.id, activeProduct?.category, activeProduct?.product_family);
+  const evidencePending = Boolean(activeProduct?.media_evidence_pending);
+  const requiresEvidence = (recipe: Pick<OutputRecipe, 'id' | 'requiredEvidence'>) => {
+    if (!generationSliceEnabled || evidencePending) return false;
+    const required = recipeEvidence(recipe, activeProduct?.category, activeProduct?.product_family);
     return required.length > 0 && !required.every(item => availableEvidence.has(item));
   };
-  const hasEvidence = (recipe: { id: string }) => {
+  const hasEvidence = (recipe: Pick<OutputRecipe, 'id' | 'requiredEvidence'>) => {
+    if (evidencePending) return false;
     // The rollout flag restores the pre-readiness selection behaviour as well
     // as disabling submission, which keeps rollback genuinely reversible.
     if (!generationSliceEnabled) return true;
-    const required = recipeEvidence(recipe.id, activeProduct?.category, activeProduct?.product_family);
+    const required = recipeEvidence(recipe, activeProduct?.category, activeProduct?.product_family);
     // The user may explicitly continue with a best-effort output when the
     // recommended supporting view is unavailable.
     if (activeProduct && evidenceOverrides[activeProduct.id]?.includes(recipe.id)) return true;
@@ -78,6 +80,11 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
     return required.length === 0 || required.every(item => availableEvidence.has(item));
   };
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+  useEffect(() => {
+    if (!evidencePending) return;
+    const refresh = window.setInterval(() => router.refresh(), 2000);
+    return () => window.clearInterval(refresh);
+  }, [evidencePending, router]);
   const selectedFor = (productId: string) => {
     const recipeIds = new Set((recipesByProduct.get(productId) ?? []).map(recipe => recipe.id));
     return [...new Set(selection[productId] ?? [])].filter(id => recipeIds.has(id));
@@ -91,8 +98,10 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
     template_id,
     channel: 'ecommerce' as const,
     presentation: presentationByProduct[product.id] ?? 'unisex',
+    evidence_override: evidenceOverrides[product.id]?.includes(template_id) ?? false,
   })));
-  const canSubmitGeneration = generationSliceEnabled && ready && generationSelections.length > 0;
+  const anyEvidencePending = products.some(product => product.media_evidence_pending);
+  const canSubmitGeneration = generationSliceEnabled && ready && generationSelections.length > 0 && !anyEvidencePending;
 
   useEffect(() => {
     const dialog = reviewDialog.current;
@@ -113,10 +122,14 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
     setReviewOpen(false);
   }
 
-  function requestEvidence(recipe: { id: string }) {
+  function requestEvidence(recipe: Pick<OutputRecipe, 'id' | 'requiredEvidence'>) {
     if (uploading) return;
-    const missing = recipeEvidence(recipe.id, activeProduct?.category, activeProduct?.product_family)[0]?.replaceAll('_', ' ') ?? 'product';
-    setUploadMessage(`Add a clear image showing the missing ${missing}`);
+    if (evidencePending) {
+      setUploadMessage('Analysing product image… please wait.');
+      return;
+    }
+    const missing = recipeEvidence(recipe, activeProduct?.category, activeProduct?.product_family)[0]?.replaceAll('_', ' ') ?? 'product angle';
+    setUploadMessage(`We recommend a clear ${missing} for this output. Add one now, or continue using your current references.`);
     setPendingEvidenceRecipe(recipe.id);
     setUploadOpen(true);
   }
@@ -152,8 +165,11 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
         const queued = await fetch(`${base}/products/${encodeURIComponent(activeProduct.id)}/source-assets/${encodeURIComponent(details.asset_id)}/evidence`, { method: 'POST', headers });
         if (!queued.ok) throw new Error('A source image could not be queued for analysis.');
       }
+      const recipeId = pendingEvidenceRecipe;
       setUploadMessage(`${files.length} source ${files.length === 1 ? 'image' : 'images'} queued for evidence analysis.`);
       setUploadOpen(false);
+      setPendingEvidenceRecipe(null);
+      if (recipeId && !selectedIds.has(recipeId)) toggleRecipe(recipeId);
       router.refresh();
     } catch (cause) {
       setUploadMessage(cause instanceof Error ? cause.message : 'The evidence upload failed.');
@@ -204,12 +220,12 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
     {uploadMessage && !uploadOpen && <p className="pf-output-evidence-message" role="status">{uploadMessage}</p>}
     <dialog ref={uploadDialog} className="pf-output-evidence-dialog" aria-labelledby="pf-evidence-upload-title" onCancel={event => { event.preventDefault(); if (!uploading) setUploadOpen(false); }} onClick={event => { if (event.target === event.currentTarget && !uploading) setUploadOpen(false); }}>
       <div className="pf-output-evidence-dialog-content">
-        <h2 id="pf-evidence-upload-title">Upload another product image</h2>
-        <p className="pf-output-evidence-hint"><StudioIcon name="garment"/><span>{uploadMessage || 'Add a clear image showing the product detail required for this output.'}</span></p>
+        <h2 id="pf-evidence-upload-title">This output may benefit from another angle</h2>
+        <p className="pf-output-evidence-hint"><StudioIcon name="garment"/><span>{uploadMessage || 'A supporting angle may improve accuracy for this output. You can add one now or continue with your current references.'}</span></p>
         <ul className="pf-output-evidence-tips"><li>Show the full product clearly</li><li>Use even, natural lighting</li><li>Keep the background simple</li></ul>
         <input ref={uploadInput} className="pf-output-evidence-input" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadEvidence} aria-label="Choose source evidence images" />
-        <label className="pf-output-evidence-picker"> <img src="/documents/upload-icon-green.svg" alt="" /> <span>{uploading ? 'Uploading…' : 'Choose images'}</span><small>JPG, PNG or WEBP · Multiple allowed</small><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadEvidence} disabled={uploading} /></label>
-        <div className="pf-output-evidence-actions"><div className="pf-output-evidence-continue-wrap"><button type="button" className="pf-output-evidence-continue" onClick={continueWithoutEvidence} disabled={uploading}>Continue without reference</button><small>We’ll generate using the available product references. The result may be less accurate.</small></div><button type="button" className="pf-output-evidence-cancel" onClick={() => { setUploadOpen(false); setPendingEvidenceRecipe(null); }} disabled={uploading}>Cancel</button></div>
+        <label className="pf-output-evidence-picker"> <img src="/documents/upload-icon-green.svg" alt="" /> <span>{uploading ? 'Uploading…' : 'Add supporting angle'}</span><small>JPG, PNG or WEBP · Multiple allowed</small><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={uploadEvidence} disabled={uploading} /></label>
+        <div className="pf-output-evidence-actions"><button type="button" className="pf-output-evidence-continue" onClick={continueWithoutEvidence} disabled={uploading}><span>Continue anyway</span><small>We’ll generate using your current references. Hidden details may be less accurate.</small></button><button type="button" className="pf-output-evidence-cancel" onClick={() => { setUploadOpen(false); setPendingEvidenceRecipe(null); }} disabled={uploading}>Go back</button></div>
       </div>
     </dialog>
     <button className="pf-output-back" type="button" onClick={onBack}><span aria-hidden="true">←</span> Back to products</button>
@@ -264,7 +280,7 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
             })}</div>
           <footer className="pf-output-summary-footer">
               <p id="output-selection-total">{generationMessage || `${total} ${total === 1 ? 'output' : 'outputs'} selected`}</p>
-              <div className="pf-output-summary-actions"><button className="pf-output-summary-back" type="button" onClick={() => setReviewOpen(false)}>Back to selection</button><button className="pf-output-summary-continue" type="button" disabled={!canSubmitGeneration || submitting} onClick={startGeneration}>{submitting ? 'Starting…' : canSubmitGeneration ? 'Continue' : generationSliceEnabled ? 'Select one product and output' : 'Generation unavailable'} <span aria-hidden="true">→</span></button></div>
+              <div className="pf-output-summary-actions"><button className="pf-output-summary-back" type="button" onClick={() => setReviewOpen(false)}>Back to selection</button><button className="pf-output-summary-continue" type="button" disabled={!canSubmitGeneration || submitting} onClick={startGeneration}>{submitting ? 'Starting…' : canSubmitGeneration ? 'Continue' : anyEvidencePending ? 'Waiting for reference analysis…' : generationSliceEnabled ? 'Select one product and output' : 'Generation unavailable'} <span aria-hidden="true">→</span></button></div>
             </footer>
         </div>
       </dialog>
@@ -273,12 +289,12 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
       <div className="pf-output-catalogue" role="group" aria-label={`Output choices for ${activeProduct.name}`}>
         {OUTPUT_CATEGORIES.map(category => <section className="pf-output-category" key={category} aria-labelledby={`output-category-${category}`}>
           <div className="pf-output-category-heading"><h2 id={`output-category-${category}`}>{category}</h2><span>{activeRecipes.filter(recipe => recipe.category === category).length} templates</span></div>
-          <div className="pf-output-grid">{activeRecipes.filter(recipe => recipe.category === category).map((recipe, index) => <button className={`pf-output-card${recipe.exampleImage.startsWith('/') ? ' pf-output-card-portrait' : ''}${recipe.hoverExampleImage ? ' pf-output-card-has-hover-image' : ''}`} type="button" key={recipe.id} aria-label={recipe.name} aria-pressed={selectedIds.has(recipe.id)} aria-describedby={`output-description-${recipe.id}`} onClick={() => hasEvidence(recipe) ? toggleRecipe(recipe.id) : requestEvidence(recipe)}>
+          <div className="pf-output-grid">{activeRecipes.filter(recipe => recipe.category === category).map((recipe, index) => <button className={`pf-output-card${recipe.exampleImage.startsWith('/') ? ' pf-output-card-portrait' : ''}${recipe.hoverExampleImage ? ' pf-output-card-has-hover-image' : ''}`} type="button" key={recipe.id} aria-label={`${recipe.name}${requiresEvidence(recipe) ? ' — another angle recommended' : ''}`} aria-pressed={selectedIds.has(recipe.id)} aria-describedby={`output-description-${recipe.id}`} onClick={() => evidencePending ? requestEvidence(recipe) : hasEvidence(recipe) ? toggleRecipe(recipe.id) : requestEvidence(recipe)}>
             {renderRecipeImage(recipe)}
-            {requiresEvidence(recipe) ? <span className="pf-output-example pf-output-needs-evidence"><b aria-hidden="true">!</b><span>Additional angle required</span></span> : <span className="pf-output-example">Example</span>}
+            {evidencePending ? <span className="pf-output-example"><span>Analysing product image…</span></span> : requiresEvidence(recipe) ? <span className="pf-output-example pf-output-needs-evidence"><b aria-hidden="true">!</b><span>Additional angle recommended</span></span> : <span className="pf-output-example">Example</span>}
             {selectedIds.has(recipe.id) && <span className="pf-output-selected"><span aria-hidden="true">✓</span> Selected</span>}
-            <span className={`pf-output-card-product-thumb${requiresEvidence(recipe) ? ' is-missing' : ''}`} aria-hidden="true">{!requiresEvidence(recipe) && activeProduct.image_url ? <Image src={activeProduct.image_url} alt="" fill sizes="52px" unoptimized={!activeProduct.image_url.startsWith('/')}/> : !requiresEvidence(recipe) ? <span>✓</span> : <img src="/documents/upload-icon-green.svg" alt=""/>}</span>
-            <span className="pf-output-card-copy"><b>{String(index + 1).padStart(2, '0')} · {recipe.name}</b><span id={`output-description-${recipe.id}`}>{recipe.description}</span></span>
+            <span className={`pf-output-card-product-thumb${requiresEvidence(recipe) ? ' is-missing' : ''}`} aria-hidden="true">{evidencePending ? <span>…</span> : !requiresEvidence(recipe) && activeProduct.image_url ? <Image src={activeProduct.image_url} alt="" fill sizes="52px" unoptimized={!activeProduct.image_url.startsWith('/')}/> : !requiresEvidence(recipe) ? <span>✓</span> : <span className="pf-output-missing-mark">!</span>}</span>
+            <span className="pf-output-card-copy"><b>{recipe.id.match(/-(\d+)$/)?.[1] ?? String(index + 1).padStart(2, '0')} · {recipe.name}</b><span id={`output-description-${recipe.id}`}>{recipe.description}</span></span>
           </button>)}</div>
         </section>)}
       </div>
@@ -288,16 +304,18 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
 
 function formatCategory(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(); }
 
-function recipeEvidence(id: string, category?: string | null, family?: string | null): string[] {
+function recipeEvidence(recipe: Pick<OutputRecipe, 'id' | 'requiredEvidence'>, category?: string | null, family?: string | null): string[] {
+  if (recipe.requiredEvidence) return [...recipe.requiredEvidence];
+  const id = recipe.id;
   const normalized = category?.trim().toLowerCase();
   if (normalized === 'socks') return [];
   if (normalized === 'underwear' && family?.trim().toLowerCase() !== 'lower_body_underwear') return [];
   if (normalized === 'footwear') {
     if (id.includes('sole')) return ['sole_or_underside'];
-    if (id.includes('top')) return ['top_view'];
     if (id.includes('rear')) return ['rear_view'];
-    if (id.includes('inner') || id.includes('outer') || id.includes('three-quarter') || id.includes('feet')) return ['top_view'];
-    return ['top_view'];
+    if (id.includes('top')) return ['top_view'];
+    if (id.includes('inner') || id.includes('outer') || id.includes('three-quarter') || id.includes('side-on-feet')) return ['side_view'];
+    return ['front_view'];
   }
   if (normalized === 'outerwear' || normalized === 'bottoms' || normalized === 'tops' || normalized === 'underwear') {
     return id.includes('back') || id.includes('rear') || id.includes('over-the-shoulder') ? ['rear_view'] : ['front_view'];

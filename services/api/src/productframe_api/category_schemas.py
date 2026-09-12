@@ -4,7 +4,21 @@ from typing import Literal, Union
 from pydantic import BaseModel, Field
 
 
+TopsFamily = Literal[
+    "shirts", "t-shirts-casual-tops", "sleeveless-tops", "knitwear", "hoodies"
+]
+OuterwearFamily = Literal["jackets", "coats", "gilets-padded-vests"]
+DressFamily = Literal["dresses"]
+TailoringFamily = Literal["tailored-jackets", "waistcoats", "suits", "tuxedos"]
+SleepwearFamily = Literal["pyjamas", "nightwear", "robes"]
+SocksFamily = Literal["socks"]
+FootwearFamily = Literal["trainers", "flats-loafers", "sandals-open-shoes", "boots", "heels"]
+JewelleryFamily = Literal["rings", "bracelets", "earrings", "necklaces", "watches"]
+AccessoriesFamily = Literal["headwear", "scarves", "gloves", "belts", "ties-neckwear", "veils"]
+
+
 class TopsDetails(BaseModel):
+    family: TopsFamily | None = None
     subtype: str
     neckline_type: str
     neckline_depth: str
@@ -43,6 +57,7 @@ class TopsDetails(BaseModel):
 
 
 class OuterwearDetails(BaseModel):
+    family: OuterwearFamily | None = None
     subtype: str
     collar_or_lapel: str
     hood_type: str
@@ -69,7 +84,7 @@ class OuterwearDetails(BaseModel):
 
 
 BottomsFamily = Literal[
-    "structured_bottoms", "casual_bottoms", "leggings", "skirts"
+    "structured_bottoms", "shorts", "casual_bottoms", "leggings", "skirts"
 ]
 
 
@@ -89,6 +104,11 @@ class BottomsDetails(BaseModel):
     panel_or_seam_details: list[str]
     fit_and_silhouette: str
     visible_uncertainties: list[str]
+    # Shorts-specific observations; remain not_visible for other bottoms.
+    inseam_length: str = "not_visible"
+    leg_opening: str = "not_visible"
+    drawcord_details: str = "not_visible"
+    shorts_length: str = "not_visible"
 
 
 UnderwearFamily = Literal[
@@ -160,6 +180,7 @@ class UnderwearDetails(BaseModel):
 
 
 class SocksDetails(BaseModel):
+    family: SocksFamily | None = None
     subtype: str
     sock_length: str
     cuff_height: str
@@ -182,6 +203,7 @@ class SocksDetails(BaseModel):
 
 
 class FootwearDetails(BaseModel):
+    family: FootwearFamily | None = None
     subtype: str
     toe_shape: str
     heel_type: str
@@ -202,6 +224,64 @@ class FootwearDetails(BaseModel):
     seam_and_stitching_details: list[str] = []
     collar_or_opening: str = "not_visible"
     fit_and_silhouette: str = "not_visible"
+    visible_uncertainties: list[str]
+
+
+class DressDetails(BaseModel):
+    family: DressFamily | None = None
+    subtype: str
+    length: str
+    structure: str
+    silhouette: str
+    occasion: str
+    fabric_appearance: str
+    construction_details: list[str]
+    visible_uncertainties: list[str]
+
+
+class TailoringDetails(BaseModel):
+    family: TailoringFamily | None = None
+    subtype: str
+    product_unit: str
+    lapel_or_neckline: str
+    closure_details: list[str]
+    pocket_details: list[str]
+    lining_or_structure: str
+    fit_and_silhouette: str
+    fabric_appearance: str
+    visible_uncertainties: list[str]
+
+
+class SleepwearDetails(BaseModel):
+    family: SleepwearFamily | None = None
+    subtype: str
+    product_unit: str
+    coverage: str
+    closure_details: list[str]
+    fit_and_silhouette: str
+    fabric_appearance: str
+    visible_uncertainties: list[str]
+
+
+class UnifiedJewelleryDetails(BaseModel):
+    family: JewelleryFamily | None = None
+    subtype: str
+    form: str
+    closure_or_attachment: str
+    material_appearance: str
+    stones_or_decoration: list[str]
+    surface_finish: str
+    visible_uncertainties: list[str]
+
+
+class AccessoriesDetails(BaseModel):
+    family: AccessoriesFamily | None = None
+    subtype: str
+    form: str
+    closure_or_adjustment: str
+    material_appearance: str
+    surface_finish: str
+    occasion: str
     visible_uncertainties: list[str]
 
 
@@ -360,8 +440,10 @@ class BeltsDetails(BaseModel):
 
 CategoryDetails = Union[
     TopsDetails, OuterwearDetails, BottomsDetails, UnderwearDetails,
-    SocksDetails, FootwearDetails, ScarvesDetails, GlovesDetails,
-    HeadwearDetails, JewelleryDetails, NeckwearDetails, BeltsDetails,
+    SocksDetails, FootwearDetails, DressDetails, TailoringDetails,
+    SleepwearDetails, UnifiedJewelleryDetails, AccessoriesDetails,
+    ScarvesDetails, GlovesDetails, HeadwearDetails, JewelleryDetails,
+    NeckwearDetails, BeltsDetails,
 ]
 
 
@@ -372,6 +454,11 @@ CATEGORY_DETAIL_MODELS = {
     "underwear": UnderwearDetails,
     "socks": SocksDetails,
     "footwear": FootwearDetails,
+    "dresses": DressDetails,
+    "tailoring": TailoringDetails,
+    "sleepwear_loungewear": SleepwearDetails,
+    "jewellery": UnifiedJewelleryDetails,
+    "accessories": AccessoriesDetails,
     "scarves": ScarvesDetails,
     "gloves": GlovesDetails,
     "headwear": HeadwearDetails,

@@ -21,7 +21,7 @@ class Body:
 
 def test_openai_image_provider_sends_both_references(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
-    monkeypatch.setenv("OPENAI_IMAGE_MODEL", "gpt-image-2-2026-04-21")
+    monkeypatch.setenv("OPENAI_IMAGE_MODEL", "gpt-image-2.5-flare")
     valid_image = io.BytesIO()
     Image.new("RGB", (32, 32), "navy").save(valid_image, format="WEBP")
     objects = {
@@ -56,9 +56,9 @@ def test_openai_image_provider_sends_both_references(monkeypatch):
     result = provider.generate(request)
 
     assert result.content == b"output"
-    assert result.provider == "gpt-image-2-2026-04-21"
+    assert result.provider == "gpt-image-2.5-flare"
     assert result.request_id == "img_req_123"
-    assert client.images.kwargs["model"] == "gpt-image-2-2026-04-21"
+    assert client.images.kwargs["model"] == "gpt-image-2.5-flare"
     assert client.images.kwargs["size"] == "1024x1024"
     assert client.images.kwargs["quality"] == "medium"
     assert len(client.images.kwargs["image"]) == 1
@@ -67,7 +67,7 @@ def test_openai_image_provider_sends_both_references(monkeypatch):
 
 def test_openai_provider_normalizes_reference_orientation(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
-    monkeypatch.setenv("OPENAI_IMAGE_MODEL", "gpt-image-2-2026-04-21")
+    monkeypatch.setenv("OPENAI_IMAGE_MODEL", "gpt-image-2.5-flare")
     source = Image.new("RGB", (40, 80), "navy")
     exif = Image.Exif()
     exif[274] = 6
@@ -107,7 +107,7 @@ def test_openai_provider_normalizes_reference_orientation(monkeypatch):
 
 def test_openai_provider_marks_empty_responses_non_retryable(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
-    monkeypatch.setenv("OPENAI_IMAGE_MODEL", "gpt-image-2-2026-04-21")
+    monkeypatch.setenv("OPENAI_IMAGE_MODEL", "gpt-image-2.5-flare")
 
     image = io.BytesIO()
     Image.new("RGB", (32, 32), "navy").save(image, format="PNG")

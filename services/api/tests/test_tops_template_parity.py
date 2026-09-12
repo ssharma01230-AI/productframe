@@ -20,8 +20,11 @@ def _frontend_family_counts(source: str) -> dict[str, int]:
         block,
     ):
         counts[_key(match.groups())] = int(match.group(3))
-    # Explicit arrays are allowed for a family whose visual order is not a
-    # simple generated filename sequence.
+    # Explicit arrays or numeric-map arrays are allowed for families whose
+    # visual order is not a simple generated filename sequence.
+    tshirt = re.search(r"'t-shirts-casual-tops':\s*\(\[([^\]]+)\].*?\)\.map", block, re.DOTALL)
+    if tshirt:
+        counts['t-shirts-casual-tops'] = len(re.findall(r'\d+', tshirt.group(1)))
     explicit = re.search(r"'sleeveless-tops':\s*\[(.*?)\n\s*\],", block, re.DOTALL)
     assert explicit is not None
     counts["sleeveless-tops"] = len(re.findall(r"/output-examples/tops/sleeveless/", explicit.group(1)))
@@ -50,8 +53,8 @@ def test_tops_frontend_and_backend_template_ids_and_evidence_match():
             category="tops", channel="ecommerce", product_family=family,
         )
         assert len(backend) == counts[family]
+        expected_numbers = [1, 2, 3, 4, 5, 6, 8, 9, 10] if family == 't-shirts-casual-tops' else list(range(1, counts[family] + 1))
         assert [template.id for template in backend] == [
-            f"ecommerce-tops-{family}-{index:02d}"
-            for index in range(1, counts[family] + 1)
+            f"ecommerce-tops-{family}-{index:02d}" for index in expected_numbers
         ]
         assert tuple(template.required_evidence[0] for template in backend) == evidence[family]

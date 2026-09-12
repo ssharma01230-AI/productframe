@@ -517,7 +517,7 @@ test('outerwear uses exactly the ten ordered local examples while other categori
     const fallback = outputUi([{ ...products[1], category }]).ui;
     assert.deepEqual(outputCards(fallback).map(card => card.props['aria-label']), defaultNames);
     const current = fallback.nodes(node => node.props.className === 'pf-output-current')[0];
-    assert.equal(textContent(fallback.nodes(node => node.type === 'p', current)[0]), 'Showing templates for ' + (category ?? 'this product'));
+    assert.equal(textContent(fallback.nodes(node => node.type === 'p', current)[0]), 'Showing templates for ' + (category ? category.charAt(0).toUpperCase() + category.slice(1).toLowerCase() : 'this product'));
   }
 });
 
@@ -525,14 +525,14 @@ test('mixed categories keep independent valid choices and show the matching popu
   const products = mixedProducts();
   const { ui, rerender, selectProduct, chooseRecipe, selection } = outputUi(products);
   const current = ui.nodes(node => node.props.className === 'pf-output-current')[0];
-  assert.equal(textContent(ui.nodes(node => node.type === 'p', current)[0]), 'Showing templates for outerwear');
-  assert.equal(textContent(ui.nodes(node => node.type === 'strong', current)[0]), 'outerwear');
+  assert.equal(textContent(ui.nodes(node => node.type === 'p', current)[0]), 'Showing templates for Outerwear');
+  assert.equal(textContent(ui.nodes(node => node.type === 'strong', current)[0]), 'Outerwear');
   chooseRecipe('Front Close');
   chooseRecipe('Fabric Shot');
   selectProduct(products[1]);
   const switched = ui.nodes(node => node.props.className === 'pf-output-current')[0];
-  assert.equal(textContent(ui.nodes(node => node.type === 'p', switched)[0]), 'Showing templates for tops');
-  assert.equal(textContent(ui.nodes(node => node.type === 'strong', switched)[0]), 'tops');
+  assert.equal(textContent(ui.nodes(node => node.type === 'p', switched)[0]), 'Showing templates for Tops');
+  assert.equal(textContent(ui.nodes(node => node.type === 'strong', switched)[0]), 'Tops');
   assert.equal(outputCards(ui).some(card => card.props['aria-label'] === 'Front Close'), false);
   chooseRecipe('Folded View');
   chooseRecipe('Everyday Wear');
@@ -596,7 +596,6 @@ const footwearExamples = [
   ['Rear View', '05-rear-view.png'],
   ['Top View', '06-top-view.png'],
   ['Sole View', '07-sole-view.png'],
-  ['Material and Detail', '08-material-and-detail.png'],
   ['Front on Feet', '09-front-on-feet.png'],
   ['Side on Feet', '10-side-on-feet.png'],
 ];
@@ -608,15 +607,15 @@ function footwearProducts() {
   ];
 }
 
-test('normalized footwear categories show ten ordered portrait examples with the correct local PNGs', () => {
+test('normalized footwear categories show nine ordered portrait examples with the correct local PNGs', () => {
   const product = footwearProducts()[0];
   for (const category of ['footwear', ' Footwear ']) {
     const { ui } = outputUi([{ ...product, category }]);
     const ecommerce = categorySection(ui, 'Ecommerce');
     const cards = outputCards(ui, ecommerce);
-    assert.equal(outputCards(ui).length, 34);
+    assert.equal(outputCards(ui).length, 33);
     assert.deepEqual(cards.map(card => card.props['aria-label']), footwearExamples.map(([name]) => name));
-    assert.match(textContent(ecommerce), /10 templates/);
+    assert.match(textContent(ecommerce), /9 templates/);
     cards.forEach((card, index) => {
       const [name, filename] = footwearExamples[index];
       const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];

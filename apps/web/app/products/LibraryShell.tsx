@@ -2,7 +2,7 @@
 
 import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import StudioIcon from '../studio/StudioIcon';
 import '../studio/studio-home.css';
 
@@ -24,6 +24,8 @@ function LibraryNavigation({ onNavigate }: { onNavigate?: () => void }) {
 
 export default function LibraryShell({ breadcrumb = 'Catalogue', userId, children }: LibraryShellProps) {
   const mobileNavigation = useRef<HTMLDetailsElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     function dismissOutside(event: PointerEvent) {
@@ -65,7 +67,7 @@ export default function LibraryShell({ breadcrumb = 'Catalogue', userId, childre
           </details>
           <div className="sh-crumb">Studio / <strong>{breadcrumb}</strong></div>
         </div>
-        {userId && <div className="sh-top-actions"><div className="sh-account-avatar"><UserButton/></div></div>}
+        {userId && mounted && <div className="sh-top-actions"><div className="sh-account-avatar"><UserButton/></div></div>}
       </header>
       <main className="pl-content" id="product-library-content" tabIndex={-1}>{children}</main>
     </div>

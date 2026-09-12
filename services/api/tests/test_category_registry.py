@@ -4,11 +4,26 @@ from productframe_api.category_registry import (
     BOTTOMS_FAMILY_SUBTYPE_MAP,
     CATEGORIES,
     CHANNELS,
+    controlled_subtype_label,
     get_bottoms_family_for_subtype,
     get_category_definition,
+    get_tops_family_for_subtype,
     validate_category_channel,
     validate_category_details,
 )
+
+
+def test_controlled_subtype_labels_never_use_long_product_type():
+    cases = [
+        ("tops", "t-shirts-casual-tops", "long sleeve cotton crew neck t-shirt with print", "T-Shirt"),
+        ("footwear", "heels", "red suede pointed toe pumps with mid heel", "Heels"),
+        ("bottoms", "leggings", "black high-waisted full-length leggings", "Leggings"),
+        ("outerwear", "jackets", "long waterproof hooded shell jacket", "Jacket"),
+        ("accessories", "belts", "wide leather belt with brushed buckle", "Belt"),
+        ("tops", None, None, "Unclassified"),
+    ]
+    for category, family, product_type, expected in cases:
+        assert controlled_subtype_label(category=category, family=family, subtype=None, product_type=product_type) == expected
 
 
 def test_registry_contains_all_supported_categories_and_channels():
@@ -121,12 +136,26 @@ def test_category_details_are_validated_against_the_category_schema():
     assert details["subtype"] == "crew"
 
 
+def test_tops_descriptive_subtypes_route_to_family_packs():
+    cases = {
+        "button-down shirt with chest pocket": "shirts",
+        "short sleeve t-shirt with graphic print": "t-shirts-casual-tops",
+        "sleeveless vest top": "sleeveless-tops",
+        "knitted sleeveless sweater vest": "sleeveless-tops",
+        "chunky knit sweater with ribbed cuffs": "knitwear",
+        "zip-up hoodie with drawstring hood and front pockets": "hoodies",
+    }
+    for subtype, family in cases.items():
+        assert get_tops_family_for_subtype(subtype) == family
+
+
 def test_bottoms_subtypes_have_one_controlled_rendering_family():
     bottoms = get_category_definition("bottoms")
 
     assert set(BOTTOMS_FAMILY_SUBTYPE_MAP) == set(bottoms.subtypes)
     assert get_bottoms_family_for_subtype(" Jeans ") == "structured_bottoms"
     assert get_bottoms_family_for_subtype("joggers") == "casual_bottoms"
+    assert get_bottoms_family_for_subtype("wide leg drawstring pants") == "casual_bottoms"
     assert get_bottoms_family_for_subtype("leggings") == "leggings"
     assert get_bottoms_family_for_subtype("skirt") == "skirts"
     assert get_bottoms_family_for_subtype("unknown lower-body garment") is None

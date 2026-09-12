@@ -142,13 +142,30 @@ def test_bottoms_prompt_applies_family_policy_without_extra_request():
         },
     )
     result = build_generation_prompt(GenerationRequest(
-        template_id="ecommerce-bottoms-front-view", channel="ecommerce",
+        template_id="ecommerce-bottoms-leggings-05", channel="ecommerce",
         product=product,
         product_reference_images=(ReferenceImage(role="product_reference", object_key="leggings.png"),),
     ))
 
     assert "BOTTOMS FAMILY RENDERING POLICY" in result.prompt
     assert "Do not assume a fly, belt loops, rigid denim" in result.prompt
+
+
+def test_selected_presentation_applies_to_models_and_mannequins_across_families(tops_request):
+    product = ProductContext(
+        name="Navy shorts", category="bottoms", product_type="Shorts",
+        colours="Navy", materials="Cotton blend", features=("Elastic waistband",),
+        description="Navy casual shorts.", category_details={"family": "shorts"}, presentation="female",
+    )
+    reference = (ReferenceImage(role="product_reference", object_key="shorts.png"),)
+    for template_id in ("ecommerce-bottoms-shorts-02", "ecommerce-bottoms-shorts-05"):
+        result = build_generation_prompt(GenerationRequest(
+            template_id=template_id, channel="ecommerce", product=product,
+            product_reference_images=reference,
+        ))
+        assert "female model presentation" in result.prompt
+        assert "female gender presentation" in result.prompt
+        assert "selected user presentation overrides" in result.prompt
 
 
 def test_prompt_rejects_wrong_category(tops_request):

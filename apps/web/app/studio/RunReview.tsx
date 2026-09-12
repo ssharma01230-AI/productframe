@@ -7,7 +7,7 @@ import './run-review.css';
 import { useRouter } from 'next/navigation';
 
 type ImageResult = { id:string; image_number:number; filename:string|null; image_url:string|null; passed:boolean|null; product_number:number|null; rejection_reason:string|null; status:string };
-type Product = { id:string; final_product_id:string|null; product_number:number; product_name:string; category:string; product_type:string; colours:string; materials:string; features:string[]; description:string; confidence:number; confirmation_status:string; gender?:'male'|'female'|'unisex' };
+type Product = { id:string; final_product_id:string|null; product_number:number; product_name:string; category:string; product_family:string|null; subtype:string|null; controlled_subtype?:string|null; classification?:{global_category:string; controlled_subtype:string; label:string}; product_type:string; colours:string; materials:string; features:string[]; description:string; confidence:number; confirmation_status:string; gender?:'male'|'female'|'unisex' };
 type Results = { id:string; status:string; total_images:number; processed_images:number; unique_product_count:number; progress?:{stage:string; message:string|null; completed:number; total:number; percent:number}; images:ImageResult[]; products:Product[] };
 type Draft = Product;
 type EditableField = 'product_name' | 'product_type' | 'colours' | 'materials' | 'features' | 'description';
@@ -281,6 +281,32 @@ function categoryIcon(category: string): IconName {
   const icons: Record<string, IconName> = { tops: 'garment', outerwear: 'outerwear', bottoms: 'bottoms', underwear: 'underwear', socks: 'socks', footwear: 'footwear', scarves: 'scarf', gloves: 'gloves', headwear: 'outerwear', rings: 'ring', bracelets: 'bracelet', earrings: 'earring', watches: 'watch', belts: 'belt', neckwear: 'tie' };
   return icons[category.trim().toLowerCase()] ?? 'garment';
 }
+function classificationLabel(product: Product) {
+  if (product.classification?.label) return product.classification.label;
+  const category = titleCase(product.category);
+  const subtype = product.controlled_subtype || displaySubtype(product);
+  return `${category} · ${subtype ? titleCase(subtype) : 'Unclassified'}`;
+}
+function displaySubtype(product: Product) {
+  const family = product.product_family?.trim().toLowerCase();
+  const category = product.category.trim().toLowerCase();
+  const familyNames: Record<string, string> = {
+    't-shirts-casual-tops': 't-shirt', 'sleeveless-tops': 'sleeveless top', shirts: 'shirt', knitwear: 'knitwear', hoodies: 'hoodie',
+    tailored_jackets: 'tailored jacket', waistcoats: 'waistcoat', suits: 'suit', tuxedos: 'tuxedo',
+    jackets: 'jacket', coats: 'coat', 'gilets-padded-vests': 'gilet',
+    structured_bottoms: 'trousers', shorts: 'shorts', casual_bottoms: 'joggers', leggings: 'leggings', skirts: 'skirt',
+    dresses: 'dress', pyjamas: 'pyjamas', nightwear: 'nightwear', robes: 'robe',
+    lower_body_underwear: 'lower-body underwear', bra: 'bra', lingerie: 'lingerie', base_layer: 'base layer', underwear_set: 'underwear set',
+    socks: 'socks', trainers: 'trainers', 'flats-loafers': 'flats / loafers', 'sandals-open-shoes': 'sandals', boots: 'boots', heels: 'heels',
+    headwear: 'headwear', scarves: 'scarf', gloves: 'gloves', belts: 'belt', 'ties-neckwear': 'neckwear', veils: 'veil',
+    rings: 'rings', bracelets: 'bracelets', earrings: 'earrings', necklaces: 'necklace', watches: 'watches',
+  };
+  if (family && familyNames[family]) return familyNames[family];
+  const subtype = product.subtype?.trim().toLowerCase();
+  if (subtype && subtype.split(/\s+/).length <= 3) return subtype;
+  return 'Unclassified';
+}
+function titleCase(value: string) { return value.split(/\s+/).map(word => word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word).join(' '); }
 function Metric({ value, label, icon, warm = false }: { value: number | string; label: string; icon: IconName; warm?: boolean }) {
   return <div className={'pf-metric' + (warm ? ' warm' : '')}><Icon name={icon} /><strong>{value}</strong><span>{label}</span></div>;
 }
@@ -419,7 +445,7 @@ function ProductEditor({ product, totalProducts, images, imageIndex, setImageInd
           <div className="pf-thumbnails" aria-label="Grouped product images">
             {images.map((item, index) => <button type="button" className="pf-thumbnail" aria-pressed={index === visibleIndex} aria-label={'View image ' + (index + 1) + ' of ' + product.product_name} key={item.id} onClick={() => setImageIndex(index)}><ProductPhoto src={item.image_url} alt="" sizes="80px" /></button>)}
           </div>
-          <section className="pf-category" aria-label="Product classification"><div className="pf-category-inline"><Icon name={categoryIcon(product.category)} /><span>Category</span><strong>{product.category}</strong><Icon name="lock" /></div><label className="pf-gender-setting"><span><Icon name="user" />Gender</span><select value={product.gender ?? 'unisex'} disabled={locked || saving} aria-label="Product gender" onChange={event => update(product.product_number, 'gender', event.target.value)}><option value="male">Male</option><option value="female">Female</option><option value="unisex">Unisex</option></select></label></section>
+          <section className="pf-category" aria-label="Product classification"><div className="pf-category-inline"><Icon name={categoryIcon(product.category)} /><span>Category</span><strong>{classificationLabel(product)}</strong><Icon name="lock" /></div><label className="pf-gender-setting"><span><Icon name="user" />Gender</span><select value={product.gender ?? 'unisex'} disabled={locked || saving} aria-label="Product gender" onChange={event => update(product.product_number, 'gender', event.target.value)}><option value="male">Male</option><option value="female">Female</option><option value="unisex">Unisex</option></select></label></section>
         </div>
         <form id="pf-product-form" className="pf-product-form" onSubmit={event => { event.preventDefault(); if (!locked && !saving && !cancelOpen) onApprove(); }}>
           <div className="pf-fields">

@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from .category_registry import validate_category_details
+from .category_registry import get_bottoms_family_for_subtype, validate_category_details
 from .generation_templates import GenerationTemplate, get_bottoms_family_policy, validate_generation_template
 
 
@@ -26,6 +26,7 @@ class ProductContext:
     category_details: dict[str, object] | None = None
     global_details: dict[str, object] | None = None
     confidence_details: dict[str, object] | None = None
+    presentation: Literal["male", "female", "unisex"] = "unisex"
     fidelity_constraints: tuple[str, ...] = ()
 
 
@@ -143,7 +144,7 @@ def compile_generation_prompt(request: GenerationRequest) -> GenerationPrompt:
     product = request.product
     category_details = _as_dict(product.category_details) or {}
     subtype = category_details.get("subtype")
-    product_family = category_details.get("family")
+    product_family = category_details.get("family") or (get_bottoms_family_for_subtype(str(subtype)) if product.category == "bottoms" and subtype else None)
     template = validate_generation_template(
         request.template_id,
         category=product.category,
@@ -220,6 +221,10 @@ CONFIDENCE AND UNCERTAINTY
 PRODUCT FIDELITY PRESERVATION
 {fidelity_rules}
 {family_policy_section}
+MODEL AND MANNEQUIN PRESENTATION
+- For any visible model-worn composition, use a {product.presentation} model presentation. Preserve the garment identity and do not introduce body features that conflict with the requested presentation.
+- For any visible, headless, or invisible mannequin composition, use a mannequin with a {product.presentation} gender presentation. The selected user presentation overrides any default or template wording; never substitute a male or female model/mannequin when the user selected the other gender. Product-only flat-lay and detail compositions must not add a person or mannequin.
+
 TEMPLATE PRESENTATION
 {template.prompt_instructions}
 

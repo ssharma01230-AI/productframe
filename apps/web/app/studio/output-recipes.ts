@@ -9,6 +9,9 @@ export type OutputRecipe = {
   hoverExampleImage?: string;
   showProductThumbnail?: boolean;
   requiredEvidence?: readonly string[];
+  /** Human-reviewed visual contract represented by exampleImage. */
+  benchmarkIntent?: string;
+  presentation?: 'product_only' | 'worn_product';
 };
 
 // Reference images illustrate output types; they are never generated product assets.
@@ -383,7 +386,7 @@ export const FOOTWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     id: 'ecommerce-footwear-rear-view',
     category: 'Ecommerce',
     name: 'Rear View',
-    description: 'A straight-on rear view showing the heel shape, back construction and sole thickness.',
+    description: 'A strictly centered, straight-on rear view showing the heel shape, back construction and sole thickness with no side angle.',
     exampleImage: '/output-examples/footwear/05-rear-view.png',
   },
   {
@@ -399,13 +402,6 @@ export const FOOTWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Sole View',
     description: 'A complete underside view showing the outsole shape, tread and visible construction from heel to toe.',
     exampleImage: '/output-examples/footwear/07-sole-view.png',
-  },
-  {
-    id: 'ecommerce-footwear-material-and-detail',
-    category: 'Ecommerce',
-    name: 'Material and Detail',
-    description: 'A close crop highlighting the footwear’s material texture, surface finish and visible stitching or construction details.',
-    exampleImage: '/output-examples/footwear/08-material-and-detail.png',
   },
   {
     id: 'ecommerce-footwear-front-on-feet',
@@ -608,19 +604,64 @@ export const UNDERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
   },
 ];
 
+const SHORTS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-bottoms-shorts-01', category: 'Ecommerce', name: 'Flat-Laid Product', description: 'Complete shorts laid flat on a clean studio surface.', exampleImage: '/output-examples/bottoms/shorts/01-flat-laid-product.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-shorts-02', category: 'Ecommerce', name: 'Front Invisible Mannequin', description: 'Complete front shorts view shaped by an invisible mannequin.', exampleImage: '/output-examples/bottoms/shorts/02-front-invisible-mannequin.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-shorts-03', category: 'Ecommerce', name: 'Three-Quarter Invisible Mannequin', description: 'Three-quarter shorts view shaped by an invisible mannequin.', exampleImage: '/output-examples/bottoms/shorts/03-three-quarter-invisible-mannequin.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-shorts-04', category: 'Ecommerce', name: 'Rear Invisible Mannequin', description: 'Complete rear shorts view shaped by an invisible mannequin.', exampleImage: '/output-examples/bottoms/shorts/04-rear-invisible-mannequin.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-shorts-05', category: 'Ecommerce', name: 'Front-Facing Model', description: 'Waist-down front-facing model view of the shorts.', exampleImage: '/output-examples/bottoms/shorts/05-front-facing-model.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-shorts-06', category: 'Ecommerce', name: 'Three-Quarter Full-Length Model', description: 'Full-length three-quarter model view of the shorts.', exampleImage: '/output-examples/bottoms/shorts/06-three-quarter-full-length-model.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-shorts-07', category: 'Ecommerce', name: 'Rear-Facing Model', description: 'Waist-down rear-facing model view of the shorts.', exampleImage: '/output-examples/bottoms/shorts/07-rear-facing-model.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-shorts-08', category: 'Ecommerce', name: 'Full-Length Front-Facing Model', description: 'Full-length straight-on model view showing shorts fit and outfit context.', exampleImage: '/output-examples/bottoms/shorts/08-full-length-front-facing-model.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-shorts-09', category: 'Ecommerce', name: 'Waistband & Closure Detail', description: 'Close-up of the elastic waistband, drawcord, closure seam and upper front construction.', exampleImage: '/output-examples/bottoms/shorts/09-waistband-closure-detail.png', showProductThumbnail: true },
+];
+
+const JOGGERS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-bottoms-joggers-01', category: 'Ecommerce', name: 'Flat-Laid Product', description: 'Joggers laid flat showing the full front shape, waistband, pockets and cuffs.', exampleImage: '/output-examples/bottoms/joggers/01-flat-laid-product.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-joggers-02', category: 'Ecommerce', name: 'Front Invisible Mannequin', description: 'Front view with natural garment volume and no visible mannequin.', exampleImage: '/output-examples/bottoms/joggers/02-front-invisible-mannequin.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-joggers-03', category: 'Ecommerce', name: 'Three-Quarter Invisible Mannequin', description: 'Angled front view highlighting the pocket, side profile and leg taper.', exampleImage: '/output-examples/bottoms/joggers/03-three-quarter-invisible-mannequin.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-joggers-04', category: 'Ecommerce', name: 'Rear Invisible Mannequin', description: 'Rear view showing the seat, waistband and cuffs.', exampleImage: '/output-examples/bottoms/joggers/04-rear-invisible-mannequin.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-joggers-05', category: 'Ecommerce', name: 'Front-Facing Model', description: 'Lower-torso-to-feet view showing jogger fit with neutral footwear.', exampleImage: '/output-examples/bottoms/joggers/05-front-facing-model.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-joggers-06', category: 'Ecommerce', name: 'Three-Quarter Model', description: 'Neck-to-feet angled pose showing fit and drape.', exampleImage: '/output-examples/bottoms/joggers/06-three-quarter-model.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-joggers-07', category: 'Ecommerce', name: 'Rear-Facing Model', description: 'Rear model view showing the seat and leg fit.', exampleImage: '/output-examples/bottoms/joggers/07-rear-facing-model.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-joggers-08', category: 'Ecommerce', name: 'Full-Length Front Model', description: 'Straight front view from neck to feet with a plain white T-shirt.', exampleImage: '/output-examples/bottoms/joggers/08-full-length-front-model.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-joggers-09', category: 'Ecommerce', name: 'Folded Top-Down Product', description: 'Folded joggers viewed from above, showing waistband, pockets and fabric.', exampleImage: '/output-examples/bottoms/joggers/09-folded-top-down.png', showProductThumbnail: true },
+];
+
+const LEGGINGS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-bottoms-leggings-01', category: 'Ecommerce', name: 'Cropped Front Model', description: 'Cropped straight front model view of fitted leggings.', exampleImage: '/output-examples/bottoms/leggings/01-leggings.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-leggings-02', category: 'Ecommerce', name: 'Front Flat-Lay Product', description: 'Product-only front flat-lay view of the complete leggings.', exampleImage: '/output-examples/bottoms/leggings/02-leggings.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-leggings-03', category: 'Ecommerce', name: 'Rear Invisible Mannequin', description: 'Straight rear product view on an invisible mannequin.', exampleImage: '/output-examples/bottoms/leggings/03-leggings.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-leggings-04', category: 'Ecommerce', name: 'Three-Quarter Front Invisible Mannequin', description: 'Angled front product view on an invisible mannequin.', exampleImage: '/output-examples/bottoms/leggings/04-leggings.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-leggings-05', category: 'Ecommerce', name: 'Front Invisible Mannequin', description: 'Straight front product view with natural leggings volume.', exampleImage: '/output-examples/bottoms/leggings/05-leggings.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-leggings-06', category: 'Ecommerce', name: 'Folded Top-Down Product', description: 'Neatly folded leggings photographed from directly above.', exampleImage: '/output-examples/bottoms/leggings/06-leggings.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-leggings-07', category: 'Ecommerce', name: 'Cropped Rear Model', description: 'Cropped straight rear model view of fitted leggings.', exampleImage: '/output-examples/bottoms/leggings/07-leggings.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-leggings-08', category: 'Ecommerce', name: 'Full-Length Front Model', description: 'Straight front model view from neck to feet.', exampleImage: '/output-examples/bottoms/leggings/08-leggings.png', showProductThumbnail: true },
+];
+
+const SKIRTS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-bottoms-skirts-01', category: 'Ecommerce', name: 'Front Product', description: 'Product-only close front view of the structured pleated skirt.', exampleImage: '/output-examples/bottoms/skirts/01-skirt.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-skirts-02', category: 'Ecommerce', name: 'Back Product', description: 'Product-only close rear view of the structured pleated skirt.', exampleImage: '/output-examples/bottoms/skirts/02-skirt.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-skirts-03', category: 'Ecommerce', name: 'Front Model', description: 'Cropped straight front model view of the skirt.', exampleImage: '/output-examples/bottoms/skirts/03-skirt.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-skirts-04', category: 'Ecommerce', name: 'Back Model', description: 'Cropped straight rear model view of the skirt.', exampleImage: '/output-examples/bottoms/skirts/04-skirt.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-skirts-05', category: 'Ecommerce', name: 'Full Three-Quarter Model', description: 'Full-length three-quarter model view showing fit and drape.', exampleImage: '/output-examples/bottoms/skirts/05-skirt.png', showProductThumbnail: true },
+  { id: 'ecommerce-bottoms-skirts-06', category: 'Ecommerce', name: 'Full Front Natural Model', description: 'Full-length straight front model view with relaxed arms.', exampleImage: '/output-examples/bottoms/skirts/06-skirt.png', showProductThumbnail: true },
+];
+
 const bottomsOutputRecipes: readonly OutputRecipe[] = [
   ...BOTTOMS_ECOMMERCE_RECIPES,
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
 ];
 
-// Bottoms families currently share the same composition primitives. Keeping
-// family routing explicit allows family-specific recipe policies later without
-// changing the product/category API or template IDs.
+// Structured bottoms retain the shared composition pack. Shorts use a dedicated
+// benchmark-mapped pack because their invisible-mannequin and full-length model
+// compositions differ materially from the generic bottoms references.
 const bottomsFamilyOutputRecipes: Record<string, readonly OutputRecipe[]> = {
   structured_bottoms: bottomsOutputRecipes,
-  casual_bottoms: bottomsOutputRecipes,
-  leggings: bottomsOutputRecipes,
-  skirts: bottomsOutputRecipes,
+  shorts: [...SHORTS_ECOMMERCE_RECIPES, ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce')],
+  casual_bottoms: [...JOGGERS_ECOMMERCE_RECIPES, ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce')],
+  leggings: [...LEGGINGS_ECOMMERCE_RECIPES, ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce')],
+  skirts: [...SKIRTS_ECOMMERCE_RECIPES, ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce')],
 };
 
 const underwearOutputRecipes: readonly OutputRecipe[] = [
@@ -712,18 +753,17 @@ const TOPS_FAMILY_EXAMPLES: Record<string, readonly string[]> = {
     'invisible-mannequin-front', 'detail-collar-button-placket', 'detail-cuff-adjustment', 'side-three-quarter-model',
     'side-three-quarter-product', 'rear-product', 'rear-model',
   ][index]}.png`),
-  't-shirts-casual-tops': Array.from({ length: 10 }, (_, index) => `/output-examples/tops/t-shirts-casual/t-shirts-casual-ecom-${String(index + 1).padStart(2, '0')}-${[
-    'front-invisible-mannequin', 'hem-fit-detail-model', 'folded-product', 'front-model', 'side-three-quarter-product',
-    'rear-model', 'front-product', 'rear-product', 'fabric-knit-texture-detail', 'side-three-quarter-model',
+  't-shirts-casual-tops': ([1, 2, 3, 4, 5, 6, 8, 9, 10] as const).map((templateNumber, index) => `/output-examples/tops/t-shirts-casual/t-shirts-casual-ecom-${String(templateNumber).padStart(2, '0')}-${[
+    'front-product-shaped', 'hem-fit-detail-model', 'folded-product', 'front-model', 'front-invisible-mannequin',
+    'rear-model', 'side-three-quarter-invisible-mannequin', 'fabric-knit-texture-detail', 'rear-invisible-mannequin',
   ][index]}.png`),
   'sleeveless-tops': [
     '/output-examples/tops/sleeveless/sleeveless-ecom-01-rear-model.png',
     '/output-examples/tops/sleeveless/sleeveless-ecom-02-front-model.png',
     '/output-examples/tops/sleeveless/sleeveless-ecom-03-three-quarter-product.png',
-    '/output-examples/tops/sleeveless/sleeveless-ecom-04-flat-lay-full-product.png',
-    '/output-examples/tops/sleeveless/sleeveless-ecom-05-three-quarter-headless-mannequin.png',
-    '/output-examples/tops/sleeveless/sleeveless-ecom-06-front-product.png',
-    '/output-examples/tops/sleeveless/sleeveless-ecom-07-styled-model-no-face.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-04-front-invisible-mannequin.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-07-front-product.png',
+    '/output-examples/tops/sleeveless/sleeveless-ecom-06-styled-model-no-face.png',
   ],
   knitwear: Array.from({ length: 11 }, (_, index) => `/output-examples/tops/knitwear/knitwear-ecom-${String(index + 1).padStart(2, '0')}-${[
     'folded-product', 'neckline-detail', 'front-model', 'front-product', 'rear-three-quarter-model', 'knit-fabric-detail',
@@ -739,18 +779,36 @@ const TOPS_FAMILY_EXAMPLES: Record<string, readonly string[]> = {
 // Evidence is explicit per family asset. Family packs do not share the
 // generic Tops primitive ordering; the numeric suffix only identifies the
 // supplied preview asset.
+const TOPS_FAMILY_TEMPLATE_NUMBERS: Record<string, readonly number[]> = {
+  't-shirts-casual-tops': [1, 2, 3, 4, 5, 6, 8, 9, 10],
+};
+
+const TOPS_FAMILY_BENCHMARK_INTENTS: Record<string, readonly string[]> = {
+  't-shirts-casual-tops': [
+    'One complete T-shirt laid out as a naturally shaped product-only studio photograph.',
+    'Close hem and fit detail on a worn model; crop out the entire face and head.',
+    'One neatly folded T-shirt product photograph.',
+    'Front-facing T-shirt worn by a model; face excluded.',
+    'One complete T-shirt presented on an invisible/headless mannequin from the front; no mannequin body visible.',
+    'Rear-facing T-shirt worn by a model; face excluded.',
+    'One complete T-shirt presented on an invisible/headless mannequin from a side or three-quarter angle; no mannequin body visible.',
+    'One close-up macro photograph of the actual T-shirt fabric texture.',
+    'One complete T-shirt presented on an invisible/headless mannequin from the rear; no mannequin body visible.',
+  ],
+};
+
 const TOPS_FAMILY_NAMES: Record<string, readonly string[]> = {
   shirts: ['Seated Lifestyle', 'Styled Front Model', 'Folded Shirt', 'Flat-Lay Shirt', 'Front Model', 'Seated Model', 'Cuff Detail', 'Fabric Texture Detail', 'Front Invisible Mannequin', 'Collar & Button Placket Detail', 'Cuff Adjustment Detail', 'Side / Three-Quarter Model', 'Side / Three-Quarter Product', 'Rear Product', 'Rear Model'],
-  't-shirts-casual-tops': ['Front Invisible Mannequin', 'Hem & Fit Detail', 'Folded T-Shirt', 'Front Model', 'Side / Three-Quarter Product', 'Rear Model', 'Front Product', 'Rear Product', 'Fabric Texture Detail', 'Rear Model'],
-  'sleeveless-tops': ['Rear Model', 'Front Model', 'Three-Quarter Product', 'Front Invisible Mannequin', 'Three-Quarter Invisible Mannequin', 'Front Product', 'Styled Model'],
+  't-shirts-casual-tops': ['Front Product (Shaped)', 'Hem & Fit Detail', 'Folded T-Shirt', 'Front Model (Hand in Pocket)', 'Front Invisible Mannequin', 'Rear Model', 'Side / Three-Quarter Invisible Mannequin', 'Fabric Texture Detail', 'Rear Invisible Mannequin'],
+  'sleeveless-tops': ['Rear Model', 'Front Model', '3/4 View Invisible Mannequin', 'Front Invisible Mannequin', 'Front Product', 'Styled Model'],
   knitwear: ['Folded Knitwear', 'Neckline Detail', 'Front Model', 'Front Product', 'Rear Three-Quarter Model', 'Knit Fabric Detail', 'Seated Styled Model', 'Flat-Lay Knitwear', 'Rear Invisible Mannequin', 'Front Invisible Mannequin', 'Styled Model'],
   hoodies: ['Flat Product', 'Front Invisible Mannequin', 'Rear Invisible Mannequin', 'Three-Quarter Invisible Mannequin', 'Front Model', 'Rear Model', 'Three-Quarter Model', 'Rear Model Adjusting Hood', 'Front Model Adjusting Hood', 'Model with Hands in Pockets', 'Seated Three-Quarter Model', 'Full-Length Model'],
 };
 
 const TOPS_FAMILY_EVIDENCE: Record<string, readonly string[]> = {
   shirts: ['front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'rear_view'],
-  't-shirts-casual-tops': ['front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'rear_view', 'front_view', 'rear_view'],
-  'sleeveless-tops': ['rear_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view'],
+  't-shirts-casual-tops': ['front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'rear_view'],
+  'sleeveless-tops': ['rear_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view'],
   knitwear: ['front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'front_view'],
   hoodies: ['front_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'front_view', 'front_view'],
 };
@@ -761,13 +819,17 @@ function topsTemplateEvidence(family: string, index: number): readonly string[] 
 
 const topsFamilyOutputRecipes: Record<string, readonly OutputRecipe[]> = Object.fromEntries(
   Object.entries(TOPS_FAMILY_EXAMPLES).map(([family, files]) => [family, files.map((exampleImage, index) => ({
-    id: `ecommerce-tops-${family}-${String(index + 1).padStart(2, '0')}`,
+    id: `ecommerce-tops-${family}-${String(TOPS_FAMILY_TEMPLATE_NUMBERS[family]?.[index] ?? index + 1).padStart(2, '0')}`,
     category: 'Ecommerce' as const,
     name: TOPS_FAMILY_NAMES[family]?.[index] ?? `${family.replaceAll('-', ' ')} template ${String(index + 1).padStart(2, '0')}`,
-    description: `Family-specific Ecommerce reference for ${family.replaceAll('-', ' ')}.`,
+    description: TOPS_FAMILY_BENCHMARK_INTENTS[family]?.[index] ?? `Family-specific Ecommerce reference for ${family.replaceAll('-', ' ')}.`,
     exampleImage,
     showProductThumbnail: true,
     requiredEvidence: topsTemplateEvidence(family, index),
+    benchmarkIntent: TOPS_FAMILY_BENCHMARK_INTENTS[family]?.[index],
+    presentation: family === 't-shirts-casual-tops'
+      ? (index === 1 || index === 3 || index === 5 ? 'worn_product' : 'product_only')
+      : undefined,
   }))])
 );
 
@@ -786,9 +848,13 @@ const socksOutputRecipes: readonly OutputRecipe[] = [
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
 ];
 
-export function getOutputRecipes(productCategory?: string | null, productFamily?: string | null): readonly OutputRecipe[] {
+export function getOutputRecipes(productCategory?: string | null, productFamily?: string | null, productType?: string | null): readonly OutputRecipe[] {
   const category = productCategory?.trim().toLowerCase();
-  const family = productFamily?.trim().toLowerCase();
+  const type = productType?.trim().toLowerCase();
+  // Older product records may not have product_family populated. Derive the
+  // Shorts route from the canonical subtype so the UI cannot fall back to
+  // trousers/jeans recipes while the API record is being upgraded.
+  const family = category === 'bottoms' && type === 'shorts' ? 'shorts' : productFamily?.trim().toLowerCase();
   if (category === 'tops') {
     const familyRecipes = family ? topsFamilyOutputRecipes[family] : undefined;
     return familyRecipes

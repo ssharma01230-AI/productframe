@@ -18,7 +18,7 @@ from productframe_api.image_processing import normalize_image_orientation
 from .image_provider import GeneratedImage
 
 logger = logging.getLogger(__name__)
-DEFAULT_IMAGE_MODEL = "gpt-image-2-2026-04-21"
+DEFAULT_IMAGE_MODEL = "gpt-image-2.5-flare"
 DEFAULT_TIMEOUT_SECONDS = 300.0
 DEFAULT_IMAGE_REQUEST_SIZE = "1024x1024"
 DEFAULT_IMAGE_QUALITY = "medium"

@@ -194,7 +194,7 @@ def test_all_vision_stages_use_default_or_configured_model(monkeypatch, configur
                     functional_details=[], callouts=[], visible_uncertainties=[],
                 ),
                 branding=recognition.BrandingDescription(graphics=[], logos=[]),
-                gender=recognition.GenderDescription(assumed="Not determinable", user_confirmed=None),
+                gender=recognition.GenderDescription(assumed="not_determinable", confidence=0.1, evidence=["Gender is not visible"], basis="unclear", user_confirmed=None),
             ),
             category_details={
                 "subtype": "shirt", "neckline_type": "pointed collar", "neckline_depth": "shallow",

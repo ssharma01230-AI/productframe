@@ -40,7 +40,7 @@ test('generation gallery exposes per-card loading and run progress', () => {
   assert.doesNotMatch(gallery, /Finding the right light|Adding the final touches/);
   assert.doesNotMatch(gallery, /setInterval\(/);
   assert.match(gallery, /role="progressbar"/);
-  assert.match(gallery, /Your image is currently being generated/);
+  assert.match(gallery, /<strong>In progress<\/strong>/);
   assert.match(contract, /GenerationProgress/);
 });
 

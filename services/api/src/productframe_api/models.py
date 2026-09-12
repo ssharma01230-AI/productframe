@@ -75,6 +75,7 @@ class AnalysisJob(Base):
     progress_completed: Mapped[int] = mapped_column(default=0)
     progress_total: Mapped[int] = mapped_column(default=0)
     progress_percent: Mapped[int] = mapped_column(default=0)
+    stage_state: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -94,8 +95,28 @@ class AnalysisJobImage(Base):
     passed: Mapped[bool | None] = mapped_column()
     product_number: Mapped[int | None] = mapped_column()
     rejection_reason: Mapped[str | None] = mapped_column(String(500))
+    image_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    stage_results: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     job: Mapped[AnalysisJob] = relationship(back_populates="images")
+
+
+class ImageAnalysisCache(Base):
+    __tablename__ = "image_analysis_cache"
+    __table_args__ = (UniqueConstraint("image_hash", "model", "prompt_version", "schema_version", name="uq_image_analysis_cache_key"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    image_hash: Mapped[str] = mapped_column(String(64), index=True)
+    model: Mapped[str] = mapped_column(String(120))
+    prompt_version: Mapped[str] = mapped_column(String(40))
+    schema_version: Mapped[str] = mapped_column(String(40))
+    moderation_result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    screening_result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    identity_result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    classification_result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    media_evidence: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class ProductAnalysisRecord(Base):
@@ -173,6 +194,9 @@ class GenerationJob(Base):
     workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
     product_id: Mapped[str] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
     template_id: Mapped[str] = mapped_column(String(160))
+    presentation: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    evidence_override: Mapped[bool] = mapped_column(default=False)
+    missing_evidence: Mapped[list[str]] = mapped_column(JSON, default=list)
     template_version: Mapped[int] = mapped_column(default=1)
     job_index: Mapped[int] = mapped_column(default=0)
     graph_thread_id: Mapped[str] = mapped_column(String(120), unique=True)

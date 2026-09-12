@@ -36,7 +36,7 @@ def planned_image_provider(*, total_jobs: int, job_index: int) -> str:
 def image_provider_model(provider: str) -> str:
     if provider == "gemini":
         return os.environ.get("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-lite-image")
-    return os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-2-2026-04-21")
+    return os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-2.5-flare")
 
 
 def recalculate_generation_run(db: Session, run_id: str) -> GenerationRun:
@@ -79,7 +79,7 @@ def create_generation_run(
     db: Session,
     *,
     workspace_id: str,
-    selections: list[dict[str, str]],
+    selections: list[dict[str, object]],
     idempotency_key: str | None = None,
     enforce_evidence: bool = False,
 ) -> tuple[GenerationRun, list[GenerationJob]]:
@@ -105,7 +105,7 @@ def create_generation_run(
                 raise ValueError("Idempotent generation run has no jobs")
             return existing, jobs
 
-    validated: list[tuple[Product, object]] = []
+    validated: list[tuple[Product, object, list[str], bool]] = []
     for selection in unique_selections:
         product = db.scalar(select(Product).where(Product.id == selection["product_id"], Product.workspace_id == workspace_id))
         if product is None:
@@ -126,25 +126,27 @@ def create_generation_run(
             subtype=category_details.get("subtype"),
             product_family=family,
         )
+        readiness = evaluate_template(template, [asset.media_evidence for asset in assets])
+        missing_evidence = [str(item) for item in readiness["missing_evidence"]]
+        evidence_override = bool(selection.get("evidence_override", False))
         if enforce_evidence:
             if not assets:
                 raise ValueError("Product has no source assets")
-            readiness = evaluate_template(template, [asset.media_evidence for asset in assets])
-            if readiness["missing_evidence"]:
-                raise ValueError("Missing source evidence: " + ", ".join(readiness["missing_evidence"]))
-        validated.append((product, template))
+            if missing_evidence and not evidence_override:
+                raise ValueError("Missing source evidence: " + ", ".join(missing_evidence))
+        validated.append((product, template, missing_evidence, evidence_override))
 
     run = GenerationRun(workspace_id=workspace_id, status=GenerationRunStatus.PENDING.value, idempotency_key=idempotency_key, total_jobs=len(validated))
     db.add(run)
     db.flush()
     jobs: list[GenerationJob] = []
-    for job_index, (product, template) in enumerate(validated):
+    for job_index, (product, template, missing_evidence, evidence_override) in enumerate(validated):
         job_id = str(uuid4())
         provider = planned_image_provider(total_jobs=len(validated), job_index=job_index)
         job = GenerationJob(
             id=job_id, graph_thread_id=f"generation-job-{job_id}", generation_run_id=run.id,
             workspace_id=workspace_id, job_index=job_index, product_id=product.id, template_id=template.id,
-            presentation=selection.get("presentation"), template_version=template.version, provider=provider, provider_model=image_provider_model(provider),
+            presentation=unique_selections[job_index].get("presentation"), template_version=template.version, provider=provider, provider_model=image_provider_model(provider), evidence_override=evidence_override, missing_evidence=missing_evidence,
         )
         db.add(job)
         jobs.append(job)
