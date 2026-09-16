@@ -297,7 +297,7 @@ function displaySubtype(product: Product) {
     structured_bottoms: 'trousers', shorts: 'shorts', casual_bottoms: 'joggers', leggings: 'leggings', skirts: 'skirt',
     dresses: 'dress', pyjamas: 'pyjamas', nightwear: 'nightwear', robes: 'robe',
     lower_body_underwear: 'lower-body underwear', bra: 'bra', lingerie: 'lingerie', base_layer: 'base layer', underwear_set: 'underwear set',
-    socks: 'socks', trainers: 'trainers', 'flats-loafers': 'flats / loafers', 'sandals-open-shoes': 'sandals', boots: 'boots', heels: 'heels',
+    socks: 'socks', shoes: 'shoes', boots: 'boots', heels: 'heels',
     headwear: 'headwear', scarves: 'scarf', gloves: 'gloves', belts: 'belt', 'ties-neckwear': 'neckwear', veils: 'veil',
     rings: 'rings', bracelets: 'bracelets', earrings: 'earrings', necklaces: 'necklace', watches: 'watches',
   };

@@ -36,9 +36,21 @@ export default function CreateView({ products, onUpload, initialSelectedIds = []
     window.history.replaceState(null, '', selectionUrl(false));
     router.push(selectionUrl(true));
   };
+  const removeOutputProduct = (id: string) => {
+    const remaining = selectedProducts.filter(product => product.id !== id);
+    setSelectedIds(remaining.map(product => product.id));
+    setOutputSelection(current => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+    const params = new URLSearchParams({ view: 'create', step: 'outputs' });
+    remaining.forEach(product => params.append('product', product.id));
+    window.history.replaceState(null, '', '/studio?' + params.toString());
+  };
 
   if (generationRunId) return <GenerationGallery runId={generationRunId}/>;
-  if (initialOutputStep) return <OutputSelection products={selectedProducts} onBack={() => router.push(selectionUrl(false))} selection={outputSelection} onSelectionChange={setOutputSelection} />;
+  if (initialOutputStep) return <OutputSelection products={selectedProducts} onBack={() => router.push(selectionUrl(false))} selection={outputSelection} onSelectionChange={setOutputSelection} onRemoveProduct={removeOutputProduct} />;
 
   return <section className="pf-create-view" aria-labelledby="create-title">
     <div className="pf-create-intro">

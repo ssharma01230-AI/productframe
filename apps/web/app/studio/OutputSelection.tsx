@@ -19,6 +19,7 @@ type Props = {
   onBack: () => void;
   selection: Record<string, string[]>;
   onSelectionChange: (selection: Record<string, string[]>) => void;
+  onRemoveProduct: (productId: string) => void;
 };
 
 function ProductImage({ product }: { product: OutputProduct }) {
@@ -36,7 +37,7 @@ function renderRecipeImage(recipe: OutputRecipe) {
   </span>;
 }
 
-export default function OutputSelection({ products, onBack, selection, onSelectionChange }: Props) {
+export default function OutputSelection({ products, onBack, selection, onSelectionChange, onRemoveProduct }: Props) {
   const [activeProductId, setActiveProductId] = useState(products[0]?.id ?? '');
   const [presentationByProduct, setPresentationByProduct] = useState<Record<string, GenerationPresentation>>(() => Object.fromEntries(products.map(product => [product.id, product.gender ?? 'unisex'])));
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -64,6 +65,7 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
   const evidencePending = Boolean(activeProduct?.media_evidence_pending);
   const requiresEvidence = (recipe: Pick<OutputRecipe, 'id' | 'requiredEvidence'>) => {
     if (!generationSliceEnabled || evidencePending) return false;
+    if (activeProduct && evidenceOverrides[activeProduct.id]?.includes(recipe.id)) return false;
     const required = recipeEvidence(recipe, activeProduct?.category, activeProduct?.product_family);
     return required.length > 0 && !required.every(item => availableEvidence.has(item));
   };
@@ -120,6 +122,23 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
   function chooseProduct(productId: string) {
     setActiveProductId(productId);
     setReviewOpen(false);
+  }
+
+  function removeProduct(productId: string) {
+    if (submitting || uploading) return;
+    if (activeProduct?.id === productId) {
+      setActiveProductId(products.find(product => product.id !== productId)?.id ?? '');
+    }
+    setReviewOpen(false);
+    setUploadOpen(false);
+    setPendingEvidenceRecipe(null);
+    setUploadMessage('');
+    setGenerationMessage('');
+    setSubmissionKey(null);
+    setEvidenceOverrides(current => { const next = { ...current }; delete next[productId]; return next; });
+    setPresentationByProduct(current => { const next = { ...current }; delete next[productId]; return next; });
+    onRemoveProduct(productId);
+    heading.current?.focus({ preventScroll: true });
   }
 
   function requestEvidence(recipe: Pick<OutputRecipe, 'id' | 'requiredEvidence'>) {
@@ -217,7 +236,6 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
   }
 
   return <section className="pf-output-selection" aria-labelledby="output-selection-title">
-    {uploadMessage && !uploadOpen && <p className="pf-output-evidence-message" role="status">{uploadMessage}</p>}
     <dialog ref={uploadDialog} className="pf-output-evidence-dialog" aria-labelledby="pf-evidence-upload-title" onCancel={event => { event.preventDefault(); if (!uploading) setUploadOpen(false); }} onClick={event => { if (event.target === event.currentTarget && !uploading) setUploadOpen(false); }}>
       <div className="pf-output-evidence-dialog-content">
         <h2 id="pf-evidence-upload-title">This output may benefit from another angle</h2>
@@ -248,6 +266,7 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
               <span className="pf-output-product-copy"><b>{product.name}</b><small>{count} {count === 1 ? 'output' : 'outputs'} selected</small></span>
               <span className="pf-output-product-count" aria-hidden="true">{count}</span>
             </button>
+            <button className="pf-output-product-remove" type="button" aria-label={`Remove ${product.name} from selection`} title="Remove from selection" disabled={submitting || uploading} onClick={() => removeProduct(product.id)}><span aria-hidden="true">×</span></button>
             <label className="pf-output-presentation"><StudioIcon name="user"/><span>Gender</span><select value={presentationByProduct[product.id] ?? 'unisex'} aria-label={`Gender for ${product.name}`} onChange={event => setPresentationByProduct(previous => ({ ...previous, [product.id]: event.target.value as GenerationPresentation }))}>
               <option value="male">Male</option><option value="female">Female</option><option value="unisex">Unisex</option>
             </select></label>

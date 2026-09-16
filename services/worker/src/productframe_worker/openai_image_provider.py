@@ -18,10 +18,10 @@ from productframe_api.image_processing import normalize_image_orientation
 from .image_provider import GeneratedImage
 
 logger = logging.getLogger(__name__)
-DEFAULT_IMAGE_MODEL = "gpt-image-2.5-flare"
+DEFAULT_IMAGE_MODEL = "gpt-image-2.5-sunburst"
 DEFAULT_TIMEOUT_SECONDS = 300.0
 DEFAULT_IMAGE_REQUEST_SIZE = "1024x1024"
-DEFAULT_IMAGE_QUALITY = "medium"
+DEFAULT_IMAGE_QUALITY = "high"
 
 
 class OpenAIImageGenerationError(RuntimeError):
@@ -106,13 +106,18 @@ class OpenAIImageGenerationProvider:
             self.client.close()
 
     def _reference_file(self, role: str, object_key: str, rotation_degrees: int = 0) -> tuple[str, bytes, str]:
-        stored = self.object_client.get_object(Bucket=self.bucket, Key=object_key)
-        body = stored["Body"]
-        try:
-            content = body.read()
-        finally:
-            body.close()
-        content_type = stored.get("ContentType") or "image/jpeg"
+        if object_key.startswith("file://"):
+            local_path = object_key[7:]
+            content = open(local_path, "rb").read()
+            content_type = "image/png" if local_path.lower().endswith(".png") else "image/jpeg"
+        else:
+            stored = self.object_client.get_object(Bucket=self.bucket, Key=object_key)
+            body = stored["Body"]
+            try:
+                content = body.read()
+            finally:
+                body.close()
+            content_type = stored.get("ContentType") or "image/jpeg"
         if not content or not content_type.startswith("image/"):
             raise OpenAIImageGenerationError(f"Invalid {role} reference image")
         try:

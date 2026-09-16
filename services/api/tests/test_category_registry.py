@@ -158,6 +158,8 @@ def test_bottoms_subtypes_have_one_controlled_rendering_family():
     assert get_bottoms_family_for_subtype("wide leg drawstring pants") == "casual_bottoms"
     assert get_bottoms_family_for_subtype("leggings") == "leggings"
     assert get_bottoms_family_for_subtype("skirt") == "skirts"
+    assert get_bottoms_family_for_subtype("pleated midi skirt") == "skirts"
+    assert get_bottoms_family_for_subtype("pleated_mini_skirt") == "skirts"
     assert get_bottoms_family_for_subtype("unknown lower-body garment") is None
     assert get_bottoms_family_for_subtype(None) is None
 

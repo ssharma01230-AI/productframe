@@ -1,5 +1,6 @@
 """The first LangGraph generation workflow: one product, one template."""
 import logging
+from pathlib import Path
 from typing import Any, NotRequired, TypedDict
 
 from langgraph.checkpoint.memory import InMemorySaver
@@ -21,6 +22,7 @@ from productframe_api.generation_prompts import (
     build_generation_prompt,
 )
 from productframe_api.models import GenerationJob, Product, SourceAsset
+from productframe_api.generation_templates import get_generation_template
 
 from .checkpoint import postgres_checkpointer
 from .generation_storage import FakeGeneratedImageStorage, GeneratedImageStorage
@@ -128,6 +130,16 @@ def create_persisted_generation_graph(
         if product is None or product.category is None:
             raise ValueError("Generation product is missing or has no category")
         assets = db.scalars(select(SourceAsset).where(SourceAsset.product_id == product.id).order_by(SourceAsset.created_at, SourceAsset.id)).all()
+        template = get_generation_template(job.template_id)
+        template_reference_images = ()
+        if template is not None and template.reference_object_key and job.template_id.startswith((
+                "ecommerce-tops-shirts-", "ecommerce-tops-t-shirts-casual-tops-", "ecommerce-tops-sleeveless-tops-", "ecommerce-tops-knitwear-", "ecommerce-tops-hoodies-", "ecommerce-outerwear-", "ecommerce-footwear-", "ecommerce-bottoms-",
+            )):
+            template_path = Path(__file__).resolve().parents[4] / template.reference_object_key
+            if template_path.is_file():
+                template_reference_images = (ReferenceImage(role="template_reference", object_key=f"file://{template_path}"),)
+            else:
+                logger.warning("tops template reference missing path=%s", template_path)
         request = GenerationRequest(
             template_id=job.template_id,
             channel="ecommerce",
@@ -149,6 +161,7 @@ def create_persisted_generation_graph(
                 ReferenceImage(role="product_reference", object_key=asset.object_key, asset_id=asset.id)
                 for asset in assets
             ),
+            template_reference_images=template_reference_images,
         )
         return {"request": request, "status": "running"}
 

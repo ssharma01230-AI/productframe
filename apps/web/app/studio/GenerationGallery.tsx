@@ -29,6 +29,19 @@ function responseError(payload: unknown, fallback: string) {
   return payload && typeof payload === 'object' && 'detail' in payload && typeof payload.detail === 'string' ? payload.detail : fallback;
 }
 
+function missingReferenceNote(job: GenerationJobResponse) {
+  if (!job.evidence_override || !job.missing_evidence?.length) return null;
+  const labels: Record<string, string> = {
+    front_view: 'front', rear_view: 'back', side_view: 'side',
+    top_view: 'top', sole_or_underside: 'sole or underside',
+  };
+  const missing = [...new Set(job.missing_evidence)];
+  const angle = missing.length === 1 ? labels[missing[0]] : null;
+  return angle
+    ? `Generated without a ${angle} reference. Add one for better accuracy.`
+    : 'Generated without all recommended references. Add them for better accuracy.';
+}
+
 function groupStatus(jobs: GenerationJobResponse[]) {
   const ready = jobs.filter(job => Boolean(job.preview_url || job.asset?.image_url)).length;
   const failed = jobs.filter(job => job.status === 'failed').length;
@@ -51,6 +64,7 @@ function GenerationCard({ job, busy, onDecision, onRetry, onDelete }: {
   const decision = job.review_decision;
   const failed = job.status === 'failed';
   const phase = failed ? 'failed' : imageUrl ? 'ready' : 'in-progress';
+  const referenceNote = imageUrl ? missingReferenceNote(job) : null;
   return <article className={`pf-generation-card is-${phase}${decision ? ` is-${decision}` : ''}`}>
     <div className="pf-generation-card-media">
       {imageUrl ? <Image src={imageUrl} alt={`${job.product.name} — ${job.template_name}`} fill sizes="(max-width: 520px) 100vw, (max-width: 900px) 50vw, 280px" unoptimized />
@@ -58,7 +72,9 @@ function GenerationCard({ job, busy, onDecision, onRetry, onDelete }: {
           : <div className="pf-generation-loading"><span className="pf-generation-orb" aria-hidden="true"/><strong>In progress</strong></div>}
       <button type="button" className="pf-generation-card-delete" onClick={() => onDelete(job)} disabled={busy || job.status === 'generating'} aria-label={`Delete ${job.template_name}`} title="Delete output"><span aria-hidden="true">×</span></button>
     </div>
-    <div className="pf-generation-card-footer"><div><span>{titleCase(job.template_channel)}</span><h3>{job.template_name}</h3></div></div>
+    <div className="pf-generation-card-footer"><div><span>{titleCase(job.template_channel)}</span><h3>{job.template_name}</h3></div>
+      {referenceNote && <div className="pf-generation-reference-info"><button type="button" className="pf-generation-reference-trigger" aria-label="Reference accuracy information" aria-describedby={`reference-note-${job.id}`}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.5 3 7.5 7.5 9.5 4.5-2 7.5-5 7.5-9.5V6L12 3Z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></button><span role="tooltip" id={`reference-note-${job.id}`} className="pf-generation-reference-tooltip">{referenceNote}</span></div>}
+    </div>
     {failed ? <div className="pf-generation-retry"><button type="button" disabled={busy} onClick={() => onRetry(job)}>{busy ? 'Retrying…' : 'Try again'}</button></div>
       : imageUrl && !decision ? <div className="pf-generation-review-actions">
         <button type="button" disabled={busy} onClick={() => onDecision(job, 'rejected')} aria-label={`Reject ${job.template_name}`}>Reject</button>

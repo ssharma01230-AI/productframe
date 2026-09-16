@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .category_registry import get_tops_family_for_subtype
+from .category_registry import get_bottoms_family_for_subtype, get_footwear_family_for_subtype, get_outerwear_family_for_subtype, get_tops_family_for_subtype
 from .generation_templates import validate_generation_template
 from .output_readiness import evaluate_template
 from .models import (
@@ -36,7 +36,7 @@ def planned_image_provider(*, total_jobs: int, job_index: int) -> str:
 def image_provider_model(provider: str) -> str:
     if provider == "gemini":
         return os.environ.get("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-lite-image")
-    return os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-2.5-flare")
+    return os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-2.5-sunburst")
 
 
 def recalculate_generation_run(db: Session, run_id: str) -> GenerationRun:
@@ -73,6 +73,18 @@ def recalculate_generation_run(db: Session, run_id: str) -> GenerationRun:
         run.status = GenerationRunStatus.PENDING.value
         run.completed_at = None
     return run
+
+
+def _resolved_generation_family(product: Product, category_details: dict[str, object]) -> str | None:
+    """Prefer descriptive subtype routing over stale persisted family metadata."""
+    subtype = category_details.get("subtype") or product.product_type
+    resolver = {
+        "tops": get_tops_family_for_subtype,
+        "bottoms": get_bottoms_family_for_subtype,
+        "outerwear": get_outerwear_family_for_subtype,
+        "footwear": get_footwear_family_for_subtype,
+    }.get(product.category)
+    return (resolver(subtype) if resolver else None) or (str(category_details["family"]) if category_details.get("family") else None)
 
 
 def create_generation_run(
@@ -115,12 +127,10 @@ def create_generation_run(
         assets = db.scalars(select(SourceAsset).where(SourceAsset.product_id == product.id)).all()
         channel = selection.get("channel", "ecommerce")
         category_details = product.category_details if isinstance(product.category_details, dict) else {}
-        family = category_details.get("family")
-        if not family and product.category == "tops":
-            family = get_tops_family_for_subtype(category_details.get("subtype") or product.product_type)
-            if family:
-                category_details = {**category_details, "family": family}
-                product.category_details = category_details
+        family = _resolved_generation_family(product, category_details)
+        if family:
+            category_details = {**category_details, "family": family}
+            product.category_details = category_details
         template = validate_generation_template(
             selection["template_id"], category=product.category, channel=channel,
             subtype=category_details.get("subtype"),
@@ -206,12 +216,13 @@ def create_single_generation_run(
         raise ValueError("Product has no category")
     assets = db.scalars(select(SourceAsset).where(SourceAsset.product_id == product.id)).all()
     category_details = product.category_details if isinstance(product.category_details, dict) else {}
+    family = _resolved_generation_family(product, category_details)
     template = validate_generation_template(
         template_id,
         category=product.category,
         channel=channel,
         subtype=category_details.get("subtype"),
-        product_family=category_details.get("family"),
+        product_family=family,
     )
     if enforce_evidence:
         if not assets:

@@ -1,0 +1,252 @@
+{
+  "product_id": "c672ffee-fbbc-4be0-b3fe-cb811542cff2",
+  "product": {
+    "name": "Blue slim fit shirt",
+    "category": "tops",
+    "product_type": "slim fit royal blue cotton shirt with long sleeves and button closure",
+    "colours": "primary colour blue",
+    "materials": "appears to be medium weight cotton fabric with a smooth texture and matte finish, moderate drape, no visible sheen or stretch",
+    "features": [
+      "point collar",
+      "button front closure",
+      "long sleeves with single button cuffs",
+      "no visible pockets"
+    ],
+    "description": "Blue shirt with collared button-up neckline and long sleeves. It has slim fit, tailored silhouette and appears to use smooth cotton. Visible details include point collar, button front closure, long sleeves with single button cuffs.",
+    "global_details": {
+      "colour": {
+        "primary_colour": "blue",
+        "secondary_colours": [],
+        "pattern": "solid",
+        "colour_distribution": "even",
+        "tonal_variation": "low",
+        "saturation": "medium",
+        "brightness": "medium",
+        "colour_finish": "matte",
+        "wash_treatment": "none",
+        "fade_level": "none",
+        "colour_variation": "none",
+        "visible_uncertainties": []
+      },
+      "materials": {
+        "appearance": "smooth cotton",
+        "weight": "medium",
+        "thickness": "medium",
+        "texture": "smooth",
+        "finish": "matte",
+        "stretch_or_flexibility": "minimal stretch",
+        "drape_or_rigidity": "moderate drape",
+        "visible_condition": "clean with minimal wrinkles",
+        "drape_quality": "moderate",
+        "rigidity_level": "medium",
+        "wrinkle_visibility": "minimal",
+        "surface_softness": "soft",
+        "fabric_body": "medium",
+        "visible_uncertainties": []
+      },
+      "construction": {
+        "silhouette": "slim fit",
+        "shape": "tailored",
+        "proportions": "narrow waist",
+        "construction_details": [
+          "button placket",
+          "stitched collar",
+          "buttoned cuffs"
+        ],
+        "functional_details": [
+          "button cuff closure",
+          "button front closure"
+        ],
+        "callouts": [
+          "point collar"
+        ],
+        "visible_uncertainties": [
+          "hem shape not visible"
+        ]
+      },
+      "branding": {
+        "graphics": [],
+        "logos": [],
+        "graphic_details": [],
+        "artwork_regions": []
+      },
+      "gender": {
+        "assumed": "male",
+        "confidence": 0.9,
+        "evidence": [
+          "visible male model wearing",
+          "garment design typical for male shirts"
+        ],
+        "basis": "both",
+        "user_confirmed": "male"
+      },
+      "source_rotation_degrees": 0
+    },
+    "category_details": {
+      "family": "shirts",
+      "subtype": "shirt",
+      "neckline_type": "collared button-up neckline",
+      "neckline_depth": "moderate",
+      "collar_type": "point collar",
+      "sleeve_type": "set-in sleeves",
+      "sleeve_length": "long sleeves",
+      "sleeve_width": "fitted",
+      "shoulder_shape": "regular shoulder with natural shoulder seam",
+      "cuff_details": "single button cuffs",
+      "hem_shape": "not_visible",
+      "fit_and_silhouette": "slim fit, tailored silhouette",
+      "garment_length": "regular length, ending at hip",
+      "closure_details": [
+        "button front closure"
+      ],
+      "pocket_details": [],
+      "hood_details": [],
+      "visible_uncertainties": [
+        "hem shape not visible"
+      ],
+      "collar_thickness": "standard",
+      "collar_width": "standard",
+      "neckline_rigidity": "soft-medium rigidity",
+      "body_width_relative_to_length": "narrow",
+      "shoulder_drop": "standard",
+      "silhouette_volume": "close fitting",
+      "sleeve_width_relative_to_body": "narrow",
+      "hem_position": "not visible",
+      "drape_quality": "moderate drape",
+      "rigidity_level": "medium",
+      "wrinkle_visibility": "minimal wrinkles",
+      "surface_softness": "soft appearance",
+      "fabric_body": "medium fabric body",
+      "wash_treatment": "no visible wash treatment",
+      "fade_level": "no visible fading",
+      "graphic_condition": "not applicable",
+      "graphic_scale": "not applicable",
+      "graphic_placement": "not applicable",
+      "graphic_edge_quality": "not applicable"
+    },
+    "confidence_details": {
+      "overall": {
+        "score": 0.9,
+        "status": "clearly_visible",
+        "evidence": [
+          "high resolution image",
+          "clear product visibility",
+          "consistent lighting"
+        ],
+        "uncertainties": []
+      },
+      "category": {
+        "score": 1.0,
+        "status": "user_confirmed",
+        "evidence": [
+          "provided category 'tops'"
+        ],
+        "uncertainties": []
+      },
+      "product_identity": {
+        "score": 0.9,
+        "status": "clearly_visible",
+        "evidence": [
+          "shirt style and construction clearly visible"
+        ],
+        "uncertainties": []
+      },
+      "colour": {
+        "score": 0.95,
+        "status": "clearly_visible",
+        "evidence": [
+          "blue colour clearly visible"
+        ],
+        "uncertainties": []
+      },
+      "materials": {
+        "score": 0.7,
+        "status": "partially_visible",
+        "evidence": [
+          "smooth texture and weight visible"
+        ],
+        "uncertainties": [
+          "exact fibre composition not visible"
+        ]
+      },
+      "construction": {
+        "score": 0.85,
+        "status": "clearly_visible",
+        "evidence": [
+          "visible collar, placket and cuffs",
+          "constructed seams clear"
+        ],
+        "uncertainties": [
+          "hem not visible"
+        ]
+      },
+      "branding": {
+        "score": 0.0,
+        "status": "not_visible",
+        "evidence": [
+          "no branding or logos visible"
+        ],
+        "uncertainties": []
+      },
+      "category_specific": {
+        "score": 0.9,
+        "status": "clearly_visible",
+        "evidence": [
+          "shirt construction details visible"
+        ],
+        "uncertainties": [
+          "hem details obscured"
+        ]
+      },
+      "gender": {
+        "score": 0.9,
+        "status": "clearly_visible",
+        "evidence": [
+          "male model wearing",
+          "garment design typical for male"
+        ],
+        "uncertainties": [],
+        "source": "none"
+      }
+    }
+  },
+  "model": "gpt-image-2.5-sunburst",
+  "jobs": [
+    {
+      "template_id": "ecommerce-tops-shirts-06",
+      "variant": "text-only",
+      "output": "/Users/shivamsharma/productframe/experiments/results/shirts-template-reference-ab/test 2/ecommerce-tops-shirts-06-text-only.png",
+      "template_reference": null
+    },
+    {
+      "template_id": "ecommerce-tops-shirts-06",
+      "variant": "template-reference",
+      "output": "/Users/shivamsharma/productframe/experiments/results/shirts-template-reference-ab/test 2/ecommerce-tops-shirts-06-template-reference.png",
+      "template_reference": "/Users/shivamsharma/productframe/apps/web/public/output-examples/tops/shirts/shirts-ecom-07-detail-barrel-cuff.png"
+    },
+    {
+      "template_id": "ecommerce-tops-shirts-07",
+      "variant": "text-only",
+      "output": "/Users/shivamsharma/productframe/experiments/results/shirts-template-reference-ab/test 2/ecommerce-tops-shirts-07-text-only.png",
+      "template_reference": null
+    },
+    {
+      "template_id": "ecommerce-tops-shirts-07",
+      "variant": "template-reference",
+      "output": "/Users/shivamsharma/productframe/experiments/results/shirts-template-reference-ab/test 2/ecommerce-tops-shirts-07-template-reference.png",
+      "template_reference": "/Users/shivamsharma/productframe/apps/web/public/output-examples/tops/shirts/shirts-ecom-08-detail-poplin-fabric-fold.png"
+    },
+    {
+      "template_id": "ecommerce-tops-shirts-12",
+      "variant": "text-only",
+      "output": "/Users/shivamsharma/productframe/experiments/results/shirts-template-reference-ab/test 2/ecommerce-tops-shirts-12-text-only.png",
+      "template_reference": null
+    },
+    {
+      "template_id": "ecommerce-tops-shirts-12",
+      "variant": "template-reference",
+      "output": "/Users/shivamsharma/productframe/experiments/results/shirts-template-reference-ab/test 2/ecommerce-tops-shirts-12-template-reference.png",
+      "template_reference": "/Users/shivamsharma/productframe/apps/web/public/output-examples/tops/shirts/shirts-ecom-13-side-three-quarter-product.png"
+    }
+  ]
+}

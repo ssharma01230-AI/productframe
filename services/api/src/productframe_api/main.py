@@ -21,7 +21,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from .auth import current_user
-from .category_registry import controlled_subtype_label, get_bottoms_family_for_subtype, get_tops_family_for_subtype
+from .category_registry import controlled_subtype_label, get_bottoms_family_for_subtype, get_footwear_family_for_subtype, get_outerwear_family_for_subtype, get_tops_family_for_subtype
 from .config import Settings, get_settings
 from .db import get_db
 from .generation_persistence import create_generation_run as create_generation_run_persistence
@@ -334,16 +334,29 @@ def product_classification(product: Product) -> dict[str, str]:
     return {"global_category": category, "controlled_subtype": label, "label": f"{category.title()} · {label}"}
 
 
+def resolved_product_family(*, category: str | None, category_details: object, product_type: str | None = None) -> str | None:
+    """Resolve family from descriptive subtype before trusting persisted fallback data."""
+    details = category_details if isinstance(category_details, dict) else {}
+    family = details.get("family")
+    subtype = details.get("subtype") or product_type
+    if category == "tops":
+        return get_tops_family_for_subtype(subtype) or (str(family) if family else None)
+    if category == "bottoms":
+        return get_bottoms_family_for_subtype(subtype) or (str(family) if family else None)
+    if category == "outerwear":
+        return get_outerwear_family_for_subtype(subtype) or (str(family) if family else None)
+    if category == "footwear":
+        return get_footwear_family_for_subtype(subtype) or (str(family) if family else None)
+    return str(family) if family else None
+
+
 def product_family(product: Product) -> str | None:
     """Return persisted family data, with routing fallback for older products."""
-    details = product.category_details if isinstance(product.category_details, dict) else {}
-    family = details.get("family")
-    subtype = details.get("subtype") or product.product_type
-    if product.category == "tops":
-        return get_tops_family_for_subtype(subtype) or (str(family) if family else None)
-    if product.category == "bottoms":
-        return get_bottoms_family_for_subtype(subtype) or (str(family) if family else None)
-    return str(family) if family else None
+    return resolved_product_family(
+        category=product.category,
+        category_details=product.category_details,
+        product_type=product.product_type,
+    )
 
 
 class ProductApprovalDraft(ProductReviewDraft):
@@ -777,7 +790,7 @@ def get_analysis_results(
         "unique_product_count": job.unique_product_count,
         "progress": {"stage": job.progress_stage, "message": job.progress_message, "completed": job.progress_completed, "total": job.progress_total, "percent": job.progress_percent},
         "images": [{"id": image.id, "image_number": image.image_number, "filename": (db.get(SourceAsset, image.source_asset_id).filename if image.source_asset_id and db.get(SourceAsset, image.source_asset_id) else None), "image_url": (s3.generate_presigned_url("get_object", Params={"Bucket": settings.minio_bucket, "Key": db.get(SourceAsset, image.source_asset_id).object_key}, ExpiresIn=900) if image.source_asset_id and db.get(SourceAsset, image.source_asset_id) else None), "status": image.status, "passed": image.passed, "product_number": image.product_number, "rejection_reason": image.rejection_reason} for image in images],
-        "products": [{"id": analysis.id, "final_product_id": analysis.final_product_id, "product_number": analysis.product_number, "product_name": analysis.product_name, "category": analysis.category, "product_family": (analysis.category_details or {}).get("family") if isinstance(analysis.category_details, dict) else None, "subtype": (analysis.category_details or {}).get("subtype") if isinstance(analysis.category_details, dict) else None, "controlled_subtype": controlled_subtype_label(category=analysis.category, family=((analysis.category_details or {}).get("family") if isinstance(analysis.category_details, dict) else None), subtype=((analysis.category_details or {}).get("subtype") if isinstance(analysis.category_details, dict) else None), product_type=analysis.product_type), "product_type": analysis.product_type, "colours": analysis.colours, "materials": analysis.materials, "features": analysis.features, "description": analysis.description, "confidence": analysis.confidence, "confirmation_status": analysis.confirmation_status, "gender": assumed_gender(analysis.global_details)} for analysis in analyses],
+        "products": [{"id": analysis.id, "final_product_id": analysis.final_product_id, "product_number": analysis.product_number, "product_name": analysis.product_name, "category": analysis.category, "product_family": resolved_product_family(category=analysis.category, category_details=analysis.category_details, product_type=analysis.product_type), "subtype": (analysis.category_details or {}).get("subtype") if isinstance(analysis.category_details, dict) else None, "controlled_subtype": controlled_subtype_label(category=analysis.category, family=resolved_product_family(category=analysis.category, category_details=analysis.category_details, product_type=analysis.product_type), subtype=((analysis.category_details or {}).get("subtype") if isinstance(analysis.category_details, dict) else None), product_type=analysis.product_type), "product_type": analysis.product_type, "colours": analysis.colours, "materials": analysis.materials, "features": analysis.features, "description": analysis.description, "confidence": analysis.confidence, "confirmation_status": analysis.confirmation_status, "gender": assumed_gender(analysis.global_details)} for analysis in analyses],
     }
 
 

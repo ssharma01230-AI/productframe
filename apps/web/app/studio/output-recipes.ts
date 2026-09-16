@@ -343,14 +343,33 @@ export const OUTERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     exampleImage: '/output-examples/outerwear/09-side-angle-model-no-face.png',
     showProductThumbnail: true,
   },
-  {
-    id: 'ecommerce-outerwear-fabric',
-    category: 'Ecommerce',
-    name: 'Fabric Shot',
-    description: 'A macro view of the outerwear’s material texture and surface finish, keeping hardware and construction details out of focus.',
-    exampleImage: '/output-examples/outerwear/10-fabric-leather-texture.png',
-    showProductThumbnail: true,
-  },
+];
+
+export const COATS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-outerwear-coats-01', category: 'Ecommerce', name: 'Front Product', description: 'Reviewed Coats Ecommerce composition: front product.', exampleImage: '/output-examples/outerwear/coats/01_front_product.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-coats-02', category: 'Ecommerce', name: 'Collar and Lapel Detail', description: 'Reviewed Coats Ecommerce composition: collar and lapel detail.', exampleImage: '/output-examples/outerwear/coats/02_collar_detail.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-coats-03', category: 'Ecommerce', name: 'Rear Shoulder Detail — No Face', description: 'Reviewed Coats Ecommerce composition: rear shoulder detail — no face.', exampleImage: '/output-examples/outerwear/coats/03_rear_shoulder_detail.png', showProductThumbnail: true, requiredEvidence: ['rear_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-coats-04', category: 'Ecommerce', name: 'Model Front Facing — Full Length', description: 'Reviewed Coats Ecommerce composition: model front facing — full length.', exampleImage: '/output-examples/outerwear/coats/04_front_model_full_length.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-coats-05', category: 'Ecommerce', name: 'Fabric and Edge Detail', description: 'Reviewed Coats Ecommerce composition: fabric and edge detail.', exampleImage: '/output-examples/outerwear/coats/05_fabric_detail.png', showProductThumbnail: true, requiredEvidence: ['detail'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-coats-06', category: 'Ecommerce', name: 'Rear Product', description: 'Reviewed Coats Ecommerce composition: rear product.', exampleImage: '/output-examples/outerwear/coats/06_rear_product.png', showProductThumbnail: true, requiredEvidence: ['rear_view'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-coats-07', category: 'Ecommerce', name: 'Model Front Facing — Cropped', description: 'Reviewed Coats Ecommerce composition: model front facing — cropped.', exampleImage: '/output-examples/outerwear/coats/07_front_model_cropped.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-coats-08', category: 'Ecommerce', name: 'Model Rear — Cropped', description: 'Reviewed Coats Ecommerce composition: model rear — cropped.', exampleImage: '/output-examples/outerwear/coats/08_rear_model.png', showProductThumbnail: true, requiredEvidence: ['rear_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-coats-09', category: 'Ecommerce', name: 'Model Front Three-Quarter — Cropped', description: 'Reviewed Coats Ecommerce composition: model front three-quarter — cropped.', exampleImage: '/output-examples/outerwear/coats/09_three_quarter_model.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-coats-10', category: 'Ecommerce', name: 'Front Invisible Mannequin', description: 'Reviewed Coats Ecommerce composition: front invisible mannequin.', exampleImage: '/output-examples/outerwear/coats/10_front_invisible_mannequin.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-coats-11', category: 'Ecommerce', name: 'Front Flat Lay — Overhead', description: 'Reviewed Coats Ecommerce composition: front flat lay — overhead.', exampleImage: '/output-examples/outerwear/coats/11_front_flat_lay_overhead.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'product_only' },
+];
+
+export const GILETS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-outerwear-gilets-padded-vests-01', category: 'Ecommerce', name: 'Front Product — Invisible Mannequin', description: 'Reviewed Gilets Ecommerce composition: front product — invisible mannequin.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/01_front_product.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-02', category: 'Ecommerce', name: 'Collar and Fastening Detail', description: 'Reviewed Gilets Ecommerce composition: collar and fastening detail.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/02_collar_detail.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'detail'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-03', category: 'Ecommerce', name: 'Rear Shoulder Detail — No Face', description: 'Reviewed Gilets Ecommerce composition: rear shoulder detail — no face.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/03_rear_shoulder_detail.png', showProductThumbnail: true, requiredEvidence: ['rear_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-04', category: 'Ecommerce', name: 'Model Front Facing — Full Length', description: 'Reviewed Gilets Ecommerce composition: model front facing — full length.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/04_front_model_full_length.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-05', category: 'Ecommerce', name: 'Fabric and Quilting Detail', description: 'Reviewed Gilets Ecommerce composition: fabric and quilting detail.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/05_fabric_detail.png', showProductThumbnail: true, requiredEvidence: ['detail'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-06', category: 'Ecommerce', name: 'Rear Product — Invisible Mannequin', description: 'Reviewed Gilets Ecommerce composition: rear product — invisible mannequin.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/06_rear_product.png', showProductThumbnail: true, requiredEvidence: ['rear_view'], presentation: 'product_only' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-07', category: 'Ecommerce', name: 'Model Front Facing — Cropped', description: 'Reviewed Gilets Ecommerce composition: model front facing — cropped.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/07_front_model_cropped.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-08', category: 'Ecommerce', name: 'Model Rear — Cropped', description: 'Reviewed Gilets Ecommerce composition: model rear — cropped.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/08_rear_model.png', showProductThumbnail: true, requiredEvidence: ['rear_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-09', category: 'Ecommerce', name: 'Model Front Three-Quarter — Cropped', description: 'Reviewed Gilets Ecommerce composition: model front three-quarter — cropped.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/09_three_quarter_model.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-outerwear-gilets-padded-vests-10', category: 'Ecommerce', name: 'Front Flat Lay — Overhead', description: 'Reviewed Gilets Ecommerce composition: front flat lay — overhead.', exampleImage: '/output-examples/outerwear/gilets-padded-vests/10_front_flat_template.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'product_only' },
 ];
 
 export const FOOTWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
@@ -417,6 +436,29 @@ export const FOOTWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     description: 'The footwear worn by an adult in a natural side stance, showing its profile and fit with the frame cropped below the knees.',
     exampleImage: '/output-examples/footwear/10-side-on-feet.png',
   },
+];
+
+export const HEELS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-footwear-heels-01', category: 'Ecommerce', name: 'Three-Quarter Product', description: 'Elevated product-only three-quarter view of one heeled shoe.', exampleImage: '/output-examples/footwear/heels/01_three_quarter_product.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'product_only' },
+  { id: 'ecommerce-footwear-heels-02', category: 'Ecommerce', name: 'Side Profile — Toe Left', description: 'Low side profile with the toe facing left.', exampleImage: '/output-examples/footwear/heels/02_side_profile_toe_left.png', showProductThumbnail: true, requiredEvidence: ['side_view'], presentation: 'product_only' },
+  { id: 'ecommerce-footwear-heels-03', category: 'Ecommerce', name: 'Side Profile — Toe Right', description: 'Opposite-facing low side profile with the toe facing right.', exampleImage: '/output-examples/footwear/heels/03_side_profile_toe_right.png', showProductThumbnail: true, requiredEvidence: ['side_view'], presentation: 'product_only' },
+  { id: 'ecommerce-footwear-heels-04', category: 'Ecommerce', name: 'Front View', description: 'Centred elevated front view showing the toe, opening and insole.', exampleImage: '/output-examples/footwear/heels/04_front_view.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'top_view'], presentation: 'product_only' },
+  { id: 'ecommerce-footwear-heels-05', category: 'Ecommerce', name: 'Rear View', description: 'Straight centred rear view showing the heel and exposed arch.', exampleImage: '/output-examples/footwear/heels/05_rear_view.png', showProductThumbnail: true, requiredEvidence: ['rear_view', 'sole_or_underside'], presentation: 'product_only' },
+  { id: 'ecommerce-footwear-heels-06', category: 'Ecommerce', name: 'Top View', description: 'Direct overhead view of the complete shoe outline and opening.', exampleImage: '/output-examples/footwear/heels/06_top_view.png', showProductThumbnail: true, requiredEvidence: ['top_view'], presentation: 'product_only' },
+  { id: 'ecommerce-footwear-heels-07', category: 'Ecommerce', name: 'Front on Feet', description: 'The pair worn in a grounded front-facing stance.', exampleImage: '/output-examples/footwear/heels/07_front_on_feet.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-heels-08', category: 'Ecommerce', name: 'Side on Feet', description: 'The pair worn in a grounded side stance.', exampleImage: '/output-examples/footwear/heels/08_side_on_feet.png', showProductThumbnail: true, requiredEvidence: ['side_view', 'rear_view'], presentation: 'worn_product' },
+];
+
+export const BOOTS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-footwear-boots-01', category: 'Ecommerce', name: 'Front Three-Quarter on Model', description: 'A front three-quarter pair worn on an adult with complete boots and the upper body excluded.', exampleImage: '/output-examples/footwear/boots/01_front_three_quarter_on_model.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-boots-02', category: 'Ecommerce', name: 'Side on Model — Toe Raised', description: 'A side profile of one worn boot with the toe raised and heel grounded.', exampleImage: '/output-examples/footwear/boots/02_side_on_model_toe_raised.png', showProductThumbnail: true, requiredEvidence: ['side_view', 'sole_or_underside'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-boots-03', category: 'Ecommerce', name: 'Front Three-Quarter Detail', description: 'A close front three-quarter pair detail showing the toe, vamp and lower shaft.', exampleImage: '/output-examples/footwear/boots/03_front_three_quarter_detail.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-boots-04', category: 'Ecommerce', name: 'Rear Three-Quarter Detail', description: 'A close rear three-quarter detail showing heel counters and rear construction.', exampleImage: '/output-examples/footwear/boots/04_rear_three_quarter_detail.png', showProductThumbnail: true, requiredEvidence: ['rear_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-boots-05', category: 'Ecommerce', name: 'Three-Quarter on Model', description: 'A grounded three-quarter pair worn on an adult with complete shaft rims, toes and heels.', exampleImage: '/output-examples/footwear/boots/05_three_quarter_on_model.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-boots-06', category: 'Ecommerce', name: 'Rear Heel Close-Up', description: 'A tight rear heel close-up with intentional toe cropping and floor contact.', exampleImage: '/output-examples/footwear/boots/06_rear_heel_close_up.png', showProductThumbnail: true, requiredEvidence: ['rear_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-boots-07', category: 'Ecommerce', name: 'Side and Vamp Close-Up', description: 'A close side/front three-quarter detail showing the vamp, toe, sole edge and heel.', exampleImage: '/output-examples/footwear/boots/07_side_vamp_close_up.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-boots-08', category: 'Ecommerce', name: 'Crossed Step on Model', description: 'A crossed-step pair worn on an adult with complete boots and shaft rims.', exampleImage: '/output-examples/footwear/boots/08_crossed_step_on_model.png', showProductThumbnail: true, requiredEvidence: ['side_view', 'rear_view', 'sole_or_underside'], presentation: 'worn_product' },
+  { id: 'ecommerce-footwear-boots-09', category: 'Ecommerce', name: 'Side Profile — Product Only', description: 'One complete boot upright in straight side profile on a warm studio floor.', exampleImage: '/output-examples/footwear/boots/09_side_profile_product_only.png', showProductThumbnail: true, requiredEvidence: ['side_view'], presentation: 'product_only' },
 ];
 
 export const SOCKS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
@@ -560,14 +602,6 @@ export const UNDERWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
     name: 'Front Flat Lay',
     description: 'A complete product-only front view of the underwear laid flat against a clean neutral surface.',
     exampleImage: '/output-examples/underwear/02-front-flat-lay.png',
-    showProductThumbnail: true,
-  },
-  {
-    id: 'ecommerce-underwear-back-flat-lay',
-    category: 'Ecommerce',
-    name: 'Back Flat Lay',
-    description: 'A complete product-only rear view showing the underwear’s back coverage, seams and leg openings.',
-    exampleImage: '/output-examples/underwear/03-back-flat-lay.png',
     showProductThumbnail: true,
   },
   {
@@ -747,11 +781,11 @@ const topsOutputRecipes: readonly OutputRecipe[] = [
 ];
 
 const TOPS_FAMILY_EXAMPLES: Record<string, readonly string[]> = {
-  shirts: Array.from({ length: 15 }, (_, index) => `/output-examples/tops/shirts/shirts-ecom-${String(index + 1).padStart(2, '0')}-${[
-    'lifestyle-seated-armchair', 'styled-front-model', 'folded-product-cuff-visible', 'flat-lay-full-product',
-    'front-model-studio', 'lifestyle-seated-model', 'detail-barrel-cuff', 'detail-poplin-fabric-fold',
-    'invisible-mannequin-front', 'detail-collar-button-placket', 'detail-cuff-adjustment', 'side-three-quarter-model',
-    'side-three-quarter-product', 'rear-product', 'rear-model',
+  shirts: Array.from({ length: 14 }, (_, index) => `/output-examples/tops/shirts/shirts-ecom-${String(index + 2).padStart(2, '0')}-${[
+    'styled-front-model', 'folded-product-cuff-visible', 'flat-lay-full-product', 'front-model-studio',
+    'lifestyle-seated-model', 'detail-barrel-cuff', 'detail-poplin-fabric-fold', 'invisible-mannequin-front',
+    'detail-collar-button-placket', 'detail-cuff-adjustment', 'side-three-quarter-model', 'side-three-quarter-product',
+    'rear-product', 'rear-model',
   ][index]}.png`),
   't-shirts-casual-tops': ([1, 2, 3, 4, 5, 6, 8, 9, 10] as const).map((templateNumber, index) => `/output-examples/tops/t-shirts-casual/t-shirts-casual-ecom-${String(templateNumber).padStart(2, '0')}-${[
     'front-product-shaped', 'hem-fit-detail-model', 'folded-product', 'front-model', 'front-invisible-mannequin',
@@ -789,24 +823,24 @@ const TOPS_FAMILY_BENCHMARK_INTENTS: Record<string, readonly string[]> = {
     'Close hem and fit detail on a worn model; crop out the entire face and head.',
     'One neatly folded T-shirt product photograph.',
     'Front-facing T-shirt worn by a model; face excluded.',
-    'One complete T-shirt presented on an invisible/headless mannequin from the front; no mannequin body visible.',
+    'One complete T-shirt shaped by a completely invisible mannequin from the front; no mannequin body or support visible.',
     'Rear-facing T-shirt worn by a model; face excluded.',
-    'One complete T-shirt presented on an invisible/headless mannequin from a side or three-quarter angle; no mannequin body visible.',
+    'One complete T-shirt shaped by a completely invisible mannequin from a side or three-quarter angle; no mannequin body or support visible.',
     'One close-up macro photograph of the actual T-shirt fabric texture.',
-    'One complete T-shirt presented on an invisible/headless mannequin from the rear; no mannequin body visible.',
+    'One complete T-shirt shaped by a completely invisible mannequin from the rear; no mannequin body or support visible.',
   ],
 };
 
 const TOPS_FAMILY_NAMES: Record<string, readonly string[]> = {
-  shirts: ['Seated Lifestyle', 'Styled Front Model', 'Folded Shirt', 'Flat-Lay Shirt', 'Front Model', 'Seated Model', 'Cuff Detail', 'Fabric Texture Detail', 'Front Invisible Mannequin', 'Collar & Button Placket Detail', 'Cuff Adjustment Detail', 'Side / Three-Quarter Model', 'Side / Three-Quarter Product', 'Rear Product', 'Rear Model'],
-  't-shirts-casual-tops': ['Front Product (Shaped)', 'Hem & Fit Detail', 'Folded T-Shirt', 'Front Model (Hand in Pocket)', 'Front Invisible Mannequin', 'Rear Model', 'Side / Three-Quarter Invisible Mannequin', 'Fabric Texture Detail', 'Rear Invisible Mannequin'],
-  'sleeveless-tops': ['Rear Model', 'Front Model', '3/4 View Invisible Mannequin', 'Front Invisible Mannequin', 'Front Product', 'Styled Model'],
+  shirts: ['Styled Front Model', 'Folded Shirt', 'Flat-Lay Shirt', 'Front Model', 'Seated Model', 'Cuff Detail', 'Fabric Texture Detail', 'Front Invisible Mannequin', 'Collar & Button Placket Detail', 'Cuff Adjustment Detail', 'Side / Three-Quarter Model', 'Side / Three-Quarter Product', 'Rear Product', 'Rear Model'],
+  't-shirts-casual-tops': ['Front Product', 'Hem & Fit Detail', 'Folded T-Shirt', 'Front Model (Hand in Pocket)', 'Front Invisible Mannequin', 'Rear Model', 'Side / Three-Quarter Invisible Mannequin', 'Fabric Texture Detail', 'Rear Invisible Mannequin'],
+  'sleeveless-tops': ['Rear Model', 'Front Model', '3/4 View Invisible Mannequin', 'Front Headless Mannequin', 'Front Product', 'Styled Model'],
   knitwear: ['Folded Knitwear', 'Neckline Detail', 'Front Model', 'Front Product', 'Rear Three-Quarter Model', 'Knit Fabric Detail', 'Seated Styled Model', 'Flat-Lay Knitwear', 'Rear Invisible Mannequin', 'Front Invisible Mannequin', 'Styled Model'],
   hoodies: ['Flat Product', 'Front Invisible Mannequin', 'Rear Invisible Mannequin', 'Three-Quarter Invisible Mannequin', 'Front Model', 'Rear Model', 'Three-Quarter Model', 'Rear Model Adjusting Hood', 'Front Model Adjusting Hood', 'Model with Hands in Pockets', 'Seated Three-Quarter Model', 'Full-Length Model'],
 };
 
 const TOPS_FAMILY_EVIDENCE: Record<string, readonly string[]> = {
-  shirts: ['front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'rear_view'],
+  shirts: ['front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'rear_view'],
   't-shirts-casual-tops': ['front_view', 'front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'rear_view'],
   'sleeveless-tops': ['rear_view', 'front_view', 'front_view', 'front_view', 'front_view', 'front_view'],
   knitwear: ['front_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'front_view', 'front_view', 'rear_view', 'front_view', 'front_view'],
@@ -833,8 +867,14 @@ const topsFamilyOutputRecipes: Record<string, readonly OutputRecipe[]> = Object.
   }))])
 );
 
-const outerwearOutputRecipes: readonly OutputRecipe[] = [
-  ...OUTERWEAR_ECOMMERCE_RECIPES,
+const jacketsOutputRecipes: readonly OutputRecipe[] = [
+  ...OUTERWEAR_ECOMMERCE_RECIPES.map((recipe, index) => ({
+    ...recipe,
+    requiredEvidence: [
+      index === 2 || index === 5 || index === 7 ? 'rear_view' : index === 8 ? 'side_view' : 'front_view',
+    ],
+    presentation: (index === 2 || index === 3 || index === 6 || index === 7 || index === 8 ? 'worn_product' : 'product_only') as 'worn_product' | 'product_only',
+  })),
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
 ];
 
@@ -847,14 +887,38 @@ const socksOutputRecipes: readonly OutputRecipe[] = [
   ...SOCKS_ECOMMERCE_RECIPES,
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
 ];
+const heelsOutputRecipes: readonly OutputRecipe[] = [
+  ...HEELS_ECOMMERCE_RECIPES,
+  ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
+];
+
+export function getEcommerceTemplateRecipes(): readonly OutputRecipe[] {
+  const all = [
+    ...OUTPUT_RECIPES,
+    ...OUTERWEAR_ECOMMERCE_RECIPES,
+    ...COATS_ECOMMERCE_RECIPES,
+    ...GILETS_ECOMMERCE_RECIPES,
+    ...FOOTWEAR_ECOMMERCE_RECIPES,
+    ...HEELS_ECOMMERCE_RECIPES,
+    ...BOOTS_ECOMMERCE_RECIPES,
+    ...SOCKS_ECOMMERCE_RECIPES,
+    ...BOTTOMS_ECOMMERCE_RECIPES,
+    ...UNDERWEAR_ECOMMERCE_RECIPES,
+    ...Object.values(topsFamilyOutputRecipes).flat(),
+    ...Object.values(bottomsFamilyOutputRecipes).flat(),
+  ];
+  return [...new Map(all.filter(recipe => recipe.category === 'Ecommerce').map(recipe => [recipe.id, recipe])).values()];
+}
 
 export function getOutputRecipes(productCategory?: string | null, productFamily?: string | null, productType?: string | null): readonly OutputRecipe[] {
   const category = productCategory?.trim().toLowerCase();
-  const type = productType?.trim().toLowerCase();
+  const type = productType?.trim().toLowerCase() ?? '';
   // Older product records may not have product_family populated. Derive the
   // Shorts route from the canonical subtype so the UI cannot fall back to
   // trousers/jeans recipes while the API record is being upgraded.
-  const family = category === 'bottoms' && type === 'shorts' ? 'shorts' : productFamily?.trim().toLowerCase();
+  const rawFamily = productFamily?.trim().toLowerCase();
+  const family = category === 'footwear' && ['trainers', 'flats-loafers', 'sandals-open-shoes'].includes(rawFamily ?? '') ? 'shoes'
+    : category === 'bottoms' && type === 'shorts' ? 'shorts' : rawFamily;
   if (category === 'tops') {
     const familyRecipes = family ? topsFamilyOutputRecipes[family] : undefined;
     return familyRecipes
@@ -862,8 +926,29 @@ export function getOutputRecipes(productCategory?: string | null, productFamily?
       : topsOutputRecipes;
   }
   if (category === 'bottoms') return bottomsFamilyOutputRecipes[family ?? ''] ?? bottomsOutputRecipes;
-  if (category === 'outerwear') return outerwearOutputRecipes;
-  if (category === 'footwear') return footwearOutputRecipes;
+  if (category === 'outerwear') {
+    // Jackets, Coats and Gilets now have distinct reviewed Ecommerce packs.
+    const outerwearFamily = family ?? (
+      /\b(?:jacket|blazer|bomber|parka)\b/.test(type) ? 'jackets' :
+      /\b(?:coat|trench|raincoat)\b/.test(type) ? 'coats' :
+      /\b(?:gilet|puffer|padded vest)\b/.test(type) ? 'gilets-padded-vests' : undefined
+    );
+    if (outerwearFamily === 'jackets') return jacketsOutputRecipes;
+    if (outerwearFamily === 'coats') return [...COATS_ECOMMERCE_RECIPES, ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce')];
+    if (outerwearFamily === 'gilets-padded-vests') return [...GILETS_ECOMMERCE_RECIPES, ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce')];
+    return OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce');
+  }
+  if (category === 'footwear') {
+    // Footwear packs are family-specific; never let one family inherit another's benchmarks.
+    const footwearFamily = family ?? (
+      /\b(?:heel|pump|court shoe)\b/.test(type) ? 'heels' :
+      /\bboot\b/.test(type) ? 'boots' : 'shoes'
+    );
+    if (footwearFamily === 'shoes') return footwearOutputRecipes;
+    if (footwearFamily === 'heels') return heelsOutputRecipes;
+    if (footwearFamily === 'boots') return BOOTS_ECOMMERCE_RECIPES;
+    return OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce');
+  }
   if (category === 'socks') return socksOutputRecipes;
   if (category === 'underwear') {
     return family === 'lower_body_underwear'

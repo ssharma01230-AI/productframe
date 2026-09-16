@@ -22,7 +22,7 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .analysis_limits import AnalysisBudgetError, AnalysisLimits, RateLimiter, estimate_request_tokens, retry_delay
-from .category_registry import get_bottoms_family_for_subtype, get_tops_family_for_subtype
+from .category_registry import get_bottoms_family_for_subtype, get_footwear_family_for_subtype, get_outerwear_family_for_subtype, get_tops_family_for_subtype
 from .description_utils import concise_product_description
 from .category_schemas import (
     AccessoriesFamily, BottomsFamily, CATEGORY_DETAIL_MODELS, CategoryDetails, DressFamily, FootwearFamily,
@@ -478,6 +478,16 @@ Do not return detailed colours, materials, features or a catalogue description."
         family = get_bottoms_family_for_subtype(categorization.subtype)
         categorization.product_family = family
         if family is None:
+            categorization.subtype = None
+    elif categorization.category == ProductCategory.FOOTWEAR:
+        categorization.product_family = get_footwear_family_for_subtype(categorization.subtype)
+        if categorization.product_family is None:
+            categorization.subtype = None
+    elif categorization.category == ProductCategory.OUTERWEAR:
+        # Outerwear is routed into the controlled jackets, coats or gilets
+        # families from the descriptive subtype.
+        categorization.product_family = get_outerwear_family_for_subtype(categorization.subtype)
+        if categorization.product_family is None:
             categorization.subtype = None
     elif categorization.category == ProductCategory.TOPS:
         # Tops use the approved family tree: sweatshirts belong to Knitwear,
@@ -955,7 +965,11 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
                     if analysis.product_family is None:
                         detail_subtype = getattr(analysis.category_details, "subtype", None) if analysis.category_details else None
                         detail_subtype = detail_subtype or analysis.product_type
-                        if analysis.category == ProductCategory.BOTTOMS:
+                        if analysis.category == ProductCategory.FOOTWEAR:
+                            analysis.product_family = get_footwear_family_for_subtype(detail_subtype)
+                        elif analysis.category == ProductCategory.OUTERWEAR:
+                            analysis.product_family = get_outerwear_family_for_subtype(detail_subtype)
+                        elif analysis.category == ProductCategory.BOTTOMS:
                             analysis.product_family = get_bottoms_family_for_subtype(detail_subtype)
                         elif analysis.category == ProductCategory.TOPS:
                             analysis.product_family = get_tops_family_for_subtype(detail_subtype)

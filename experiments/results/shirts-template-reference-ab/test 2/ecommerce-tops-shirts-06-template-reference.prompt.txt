@@ -1,0 +1,152 @@
+This is a strict image replacement and editing task, not a new creative fashion generation. Use the template reference as a locked visual layout: preserve its camera angle, framing, pose, product position, scale, lighting and background. Completely remove and discard the template garment's identity, then replace it with the exact shirt shown in the product reference image. The final image must be recognisably the uploaded Blue slim fit shirt, not a redesigned or reinterpreted version. Transfer only the presentation layout; never transfer the template garment's colour, material, texture, collar, cuffs, buttons, pockets, seams, artwork, branding, proportions or any other product-specific detail. Do not invent or optimise any product feature.
+
+Create an ecommerce image using the supplied product reference image as the primary visual authority."
+
+REFERENCE-FIRST RULES
+- Inspect the product reference image before interpreting the text description.
+- Reproduce every clearly visible construction detail directly from the reference image.
+- Never replace a visible product feature with a generic category default.
+- The reference image overrides generic template conventions and inferred schema defaults.
+- Uncertainty applies only to details that are genuinely hidden, obstructed, cropped or impossible to assess from the reference.
+- Do not treat a detail as uncertain merely because its exact measurement is unavailable.
+
+PRODUCT IDENTITY — AUTHORITATIVE
+- Name: Blue slim fit shirt
+- Category: tops
+- Product type: slim fit royal blue cotton shirt with long sleeves and button closure
+- Colour summary: primary colour blue
+- Materials summary: appears to be medium weight cotton fabric with a smooth texture and matte finish, moderate drape, no visible sheen or stretch
+- Visible features:
+- point collar
+- button front closure
+- long sleeves with single button cuffs
+- no visible pockets
+- Description: Blue shirt with collared button-up neckline and long sleeves. It has slim fit, tailored silhouette and appears to use smooth cotton. Visible details include point collar, button front closure, long sleeves with single button cuffs.
+
+DETAILED COLOUR DATA
+- Not provided
+
+GLOBAL PRODUCT DATA
+Colour:
+  Primary colour: blue
+  Secondary colours: None visible
+  Pattern: solid
+  Colour distribution: even
+  Tonal variation: low
+  Saturation: medium
+  Brightness: medium
+  Colour finish: matte
+  Wash treatment: none
+  Fade level: none
+  Colour variation: none
+  Visible uncertainties: None visible
+Materials:
+  Appearance: smooth cotton
+  Weight: medium
+  Thickness: medium
+  Texture: smooth
+  Finish: matte
+  Stretch or flexibility: minimal stretch
+  Drape or rigidity: moderate drape
+  Visible condition: clean with minimal wrinkles
+  Drape quality: moderate
+  Rigidity level: medium
+  Wrinkle visibility: minimal
+  Surface softness: soft
+  Fabric body: medium
+  Visible uncertainties: None visible
+Construction:
+  Silhouette: slim fit
+  Shape: tailored
+  Proportions: narrow waist
+  Construction details:
+    - button placket
+    - stitched collar
+    - buttoned cuffs
+  Functional details:
+    - button cuff closure
+    - button front closure
+  Callouts:
+    - point collar
+  Visible uncertainties:
+    - hem shape not visible
+Branding:
+  Graphics: None visible
+  Logos: None visible
+  Graphic details: None visible
+  Artwork regions: None visible
+Gender:
+  Assumed: male
+  Confidence: 0.9
+  Evidence:
+    - visible male model wearing
+    - garment design typical for male shirts
+  Basis: both
+  User confirmed: male
+Source rotation degrees: 0
+
+CATEGORY-SPECIFIC DATA — AUTHORITATIVE FOR CATEGORY CONSTRUCTION
+Family: shirts
+Subtype: shirt
+Neckline type: collared button-up neckline
+Neckline depth: moderate
+Collar type: point collar
+Sleeve type: set-in sleeves
+Sleeve length: long sleeves
+Sleeve width: fitted
+Shoulder shape: regular shoulder with natural shoulder seam
+Cuff details: single button cuffs
+Hem shape: not_visible
+Fit and silhouette: slim fit, tailored silhouette
+Garment length: regular length, ending at hip
+Closure details:
+  - button front closure
+Pocket details: None visible
+Hood details: None visible
+Visible uncertainties:
+  - hem shape not visible
+Collar thickness: standard
+Collar width: standard
+Neckline rigidity: soft-medium rigidity
+Body width relative to length: narrow
+Shoulder drop: standard
+Silhouette volume: close fitting
+Sleeve width relative to body: narrow
+Hem position: not visible
+Drape quality: moderate drape
+Rigidity level: medium
+Wrinkle visibility: minimal wrinkles
+Surface softness: soft appearance
+Fabric body: medium fabric body
+Wash treatment: no visible wash treatment
+Fade level: no visible fading
+Graphic condition: not applicable
+Graphic scale: not applicable
+Graphic placement: not applicable
+Graphic edge quality: not applicable
+
+PRODUCT FIDELITY PRESERVATION
+- Preserve observed colour treatment such as washing, fading, tonal variation, sheen, wear and natural wrinkles; do not clean or standardise the surface.
+- Preserve the observed silhouette, body width, garment length, shoulder construction and sleeve width; do not regularise them into a generic top.
+- Treat every visible print, illustration, logo, embroidery and appliqué as immutable product identity, not as a semantic suggestion.
+- Copy the artwork exactly from the reference pixels: preserve its component count, geometry, topology, orientation, linework, internal details, colour boundaries, text, scale, placement, spacing, edge quality, fading and distress.
+- Do not reinterpret, simplify, beautify, complete, replace or redraw artwork from its subject description. For example, identifying an animal or object does not permit drawing a different instance of it.
+- Preserve visible seams, panels, hems, neck binding and construction irregularities even when they reduce symmetry.
+- If a property is not observable, leave it uncertain rather than inventing a conventional ecommerce replacement.
+
+PRESENTATION MODE
+- Use one adult model with the requested gender presentation. Follow the specified pose and framing, keep styling restrained, and do not obscure the product. Do not use a mannequin.
+
+OUTPUT DETAILS
+- Subject: the uploaded shirt's actual cuff and adjacent sleeve while worn. Use a close oblique view from slightly above the wrist, with the cuff and fastening centred, the sleeve running diagonally and the hand visible. Exclude the face and full body; show actual cuff geometry, closure, stitching and sleeve pleats without forcing a cuff type.
+
+NEGATIVE PROMPTS
+- Do not show a mannequin, mannequin support, extra person, face or body features that obscure the product.
+
+IDENTITY PROTECTION
+The product data and product reference images are the only source of truth for
+product identity. Preserve the product's colour, material appearance, texture,
+shape, proportions, construction and category-specific details. Do not allow the
+template presentation to change the product. Treat uncertain attributes as
+uncertain and do not invent replacements. Use the template only for composition,
+framing, lighting and presentation.

@@ -78,7 +78,7 @@ CONTROLLED_FAMILY_LABELS: Final[dict[str, str]] = {
     "dresses": "Dress", "tailored-jackets": "Tailored Jacket", "waistcoats": "Waistcoat", "suits": "Suit", "tuxedos": "Tuxedo",
     "pyjamas": "Pyjamas", "nightwear": "Nightwear", "robes": "Robe",
     "lower_body_underwear": "Lower-Body Underwear", "bra": "Bra", "lingerie": "Lingerie", "base_layer": "Base Layer", "underwear_set": "Underwear Set",
-    "socks": "Socks", "trainers": "Trainers", "flats-loafers": "Flats / Loafers", "sandals-open-shoes": "Sandals", "boots": "Boots", "heels": "Heels",
+    "socks": "Socks", "shoes": "Shoes", "trainers": "Shoes", "flats-loafers": "Shoes", "sandals-open-shoes": "Shoes", "boots": "Boots", "heels": "Heels",
     "rings": "Rings", "bracelets": "Bracelets", "earrings": "Earrings", "necklaces": "Necklace", "watches": "Watches",
     "headwear": "Headwear", "scarves": "Scarf", "gloves": "Gloves", "belts": "Belt", "ties-neckwear": "Neckwear", "veils": "Veil",
 }
@@ -104,11 +104,63 @@ def controlled_subtype_label(*, category: str | None, family: str | None, subtyp
     return "Unclassified"
 
 
+OUTERWEAR_FAMILY_SUBTYPE_MAP: Final[dict[str, str]] = {
+    "jacket": "jackets",
+    "blazer": "jackets",
+    "bomber": "jackets",
+    "parka": "jackets",
+    "coat": "coats",
+    "trench coat": "coats",
+    "raincoat": "coats",
+    "gilet": "gilets-padded-vests",
+    "puffer": "gilets-padded-vests",
+}
+
+
+FOOTWEAR_FAMILY_SUBTYPE_MAP: Final[dict[str, str]] = {
+    "trainers": "shoes", "sneakers": "shoes", "shoes": "shoes",
+    "flats": "shoes", "loafers": "shoes", "formal shoes": "shoes", "slip-ons": "shoes",
+    "sandals": "shoes", "sliders": "shoes", "flat mules": "shoes", "clogs": "shoes",
+    "boots": "boots", "heels": "heels", "pumps": "heels", "court shoes": "heels",
+    "heeled sandals": "heels", "heeled mules": "heels",
+}
+
+
+def get_footwear_family_for_subtype(subtype: str | None) -> str | None:
+    """Return the controlled Footwear family for a descriptive subtype."""
+    if not subtype or not isinstance(subtype, str):
+        return None
+    normalized = " ".join(subtype.strip().lower().replace("_", " ").split())
+    if normalized in FOOTWEAR_FAMILY_SUBTYPE_MAP:
+        return FOOTWEAR_FAMILY_SUBTYPE_MAP[normalized]
+    if re.search(r"\b(?:heel|pump|court shoe|heeled sandal|heeled mule)\b", normalized): return "heels"
+    if re.search(r"\bboot\b", normalized): return "boots"
+    if re.search(r"\b(?:trainer|sneaker|flat|loafer|shoe|slip-on|sandal|slider|clog|mule)\b", normalized): return "shoes"
+    return None
+
+
+def get_outerwear_family_for_subtype(subtype: str | None) -> str | None:
+    """Return the controlled Outerwear family for a descriptive subtype."""
+    if not subtype or not isinstance(subtype, str):
+        return None
+    normalized = " ".join(subtype.strip().lower().replace("_", " ").split())
+    exact = OUTERWEAR_FAMILY_SUBTYPE_MAP.get(normalized)
+    if exact:
+        return exact
+    if re.search(r"\b(?:gilet|padded vest|puffer)\b", normalized):
+        return "gilets-padded-vests"
+    if re.search(r"\b(?:trench|raincoat|coat)\b", normalized):
+        return "coats"
+    if re.search(r"\b(?:jacket|blazer|bomber|parka)\b", normalized):
+        return "jackets"
+    return None
+
+
 def get_bottoms_family_for_subtype(subtype: str | None) -> str | None:
     """Return the controlled rendering family for a bottoms subtype."""
     if not subtype or not isinstance(subtype, str):
         return None
-    normalized = " ".join(subtype.strip().lower().split())
+    normalized = " ".join(subtype.strip().lower().replace("_", " ").split())
     exact = BOTTOMS_FAMILY_SUBTYPE_MAP.get(normalized)
     if exact:
         return exact
@@ -119,6 +171,8 @@ def get_bottoms_family_for_subtype(subtype: str | None) -> str | None:
         return "casual_bottoms"
     if "drawstring" in normalized and any(signal in normalized for signal in ("pant", "bottom", "trouser")):
         return "casual_bottoms"
+    if re.search(r"\bskirt\b", normalized):
+        return "skirts"
     return None
 
 

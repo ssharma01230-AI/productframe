@@ -29,7 +29,7 @@ def multi_api(monkeypatch):
             WorkspaceMembership(user_id="user", workspace_id="workspace"),
             Product(id="top", workspace_id="workspace", name="Blue top", category="tops"),
             Product(id="socks", workspace_id="workspace", name="Striped socks", category="socks"),
-            Product(id="shoe", workspace_id="workspace", name="Red pumps", category="footwear", product_type="pointed pumps", category_details={"family": "heels", "subtype": "pumps"}),
+            Product(id="shoe", workspace_id="workspace", name="Red trainers", category="footwear", product_type="low-top trainers", category_details={"family": "trainers", "subtype": "trainers"}),
             SourceAsset(id="top-source", product_id="top", object_key="top/source.jpg", filename="source.jpg", content_type="image/jpeg", media_evidence={"views": ["front_view"]}),
             SourceAsset(id="sock-source", product_id="socks", object_key="socks/source.jpg", filename="source.jpg", content_type="image/jpeg", media_evidence={"views": ["flat_lay"]}),
             SourceAsset(id="shoe-source", product_id="shoe", object_key="shoe/source.jpg", filename="source.jpg", content_type="image/jpeg", media_evidence={"views": ["front_view"]}),

@@ -35,6 +35,7 @@ export type GenerationSelection = {
   template_id: string;
   channel: 'ecommerce';
   presentation?: GenerationPresentation;
+  evidence_override?: boolean;
 };
 
 export type GenerationRunRequest = {

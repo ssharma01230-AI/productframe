@@ -73,10 +73,17 @@
 .pf-generation-card-error > span { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #d7b993; border-radius: 50%; background: #fbf2e6; color: #875f33; font-weight: 700; }
 .pf-generation-card-error strong { font-size: 12px; }
 .pf-generation-card-error p { margin: 0; color: var(--sh-muted); font-size: 10px; line-height: 1.45; }
-.pf-generation-card-footer { display: flex; min-height: 65px; align-items: flex-start; padding: 12px 12px 13px; }
+.pf-generation-card-footer { position: relative; display: flex; min-height: 65px; align-items: flex-start; padding: 12px 43px 13px 12px; }
 .pf-generation-card-footer > div { min-width: 0; }
 .pf-generation-card-footer span { color: var(--sh-muted); font-size: 8px; }
 .pf-generation-card-footer h3 { margin: 5px 0 0; font-size: 12px; font-weight: 600; line-height: 1.3; }
+.pf-generation-card-footer > div:not(.pf-generation-reference-info) { width: 100%; }
+.pf-generation-reference-info { position: absolute; z-index: 3; right: 10px; top: 8px; }
+.pf-generation-reference-trigger { display: grid; place-items: center; width: 23px; height: 23px; padding: 0; border: 1px solid #ffffffc7; border-radius: 50%; background: #ffffffd9; color: #687060; box-shadow: 0 1px 3px #00000015; cursor: help; }
+.pf-generation-reference-trigger:focus-visible { outline: 2px solid #656b60; outline-offset: 3px; }
+.pf-generation-card-footer .pf-generation-reference-tooltip { position: absolute; z-index: 4; bottom: 100%; right: 0; width: 190px; max-width: calc(100vw - 80px); box-sizing: border-box; padding: 10px 12px; border-radius: 6px; background: #30362c; color: #fff; font-size: 11px; font-weight: 400; line-height: 1.45; letter-spacing: normal; text-transform: none; visibility: hidden; opacity: 0; }
+.pf-generation-reference-info:hover .pf-generation-reference-tooltip,
+.pf-generation-reference-info:focus-within .pf-generation-reference-tooltip { visibility: visible; opacity: 1; }
 .pf-generation-review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding: 0 12px 12px; }
 .sh-shell .pf-generation-review-actions button,
 .sh-shell .pf-generation-retry button { display: inline-flex; min-height: 35px; align-items: center; justify-content: center; padding: 8px 10px; border: 1px solid var(--sh-line); border-radius: 6px; background: #fff; font-size: 10px; font-weight: 600; transition: background .18s, border-color .18s, transform .18s; }

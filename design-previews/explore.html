@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ProductFrame — Explore</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f5f0;color:#171817;font:15px Arial,sans-serif}.shell{display:flex;min-height:100vh}.side{width:232px;padding:27px 16px 18px;border-right:1px solid #e3e4de;background:#f7f7f3;display:flex;flex-direction:column}.logo{display:flex;align-items:center;gap:10px;padding:0 12px;margin-bottom:58px;color:#171817;font-weight:700;font-size:17px;letter-spacing:-.04em}.mark{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:#171817;color:#b9ff3d}.nav{display:grid;gap:5px}.nav a{padding:11px 12px;border-radius:9px;color:#7b7d77;text-decoration:none}.nav a.active,.nav a:hover{background:#ebebe4;color:#171817}.main{flex:1;min-width:0}.top{height:72px;border-bottom:1px solid #e3e4de;display:flex;align-items:center;padding:0 42px;color:#777a74;font-size:13px}.content{max-width:1480px;margin:auto;padding:43px 43px 60px}.header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px}.eyebrow{margin:0 0 8px;color:#777a74;font-size:12px}.title{margin:0;font-size:34px;line-height:1.05;letter-spacing:-.055em}.subtitle{margin:9px 0 0;color:#777a74;font-size:12px;line-height:1.5}.stat{padding:7px 10px;border:1px solid #e3e4de;border-radius:20px;background:#fff;color:#777a74;font-size:10px;white-space:nowrap}.stat b{color:#171817}.toolbar{display:flex;align-items:end;gap:18px;padding:14px 0 18px;border-top:1px solid #e3e4de;border-bottom:1px solid #e3e4de}.search{display:flex;flex:1;flex-direction:column;gap:7px;color:#777a74;font-size:10px;text-transform:uppercase;letter-spacing:.05em}.search input,select{padding:9px 11px;border:1px solid #e3e4de;border-radius:7px;background:#fff;color:#171817;font:11px Arial}.search input{width:min(460px,100%)}.sort{display:flex;align-items:center;gap:8px;color:#777a74;font-size:10px;text-transform:uppercase}.families{display:flex;align-items:center;gap:13px;padding:13px 0 3px;overflow:auto}.families>span{color:#777a74;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.pills{display:flex;gap:6px;min-width:max-content}.pills button{padding:6px 10px;border:1px solid #e3e4de;border-radius:16px;background:#fff;color:#777a74;font:10px Arial;cursor:pointer;white-space:nowrap}.pills button.active{border-color:#171817;background:#171817;color:#fff}.count{margin:17px 0 28px;color:#777a74;font-size:11px}.category{margin-bottom:38px}.category-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #e3e4de}.category-head h2{margin:0;font:500 28px Georgia,serif;letter-spacing:-.04em}.category-head span,.family-head span{color:#777a74;font-size:10px;text-transform:uppercase}.family{margin-bottom:25px}.family-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}.family-head h3{margin:0;color:#777a74;font-size:11px;text-transform:uppercase;letter-spacing:.08em}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.card{min-width:0;border:1px solid #e3e4de;border-radius:10px;background:#fff;overflow:hidden}.image{height:225px;background:#e5e4dc}.image img{display:block;width:100%;height:100%;object-fit:cover}.copy{padding:12px}.copy h4{margin:0;font-size:12px;line-height:1.35}.copy p{margin:6px 0 0;color:#777a74;font-size:10px;line-height:1.45}@media(max-width:1000px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.side{display:none}.content{padding:32px 22px 40px}.header,.toolbar{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.image{height:185px}.copy p{display:none}}@media(max-width:440px){.grid{grid-template-columns:1fr}.image{height:240px}}
+
+/* Explore: an image-led library with two clear levels of navigation. */
+:root{--ink:#252820;--muted:#72766d;--line:#dedfd7;--accent:#c4f46b}
+body{background:#f7f7f2;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #566d2c;outline-offset:4px}
+.side{width:216px;flex-shrink:0}.content{padding:44px 40px 80px}.top{padding:0 40px;font-size:12px}.header{margin-bottom:32px}.eyebrow{font-size:10px;letter-spacing:.13em;margin-bottom:12px}.title{font:normal 48px/1.1 Georgia,serif;letter-spacing:-.045em}.subtitle{font-size:13px;max-width:560px;line-height:1.7;margin-top:13px}.stat{font-size:11px;background:transparent;border:0;padding:0 0 4px}.stat b{font-weight:500}
+.filters{border:1px solid var(--line);border-radius:16px;background:#fdfdf9;padding:22px 24px 0}.filter-top{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:22px}.filter-label{font-size:13px;font-weight:600}.filter-hint{font-size:11px;color:var(--muted);margin:6px 0 0}.search{position:relative;display:block;flex:0 1 310px}.search svg{position:absolute;left:13px;top:12px;width:17px;height:17px;color:var(--muted)}.search input{width:100%;height:42px;padding:0 14px 0 39px;border:1px solid var(--line);border-radius:9px;background:#f6f6f1;font-size:12px;color:var(--ink)}
+.categories{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:20px}.categories button{display:flex;align-items:center;gap:9px;border:1px solid transparent;background:transparent;padding:11px 13px;border-radius:8px;font-size:12px;color:#62665c;transition:background .15s}.categories button:hover{background:#efefe7}.categories button.active{background:#282e22;color:#fff}.categories button span{font-size:10px;opacity:.7;font-variant-numeric:tabular-nums}.categories button.active span{color:var(--accent);opacity:1}
+.families{border-top:1px solid #e8e9e1;padding:17px 0 19px;display:block;overflow:visible}.families>span{display:block;font-size:10px;letter-spacing:.06em;margin-bottom:12px;color:var(--muted);text-transform:uppercase}.pills{display:flex;flex-wrap:wrap;gap:6px;min-width:0}.pills button{font-size:11px;padding:8px 11px;border:1px solid transparent;background:transparent;border-radius:6px;color:#686d61;white-space:normal;text-align:left;transition:background .15s}.pills button:hover{background:#efefe7}.pills button.active{background:#eaf0de;border-color:#d8e1c8;color:#344424}.pills button.active::before{content:'✓';margin-right:6px}
+.results-bar{display:flex;align-items:center;gap:16px;margin:23px 0 31px;min-height:20px}.count{margin:0;font-size:11px;color:var(--muted)}.count strong{color:var(--ink);font-weight:600}.results-note{margin-left:auto;font-size:10px;color:#808578}.reset{border:0;padding:0;background:none;color:#4c5e35;font-size:11px;text-decoration:underline;text-underline-offset:3px}.reset[hidden]{display:none}.reset span{margin-left:4px}
+.category{margin-bottom:48px}.category-head{margin-bottom:23px;padding-bottom:15px}.category-head h2{font-size:29px}.category-head span{text-transform:none;font-size:11px}.family{margin-bottom:32px}.family-head{margin-bottom:13px;justify-content:flex-start;gap:10px}.family-head h3{font-size:12px;letter-spacing:0;text-transform:none;color:#41463b;font-weight:600}.family-head span{font-size:10px;text-transform:none;color:#878c7f}.grid{gap:18px}.card{border:0;border-radius:10px;background:transparent}.image{height:auto;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#e9e7e0}.image img{object-fit:contain}.copy{padding:13px 1px 5px}.copy h4{font-size:12px;line-height:1.5;font-weight:500}.copy p{font-size:10px;margin-top:5px;color:#82877b}.empty{text-align:center;padding:65px 20px;border:1px dashed var(--line);border-radius:14px}.empty h2{font:26px Georgia,serif;margin:0 0 10px}.empty p{font-size:13px;color:var(--muted)}
+@media(min-width:1500px){.content{padding-top:52px}.grid{gap:22px}}
+@media(max-width:1100px){.side{width:190px}.content{padding-left:28px;padding-right:28px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.side{display:none}.content{padding:28px 20px 50px}.top{height:58px;padding:0 20px}.header{align-items:flex-start;flex-direction:row;gap:16px}.title{font-size:40px}.subtitle{font-size:12px}.stat{padding-top:6px}.filter-top{align-items:stretch;flex-direction:column;gap:16px}.search{flex:auto}.filters{padding:18px 16px 0}.categories{gap:4px}.categories button{padding:10px;font-size:11px}.families{padding-bottom:17px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.image{height:auto}.results-note{display:none}.copy p{display:block}.results-bar{margin-bottom:25px}.category-head h2{font-size:26px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.category-title{position:relative;display:flex;align-items:center;gap:10px}
+.category-compatibility{display:flex;align-items:center}
+.compatibility-trigger{display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:#858c7c;cursor:pointer}
+.compatibility-trigger:hover,.compatibility-trigger[aria-expanded="true"]{color:#465b32;background:#eaf0de}
+.compatibility-popover[hidden]{display:none}
+.compatibility-popover{position:absolute;left:0;top:100%;z-index:10;width:320px;max-width:calc(100vw - 48px);padding:18px;background:#fff;border:1px solid #dfe3d8;border-radius:12px;box-shadow:0 10px 32px #242e2017;color:#717969;line-height:1.7;font:11px/1.7 Arial,sans-serif}
+.compatibility-popover strong{font-size:12px;color:#353f2e;font-weight:600}.compatibility-popover p{margin:10px 0 0;color:#424c39}
+</style></head>
+<body><div class="shell"><aside class="side"><div class="logo"><span class="mark">P</span><span>productframe</span></div><nav class="nav"><a href="#">⌂&nbsp; Home</a><a href="#">＋&nbsp; Create</a><a href="#">▣&nbsp; Product library</a><a class="active" href="#">◉&nbsp; Explore</a><a href="#">⚙&nbsp; Settings</a></nav></aside><div class="main"><header class="top">Studio / <strong>&nbsp;Explore</strong></header><main class="content"><header class="header"><div><p class="eyebrow">ECOMMERCE TEMPLATE LIBRARY</p><h1 class="title">Explore</h1><p class="subtitle">Find your next product shot. Explore angles, details and ways to style your product.</p></div><span class="stat"><b id="total">0</b> templates</span></header><section class="filters" aria-label="Browse templates">
+<div class="filter-top"><div><span class="filter-label">Browse by category</span></div><label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input type="search" id="search" aria-label="Search templates" placeholder="Search products or views…"></label></div>
+<div class="categories" id="categories" role="group" aria-label="Category"></div>
+<div class="families"><span>Product family</span><div class="pills" id="families" role="group" aria-label="Product family"></div></div>
+</section><div class="results-bar"><p class="count" id="count" role="status" aria-live="polite"></p><button class="reset" id="reset" hidden>Clear filters <span aria-hidden="true">↗</span></button><span class="results-note">Ecommerce · Studio references</span></div><div id="library"></div></main></div></div>
+<script>
+const files = [
+"bottoms/01-front-view.png",
+"bottoms/02-back-view.png",
+"bottoms/03-side-angle-product.png",
+"bottoms/04-folded-product-flat-lay.png",
+"bottoms/05-front-model.png",
+"bottoms/06-back-model.png",
+"bottoms/07-waistband-closure-detail.png",
+"bottoms/08-pocket-panel-detail.png",
+"bottoms/09-hem-leg-detail.png",
+"bottoms/joggers/01-flat-laid-product.png",
+"bottoms/joggers/02-front-invisible-mannequin.png",
+"bottoms/joggers/03-three-quarter-invisible-mannequin.png",
+"bottoms/joggers/04-rear-invisible-mannequin.png",
+"bottoms/joggers/05-front-facing-model.png",
+"bottoms/joggers/06-three-quarter-model.png",
+"bottoms/joggers/07-rear-facing-model.png",
+"bottoms/joggers/08-full-length-front-model.png",
+"bottoms/joggers/09-folded-top-down.png",
+"bottoms/leggings/01-leggings.png",
+"bottoms/leggings/02-leggings.png",
+"bottoms/leggings/03-leggings.png",
+"bottoms/leggings/04-leggings.png",
+"bottoms/leggings/05-leggings.png",
+"bottoms/leggings/06-leggings.png",
+"bottoms/leggings/07-leggings.png",
+"bottoms/leggings/08-leggings.png",
+"bottoms/shorts/01-flat-laid-product.png",
+"bottoms/shorts/02-front-invisible-mannequin.png",
+"bottoms/shorts/03-three-quarter-invisible-mannequin.png",
+"bottoms/shorts/04-rear-invisible-mannequin.png",
+"bottoms/shorts/05-front-facing-model.png",
+"bottoms/shorts/06-three-quarter-full-length-model.png",
+"bottoms/shorts/07-rear-facing-model.png",
+"bottoms/shorts/08-full-length-front-facing-model.png",
+"bottoms/shorts/09-waistband-closure-detail.png",
+"bottoms/skirts/01-skirt.png",
+"bottoms/skirts/02-skirt.png",
+"bottoms/skirts/03-skirt.png",
+"bottoms/skirts/04-skirt.png",
+"bottoms/skirts/05-skirt.png",
+"bottoms/skirts/06-skirt.png",
+"footwear/01-three-quarter-product.png",
+"footwear/02-outer-side.png",
+"footwear/03-inner-side.png",
+"footwear/04-front-view.png",
+"footwear/05-rear-view.png",
+"footwear/06-top-view.png",
+"footwear/07-sole-view.png",
+"footwear/09-front-on-feet.png",
+"footwear/10-side-on-feet.png",
+"footwear/heels/01_three_quarter_product.png",
+"footwear/heels/02_side_profile_toe_left.png",
+"footwear/heels/03_side_profile_toe_right.png",
+"footwear/heels/04_front_view.png",
+"footwear/heels/05_rear_view.png",
+"footwear/heels/06_top_view.png",
+"footwear/heels/07_front_on_feet.png",
+"footwear/heels/08_side_on_feet.png",
+"outerwear/01-front-close.png",
+"outerwear/02-front-medium.png",
+"outerwear/03-over-the-shoulder-no-face.png",
+"outerwear/04-full-body-model-no-face.png",
+"outerwear/05-construction-close-up.png",
+"outerwear/06-back-product.png",
+"outerwear/07-front-model-no-face.png",
+"outerwear/08-back-model-no-face.png",
+"outerwear/09-side-angle-model-no-face.png",
+"outerwear/coats/01_front_product.png",
+"outerwear/coats/02_collar_detail.png",
+"outerwear/coats/03_rear_shoulder_detail.png",
+"outerwear/coats/04_front_model_full_length.png",
+"outerwear/coats/05_fabric_detail.png",
+"outerwear/coats/06_rear_product.png",
+"outerwear/coats/07_front_model_cropped.png",
+"outerwear/coats/08_rear_model.png",
+"outerwear/coats/09_three_quarter_model.png",
+"outerwear/coats/10_front_invisible_mannequin.png",
+"outerwear/coats/11_front_flat_lay_overhead.png",
+"outerwear/gilets-padded-vests/01_front_product.png",
+"outerwear/gilets-padded-vests/02_collar_detail.png",
+"outerwear/gilets-padded-vests/03_rear_shoulder_detail.png",
+"outerwear/gilets-padded-vests/04_front_model_full_length.png",
+"outerwear/gilets-padded-vests/05_fabric_detail.png",
+"outerwear/gilets-padded-vests/06_rear_product.png",
+"outerwear/gilets-padded-vests/07_front_model_cropped.png",
+"outerwear/gilets-padded-vests/08_rear_model.png",
+"outerwear/gilets-padded-vests/09_three_quarter_model.png",
+"outerwear/gilets-padded-vests/10_front_flat_template.png",
+"socks/01-three-quarter-on-feet.png",
+"socks/03-rear-on-feet.png",
+"socks/04-flat-lay.png",
+"socks/06-heel-detail-on-foot.png",
+"socks/06-heel-detail.png",
+"socks/08-knit-texture.png",
+"socks/09-front-on-feet.png",
+"socks/10-folded-product.png",
+"tops/hoodies/hoodies-ecom-01-flat-product.png",
+"tops/hoodies/hoodies-ecom-02-front-invisible-mannequin.png",
+"tops/hoodies/hoodies-ecom-03-back-invisible-mannequin.png",
+"tops/hoodies/hoodies-ecom-04-three-quarter-invisible-mannequin.png",
+"tops/hoodies/hoodies-ecom-05-front-model.png",
+"tops/hoodies/hoodies-ecom-06-back-model.png",
+"tops/hoodies/hoodies-ecom-07-three-quarter-model.png",
+"tops/hoodies/hoodies-ecom-08-back-model-adjusting-hood.png",
+"tops/hoodies/hoodies-ecom-09-front-model-adjusting-hood.png",
+"tops/hoodies/hoodies-ecom-10-model-hands-in-trouser-pockets.png",
+"tops/hoodies/hoodies-ecom-11-seated-three-quarter-model.png",
+"tops/hoodies/hoodies-ecom-12-full-length-model-face-excluded.png",
+"tops/knitwear/knitwear-ecom-01-folded-product.png",
+"tops/knitwear/knitwear-ecom-02-neckline-detail.png",
+"tops/knitwear/knitwear-ecom-03-front-model.png",
+"tops/knitwear/knitwear-ecom-04-front-product.png",
+"tops/knitwear/knitwear-ecom-05-rear-three-quarter-model.png",
+"tops/knitwear/knitwear-ecom-06-knit-fabric-detail.png",
+"tops/knitwear/knitwear-ecom-07-seated-styled-model.png",
+"tops/knitwear/knitwear-ecom-08-flat-lay-full-product.png",
+"tops/knitwear/knitwear-ecom-09-rear-invisible-mannequin.png",
+"tops/knitwear/knitwear-ecom-10-front-invisible-mannequin.png",
+"tops/knitwear/knitwear-ecom-11-styled-model.png",
+"tops/shirts/shirts-ecom-02-styled-front-model.png",
+"tops/shirts/shirts-ecom-03-folded-product-cuff-visible.png",
+"tops/shirts/shirts-ecom-04-flat-lay-full-product.png",
+"tops/shirts/shirts-ecom-05-front-model-studio.png",
+"tops/shirts/shirts-ecom-06-lifestyle-seated-model.png",
+"tops/shirts/shirts-ecom-07-detail-barrel-cuff.png",
+"tops/shirts/shirts-ecom-08-detail-poplin-fabric-fold.png",
+"tops/shirts/shirts-ecom-09-invisible-mannequin-front.png",
+"tops/shirts/shirts-ecom-10-detail-collar-button-placket.png",
+"tops/shirts/shirts-ecom-11-detail-cuff-adjustment.png",
+"tops/shirts/shirts-ecom-12-side-three-quarter-model.png",
+"tops/shirts/shirts-ecom-13-side-three-quarter-product.png",
+"tops/shirts/shirts-ecom-14-rear-product.png",
+"tops/shirts/shirts-ecom-15-rear-model.png",
+"tops/sleeveless/sleeveless-ecom-01-rear-model.png",
+"tops/sleeveless/sleeveless-ecom-02-front-model.png",
+"tops/sleeveless/sleeveless-ecom-03-three-quarter-product.png",
+"tops/sleeveless/sleeveless-ecom-04-flat-lay-full-product.png",
+"tops/sleeveless/sleeveless-ecom-04-front-invisible-mannequin.png",
+"tops/sleeveless/sleeveless-ecom-05-three-quarter-headless-mannequin.png",
+"tops/sleeveless/sleeveless-ecom-06-front-product.png",
+"tops/sleeveless/sleeveless-ecom-06-styled-model-no-face.png",
+"tops/sleeveless/sleeveless-ecom-07-front-product.png",
+"tops/sleeveless/sleeveless-ecom-07-styled-model-no-face.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-01-front-product-shaped.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-02-hem-fit-detail-model.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-03-folded-product.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-04-front-model.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-05-front-invisible-mannequin.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-06-rear-model.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-07-front-product.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-08-side-three-quarter-invisible-mannequin.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-09-fabric-knit-texture-detail.png",
+"tops/t-shirts-casual/t-shirts-casual-ecom-10-rear-invisible-mannequin.png",
+"underwear/01-front-model.png",
+"underwear/02-front-flat-lay.png",
+"underwear/04-rear-three-quarter.png",
+"underwear/05-front-product.png",
+"underwear/06-side-profile.png",
+"underwear/07-waistband-detail.png"
+];
+const familyMap={outerwear:'Jackets',footwear:'Trainers',tops:'T-Shirts Casual Tops',bottoms:'Casual Bottoms',socks:'Socks',underwear:'Underwear'};
+const clean=s=>s.replace(/[-_]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+const data=files.map(path=>{const bits=path.split('/');const category=bits[0];let family=bits.length>2?bits[1]:familyMap[category]||clean(category);const file=bits.at(-1).replace(/\.[^.]+$/,'');return{path,category,family:category==='footwear' && (bits.length===2 || bits[1]==='flats-loafers')?'Shoes':clean(family),name:clean(file.replace(/^\d+[-_]?/,'').replace(/ecom[-_]?\d+[-_]?/i,''))}});
+let selectedCategory='All categories',selectedFamily='All families';
+const categoryEl=document.querySelector('#categories'),familyEl=document.querySelector('#families'),searchEl=document.querySelector('#search');
+const categories=[...new Set(data.map(x=>x.category))];
+['All categories',...categories].forEach(value=>{
+ const b=document.createElement('button'); b.type='button'; b.dataset.category=value;
+ const count=value==='All categories'?data.length:data.filter(x=>x.category===value).length;
+ b.innerHTML=`${value==='All categories'?'All templates':clean(value)} <span>${count}</span>`;
+ b.onclick=()=>{selectedCategory=value;selectedFamily='All families';render()};categoryEl.append(b);
+});
+const resetEl=document.querySelector('#reset');
+resetEl.onclick=()=>{selectedCategory='All categories';selectedFamily='All families';searchEl.value='';render();searchEl.focus()};
+// Preview-only grouping: application taxonomy and recipe routing are unchanged.
+const supportedTypes={
+ Shoes:['Trainers','Loafers','Flats','Sandals','Formal shoes','Sliders','Flat mules','Clogs','Crocs-style shoes'],
+ Heels:['Court shoes','Heeled sandals','Heeled mules','Heeled pumps']
+};
+const categoryTypes={
+ footwear:[...supportedTypes.Shoes,...supportedTypes.Heels],
+ bottoms:['Casual trousers','Jeans','Joggers','Leggings','Shorts','Skirts'],
+ outerwear:['Jackets','Coats','Gilets','Padded vests'],
+ tops:['T-shirts','Casual tops','Shirts','Hoodies','Knitwear','Sleeveless tops'],
+ socks:['Socks'],
+ underwear:['Briefs','Boxers','Boxer briefs','Trunks','Thongs']
+};
+function bindCompatibility(){
+ document.querySelectorAll('.category-compatibility').forEach(wrap=>{
+ const button=wrap.querySelector('button'),panel=wrap.querySelector('[role="tooltip"]');
+ const setOpen=open=>{panel.hidden=!open;button.setAttribute('aria-expanded',String(open))};
+ let timer;
+ wrap.onpointerenter=e=>{if(e.pointerType==='mouse'){clearTimeout(timer);setOpen(true)}};
+ wrap.onpointerleave=e=>{if(e.pointerType==='mouse')timer=setTimeout(()=>{if(!wrap.contains(document.activeElement))setOpen(false)},160)};
+ button.onclick=e=>setOpen(e.pointerType==='mouse' ? true : panel.hidden);
+ button.onfocus=()=>{if(button.matches(':focus-visible'))setOpen(true)};
+ wrap.onfocusout=e=>{if(!wrap.contains(e.relatedTarget))setOpen(false)};
+ wrap.onkeydown=e=>{if(e.key==='Escape'){clearTimeout(timer);setOpen(false);e.stopPropagation()}};
+ });
+}
+document.addEventListener('pointerdown',e=>{
+ document.querySelectorAll('.category-compatibility').forEach(wrap=>{
+ if(!wrap.contains(e.target)){wrap.querySelector('[role="tooltip"]').hidden=true;wrap.querySelector('button').setAttribute('aria-expanded','false')}
+ });
+});
+function render(){const q=searchEl.value.trim().toLowerCase();
+ categoryEl.querySelectorAll('button').forEach(b=>{const active=b.dataset.category===selectedCategory;b.classList.toggle('active',active);b.setAttribute('aria-pressed',active)});
+ resetEl.hidden=selectedCategory==='All categories'&&selectedFamily==='All families'&&!q;const visible=data.filter(x=>(selectedCategory==='All categories'||x.category===selectedCategory)&&(selectedFamily==='All families'||x.family===selectedFamily)&&(`${x.name} ${x.family} ${x.category}`.toLowerCase().includes(q)));const families=[...new Set(data.filter(x=>selectedCategory==='All categories'||x.category===selectedCategory).map(x=>x.family))];familyEl.innerHTML='';[['All families','All families'],...families.map(x=>[x,x])].forEach(([label,value])=>{const b=document.createElement('button');b.textContent=label;b.className=value===selectedFamily?'active':'';b.type='button';b.setAttribute('aria-pressed',value===selectedFamily);b.onclick=()=>{selectedFamily=value;render();[...familyEl.children].find(el=>el.textContent===label)?.focus()};familyEl.append(b)});document.querySelector('#total').textContent=data.length;document.querySelector('#count').innerHTML=`<strong>${visible.length}</strong> ${visible.length===1?'template':'templates'}${selectedFamily!=='All families'?' in '+selectedFamily:selectedCategory!=='All categories'?' in '+clean(selectedCategory):' to explore'}`;const cats=[...new Set(visible.map(x=>x.category))];document.querySelector('#library').innerHTML=cats.map(cat=>{const fam=[...new Set(visible.filter(x=>x.category===cat).map(x=>x.family))];return `<section class="category"><header class="category-head"><div class="category-title"><h2>${clean(cat)}</h2><div class="category-compatibility"><button type="button" class="compatibility-trigger" aria-label="Templates suitable for ${clean(cat)}" aria-describedby="suitability-${cat}" aria-controls="suitability-${cat}" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></svg></button><div class="compatibility-popover" id="suitability-${cat}" role="tooltip" hidden><strong>Templates suitable for</strong><p class="supported-list">${categoryTypes[cat].join(' · ')}</p></div></div></div><span>${visible.filter(x=>x.category===cat).length} templates</span></header>${fam.map(f=>{const items=visible.filter(x=>x.category===cat&&x.family===f);return `<div class="family"><header class="family-head"><h3>${f}</h3><span>${items.length} views</span></header><div class="grid">${items.map(x=>`<article class="card"><div class="image"><img src="../apps/web/public/output-examples/${x.path}" alt="${x.family}: ${x.name}" loading="lazy" decoding="async"></div><div class="copy"><h4>${x.name}</h4><p>${x.family} · Ecommerce</p></div></article>`).join('')}</div></div>`}).join('')}</section>`}).join('');if(!visible.length) document.querySelector('#library').innerHTML='<div class="empty"><h2>No matching templates</h2><p>Try another search or clear your filters to explore the full library.</p></div>';bindCompatibility()}
+searchEl.oninput=render;render();
+</script></body></html>

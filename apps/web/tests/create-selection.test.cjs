@@ -138,6 +138,37 @@ function fixture() {
   ];
 }
 
+test('removing output products clears only their choices and persists remaining URL IDs', () => {
+  const products = fixture();
+  const ui = interactive('CreateView', { products, onUpload: noop, initialSelectedIds: products.map(p => p.id), initialOutputStep: true });
+  ui.component('OutputSelection').props.onSelectionChange({ [products[0].id]: ['one'], [products[1].id]: ['two'] });
+  ui.rerender();
+  ui.component('OutputSelection').props.onRemoveProduct(products[0].id);
+  ui.rerender();
+  assert.deepEqual(Array.from(ui.component('OutputSelection').props.products, p => p.id), products.slice(1).map(p => p.id));
+  assert.equal(ui.component('OutputSelection').props.selection[products[0].id], undefined);
+  assert.equal(ui.component('OutputSelection').props.selection[products[1].id][0], 'two');
+  assert.deepEqual(new URL(ui.replacedUrls.at(-1), 'http://localhost').searchParams.getAll('product'), products.slice(1).map(p => p.id));
+  for (const product of products.slice(1)) { ui.component('OutputSelection').props.onRemoveProduct(product.id); ui.rerender(); }
+  assert.equal(ui.component('OutputSelection').props.products.length, 0);
+  assert.equal(new URL(ui.replacedUrls.at(-1), 'http://localhost').searchParams.has('product'), false);
+  assert.equal(products.length, 3);
+});
+
+test('product remove control is independent of selection and safely switches active product', () => {
+  const products = fixture();
+  const removed = [];
+  let props = { products, onBack: noop, selection: {}, onSelectionChange: noop, onRemoveProduct: id => removed.push(id) };
+  const ui = interactive('OutputSelection', props);
+  ui.button(`Remove ${products[0].name} from selection`).props.onClick();
+  assert.deepEqual(removed, [products[0].id]);
+  props = { ...props, products: products.slice(1) };
+  ui.rerender(props);
+  assert.ok(ui.nodes(n => n.props['aria-label'] === `Output choices for ${products[1].name}`).length);
+  ui.rerender({ ...props, products: [] });
+  assert.match(ui.text(), /Choose a product to get started/);
+});
+
 function selectionUrl(ui, expectedIds, outputs) {
   assert.ok(ui.navigations.length, 'Expected a durable navigation URL');
   const url = new URL(ui.navigations.at(-1), 'https://app.example.test');
@@ -447,13 +478,12 @@ const outerwearExamples = [
   ['Front with Model (No Face)', '07-front-model-no-face.png'],
   ['Back with Model (No Face)', '08-back-model-no-face.png'],
   ['Side / Angled with Model (No Face)', '09-side-angle-model-no-face.png'],
-  ['Fabric Shot', '10-fabric-leather-texture.png'],
 ];
 
 function mixedProducts() {
   const [first, second] = fixture();
   return [
-    { ...first, name: 'Wool trench coat', category: 'outerwear' },
+    { ...first, name: 'Wool jacket', category: 'outerwear', product_type: 'jacket', product_family: 'jackets' },
     { ...second, name: 'Cotton blouse', category: 'tops' },
   ];
 }
@@ -475,17 +505,17 @@ test('Create passes the actual selected product categories to output selection',
   });
   const output = ui.component('OutputSelection');
   assert.deepEqual(Array.from(output.props.products, product => ({ id: product.id, category: product.category })), products.map(product => ({ id: product.id, category: product.category })));
-  assert.equal(output.props.products[0].name, 'Wool trench coat');
+  assert.equal(output.props.products[0].name, 'Wool jacket');
 });
 
-test('outerwear uses exactly the ten ordered local examples while other categories retain their choices', () => {
+test('outerwear uses exactly the nine ordered local examples while other categories retain their choices', () => {
   const products = mixedProducts();
   const { ui, selectProduct } = outputUi(products);
   const ecommerce = categorySection(ui, 'Ecommerce');
   const cards = outputCards(ui, ecommerce);
-  assert.equal(outputCards(ui).length, 34);
+  assert.equal(outputCards(ui).length, 33);
   assert.deepEqual(cards.map(card => card.props['aria-label']), outerwearExamples.map(([name]) => name));
-  assert.match(textContent(ecommerce), /10 templates/);
+  assert.match(textContent(ecommerce), /9 templates/);
   for (const category of ['Lifestyle', 'Campaign']) assert.equal(outputCards(ui, categorySection(ui, category)).length, 12);
   const sharedNames = ['Lifestyle', 'Campaign'].map(category => outputCards(ui, categorySection(ui, category)).map(card => card.props['aria-label']));
   const publicDirectory = path.resolve(__dirname, '../public');
@@ -504,7 +534,7 @@ test('outerwear uses exactly the ten ordered local examples while other categori
     assert.ok(fs.statSync(asset).size > 0);
   });
   const publishedPngs = fs.readdirSync(path.join(publicDirectory, 'output-examples/outerwear')).filter(filename => filename.endsWith('.png'));
-  assert.deepEqual(publishedPngs.sort(), [...expectedFiles].sort(), 'Publish only the ten leather-jacket examples');
+  assert.deepEqual(publishedPngs.sort(), [...expectedFiles].sort(), 'Publish only the nine leather-jacket examples');
 
   selectProduct(products[1]);
   assert.equal(outputCards(ui).length, 34);
@@ -528,7 +558,6 @@ test('mixed categories keep independent valid choices and show the matching popu
   assert.equal(textContent(ui.nodes(node => node.type === 'p', current)[0]), 'Showing templates for Outerwear');
   assert.equal(textContent(ui.nodes(node => node.type === 'strong', current)[0]), 'Outerwear');
   chooseRecipe('Front Close');
-  chooseRecipe('Fabric Shot');
   selectProduct(products[1]);
   const switched = ui.nodes(node => node.props.className === 'pf-output-current')[0];
   assert.equal(textContent(ui.nodes(node => node.type === 'p', switched)[0]), 'Showing templates for Tops');
@@ -538,10 +567,9 @@ test('mixed categories keep independent valid choices and show the matching popu
   chooseRecipe('Everyday Wear');
   selectProduct(products[0]);
   assert.equal(ui.button('Front Close').props['aria-pressed'], true);
-  assert.equal(ui.button('Fabric Shot').props['aria-pressed'], true);
   assert.equal(ui.button('Everyday Wear').props['aria-pressed'], false, 'Shared output types are still selected separately per product');
   assert.deepEqual(selection(), {
-    [products[0].id]: ['ecommerce-outerwear-front-close', 'ecommerce-outerwear-fabric'],
+    [products[0].id]: ['ecommerce-outerwear-front-close'],
     [products[1].id]: ['ecommerce-tops-folded-view', 'lifestyle-everyday-wear'],
   });
   assert.equal(ui.button('Review selection').props.disabled, false);
@@ -551,17 +579,15 @@ test('mixed categories keep independent valid choices and show the matching popu
   const coat = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === products[0].name, dialog)[0];
   const blouse = ui.nodes(node => node.type === 'section' && node.props['aria-label'] === products[1].name, dialog)[0];
   assert.match(textContent(coat), /Front Close/);
-  assert.match(textContent(coat), /Fabric Shot/);
   assert.doesNotMatch(textContent(coat), /Folded View|Everyday Wear/);
   assert.match(textContent(blouse), /Folded View/);
   assert.match(textContent(blouse), /Everyday Wear/);
-  assert.doesNotMatch(textContent(blouse), /Front Close|Fabric Shot/);
+  assert.doesNotMatch(textContent(blouse), /Front Close/);
   assert.deepEqual(ui.nodes(node => typeof node.props.src === 'string', coat).map(node => node.props.src), [
     '/output-examples/outerwear/01-front-close.png',
-    '/output-examples/outerwear/10-fabric-leather-texture.png',
   ]);
   assert.ok(ui.nodes(node => typeof node.props.src === 'string', blouse).every(node => !node.props.src.includes('/output-examples/outerwear/')));
-  assert.match(textContent(ui.nodes(node => node.props.id === 'output-summary-description')[0]), /4 outputs selected across 2 products/);
+  assert.match(textContent(ui.nodes(node => node.props.id === 'output-summary-description')[0]), /3 outputs selected across 2 products/);
 });
 
 test('stale ecommerce IDs from another product category cannot satisfy review or appear in the popup', () => {
@@ -602,7 +628,7 @@ const footwearExamples = [
 
 function footwearProducts() {
   return [
-    { id: 'catalogue-white-trainers', name: 'White leather trainers', category: ' Footwear ', image_url: 'https://assets.example.test/trainers.jpg' },
+    { id: 'catalogue-white-trainers', name: 'White leather trainers', category: ' Footwear ', product_type: 'trainers', product_family: 'trainers', image_url: 'https://assets.example.test/trainers.jpg' },
     ...mixedProducts(),
   ];
 }
@@ -644,7 +670,7 @@ test('footwear, outerwear and default products retain independent choices and co
   chooseRecipe('Three-Quarter Product');
   chooseRecipe('Sole View');
   selectProduct(products[1]);
-  assert.equal(outputCards(ui).length, 34);
+  assert.equal(outputCards(ui).length, 33);
   chooseRecipe('Front Close');
   selectProduct(products[2]);
   assert.equal(outputCards(ui).length, 34);
@@ -698,6 +724,59 @@ test('stale footwear choices never count for other categories or let a mixed rev
   const dialog = summaryDialog(ui);
   assert.equal(ui.nodes(node => node.type === 'li', dialog).length, 3);
   assert.match(textContent(ui.nodes(node => node.props.id === 'output-summary-description')[0]), /3 outputs selected across 3 products/);
+});
+
+const flatsLoafersExamples = [
+  ['Three-Quarter Product', '01_three_quarter_product.png'],
+  ['Side Profile — Toe Left', '02_side_profile_toe_left.png'],
+  ['Side Profile — Toe Right', '03_side_profile_toe_right.png'],
+  ['Front View', '04_front_view.png'],
+  ['Rear View', '05_rear_view.png'],
+  ['Top View', '06_top_view.png'],
+  ['Front on Feet', '07_front_on_feet.png'],
+  ['Side on Feet', '08_side_on_feet.png'],
+];
+
+test('flats and loafers use the shared Shoes pack', () => {
+  const product = { id: 'catalogue-brown-loafers', name: 'Brown loafers', category: 'footwear', product_type: 'loafers', product_family: 'shoes', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.equal(cards.length, footwearExamples.length);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), footwearExamples.map(([name]) => name));
+  assert.match(textContent(ecommerce), new RegExp(`${footwearExamples.length} templates`));
+  cards.forEach((card, index) => {
+    const [, filename] = footwearExamples[index];
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = '/output-examples/footwear/' + filename;
+    assert.equal(image.props.src, expected);
+    assert.ok(fs.statSync(path.resolve(__dirname, '../public' + expected)).isFile());
+  });
+});
+
+const heelsExamples = [
+  ['Three-Quarter Product', '01_three_quarter_product.png'],
+  ['Side Profile — Toe Left', '02_side_profile_toe_left.png'],
+  ['Side Profile — Toe Right', '03_side_profile_toe_right.png'],
+  ['Front View', '04_front_view.png'],
+  ['Rear View', '05_rear_view.png'],
+  ['Top View', '06_top_view.png'],
+  ['Front on Feet', '07_front_on_feet.png'],
+  ['Side on Feet', '08_side_on_feet.png'],
+];
+
+test('heels use their dedicated eight-template pack', () => {
+  const product = { id: 'catalogue-red-heels', name: 'Red heels', category: 'footwear', product_type: 'heels', product_family: 'heels', image_url: null };
+  const { ui } = outputUi([product]);
+  const cards = outputCards(ui, categorySection(ui, 'Ecommerce'));
+  assert.equal(cards.length, 8);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), heelsExamples.map(([name]) => name));
+  cards.forEach((card, index) => {
+    const [, filename] = heelsExamples[index];
+    const expected = '/output-examples/footwear/heels/' + filename;
+    assert.equal(ui.nodes(node => typeof node.props.src === 'string', card)[0].props.src, expected);
+    assert.ok(fs.statSync(path.resolve(__dirname, '../public' + expected)).isFile());
+  });
 });
 
 const socksExamples = [
@@ -841,21 +920,20 @@ test('normalized bottoms categories use nine ordered local examples and preserve
 const underwearExamples = [
   ['Front with Model (No Face)', '01-front-model.png'],
   ['Front Flat Lay', '02-front-flat-lay.png'],
-  ['Back Flat Lay', '03-back-flat-lay.png'],
   ['Rear Three-Quarter', '04-rear-three-quarter.png'],
   ['Front Product', '05-front-product.png'],
   ['Side Profile', '06-side-profile.png'],
   ['Waistband & Fabric Detail', '07-waistband-detail.png'],
 ];
 
-test('underwear uses seven ordered local Ecommerce examples and category-specific IDs', () => {
+test('underwear uses six ordered local Ecommerce examples and category-specific IDs', () => {
   const product = { id: 'catalogue-grey-boxers', name: 'Grey cotton boxer briefs', category: ' Underwear ', product_family: 'lower_body_underwear', image_url: 'https://assets.example.test/boxers.jpg' };
   const { ui, chooseRecipe, selection } = outputUi([product]);
   const ecommerce = categorySection(ui, 'Ecommerce');
   const cards = outputCards(ui, ecommerce);
-  assert.equal(cards.length, 7);
+  assert.equal(cards.length, 6);
   assert.deepEqual(cards.map(card => card.props['aria-label']), underwearExamples.map(([name]) => name));
-  assert.match(textContent(ecommerce), /7 templates/);
+  assert.match(textContent(ecommerce), /6 templates/);
   cards.forEach((card, index) => {
     const [name, filename] = underwearExamples[index];
     const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
@@ -868,15 +946,15 @@ test('underwear uses seven ordered local Ecommerce examples and category-specifi
   chooseRecipe('Front Product');
   chooseRecipe('Waistband & Fabric Detail');
   assert.deepEqual(selection(), { [product.id]: ['ecommerce-underwear-front-product', 'ecommerce-underwear-waistband-detail'] });
-  assert.equal(outputCards(ui).length, 31);
+  assert.equal(outputCards(ui).length, 30);
 });
 
 test('underwear templates are limited to lower-body family products', () => {
   const lower = { id: 'catalogue-lower-underwear', name: 'Boxer briefs', category: 'underwear', product_family: 'lower_body_underwear', image_url: null };
   const bra = { id: 'catalogue-bra', name: 'Soft bralette', category: 'underwear', product_family: 'bra', image_url: null };
   const lowerUi = outputUi([lower]).ui;
-  assert.equal(outputCards(lowerUi, categorySection(lowerUi, 'Ecommerce')).length, 7);
-  assert.equal(textContent(categorySection(lowerUi, 'Ecommerce')).includes('7 templates'), true);
+  assert.equal(outputCards(lowerUi, categorySection(lowerUi, 'Ecommerce')).length, 6);
+  assert.equal(textContent(categorySection(lowerUi, 'Ecommerce')).includes('6 templates'), true);
   const braUi = outputUi([bra]).ui;
   assert.equal(outputCards(braUi, categorySection(braUi, 'Ecommerce')).length, 0);
   assert.equal(textContent(categorySection(braUi, 'Ecommerce')).includes('0 templates'), true);

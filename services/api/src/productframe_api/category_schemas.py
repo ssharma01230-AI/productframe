@@ -12,7 +12,9 @@ DressFamily = Literal["dresses"]
 TailoringFamily = Literal["tailored-jackets", "waistcoats", "suits", "tuxedos"]
 SleepwearFamily = Literal["pyjamas", "nightwear", "robes"]
 SocksFamily = Literal["socks"]
-FootwearFamily = Literal["trainers", "flats-loafers", "sandals-open-shoes", "boots", "heels"]
+# Canonical families are shoes, heels and boots. Legacy values remain accepted
+# while persisted analyses and generation runs are migrated.
+FootwearFamily = Literal["shoes", "boots", "heels", "trainers", "flats-loafers", "sandals-open-shoes"]
 JewelleryFamily = Literal["rings", "bracelets", "earrings", "necklaces", "watches"]
 AccessoriesFamily = Literal["headwear", "scarves", "gloves", "belts", "ties-neckwear", "veils"]
 

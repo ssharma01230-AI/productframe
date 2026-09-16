@@ -4,7 +4,8 @@ from pathlib import Path
 from productframe_api.generation_templates import list_generation_templates
 
 
-FRONTEND_RECIPES = Path(__file__).parents[3] / "apps/web/app/studio/output-recipes.ts"
+REPO_ROOT = Path(__file__).parents[3]
+FRONTEND_RECIPES = REPO_ROOT / "apps/web/app/studio/output-recipes.ts"
 FAMILIES = ("shirts", "t-shirts-casual-tops", "sleeveless-tops", "knitwear", "hoodies")
 
 
@@ -58,3 +59,80 @@ def test_tops_frontend_and_backend_template_ids_and_evidence_match():
             f"ecommerce-tops-{family}-{index:02d}" for index in expected_numbers
         ]
         assert tuple(template.required_evidence[0] for template in backend) == evidence[family]
+
+    # Presentation names and contracts must not drift between the UI and the
+    # backend registry for the corrected benchmark cases.
+    assert "Front Headless Mannequin" in source
+    shirts = list_generation_templates(category="tops", channel="ecommerce", product_family="shirts")
+    assert shirts[2].presentation_mode == "garment"
+    assert shirts[5].presentation_mode == "model"
+    assert shirts[7].presentation_mode == "invisible_mannequin"
+    assert shirts[12].required_evidence == ("rear_view",)
+    assert shirts[13].required_evidence == ("rear_view",)
+    sleeveless = list_generation_templates(category="tops", channel="ecommerce", product_family="sleeveless-tops")
+    assert sleeveless[2].presentation_mode == "invisible_mannequin"
+    assert sleeveless[3].presentation_mode == "mannequin"
+
+
+def test_hoodie_templates_have_reviewed_details_modes_and_local_benchmarks():
+    templates = list_generation_templates(
+        category="tops", channel="ecommerce", product_family="hoodies",
+    )
+    assert [template.presentation_mode for template in templates] == [
+        "garment", "invisible_mannequin", "invisible_mannequin", "invisible_mannequin",
+        "model", "model", "model", "model", "model", "model", "model", "model",
+    ]
+    assert all(template.output_details for template in templates)
+    assert all(
+        template.reference_object_key
+        and (REPO_ROOT / template.reference_object_key).is_file()
+        for template in templates
+    )
+
+
+def test_knitwear_templates_have_reviewed_details_modes_and_local_benchmarks():
+    templates = list_generation_templates(
+        category="tops", channel="ecommerce", product_family="knitwear",
+    )
+    assert [template.presentation_mode for template in templates] == [
+        "garment", "garment", "model", "model", "model", "garment",
+        "model", "garment", "invisible_mannequin", "invisible_mannequin", "model",
+    ]
+    assert all(template.output_details for template in templates)
+    assert all(
+        template.reference_object_key
+        and (REPO_ROOT / template.reference_object_key).is_file()
+        for template in templates
+    )
+
+
+def test_sleeveless_templates_have_reviewed_details_modes_and_local_benchmarks():
+    templates = list_generation_templates(
+        category="tops", channel="ecommerce", product_family="sleeveless-tops",
+    )
+    assert [template.presentation_mode for template in templates] == [
+        "model", "model", "invisible_mannequin", "mannequin", "garment", "model",
+    ]
+    assert all(template.output_details for template in templates)
+    assert all(
+        template.reference_object_key
+        and (REPO_ROOT / template.reference_object_key).is_file()
+        for template in templates
+    )
+
+
+def test_tshirt_templates_have_reviewed_details_modes_and_local_benchmarks():
+    templates = list_generation_templates(
+        category="tops", channel="ecommerce", product_family="t-shirts-casual-tops",
+    )
+    expected_modes = [
+        "garment", "model", "garment", "model", "invisible_mannequin",
+        "model", "invisible_mannequin", "garment", "invisible_mannequin",
+    ]
+    assert [template.presentation_mode for template in templates] == expected_modes
+    assert all(template.output_details for template in templates)
+    assert all(
+        template.reference_object_key
+        and (REPO_ROOT / template.reference_object_key).is_file()
+        for template in templates
+    )

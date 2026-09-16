@@ -51,6 +51,7 @@ def test_openai_image_provider_sends_both_references(monkeypatch):
             description="A muted blue short-sleeve top.",
         ),
         product_reference_images=(ReferenceImage(role="product_reference", object_key="product.webp"),),
+        template_reference_images=(ReferenceImage(role="template_reference", object_key="templates/ecommerce/tops/front-view/reference.webp"),),
     ))
 
     result = provider.generate(request)
@@ -60,9 +61,9 @@ def test_openai_image_provider_sends_both_references(monkeypatch):
     assert result.request_id == "img_req_123"
     assert client.images.kwargs["model"] == "gpt-image-2.5-flare"
     assert client.images.kwargs["size"] == "1024x1024"
-    assert client.images.kwargs["quality"] == "medium"
-    assert len(client.images.kwargs["image"]) == 1
-    assert "white background" in client.images.kwargs["prompt"]
+    assert client.images.kwargs["quality"] == "high"
+    assert len(client.images.kwargs["image"]) == 2
+    assert "TEMPLATE REFERENCE" in client.images.kwargs["prompt"]
 
 
 def test_openai_provider_normalizes_reference_orientation(monkeypatch):

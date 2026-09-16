@@ -13,8 +13,9 @@ The current application builds successfully as of the latest handover:
 ```text
 pnpm typecheck:web   PASS
 pnpm build:web      PASS
-backend + worker tests       297 PASS
-frontend tests               6 PASS
+backend tests                287 PASS
+worker tests                 21 PASS
+frontend tests               27 PASS
 ```
 
 The Next.js build completes for `/`, `/studio`, and `/products`. Build output contains existing Autoprefixer warnings about `start`/`end` flex values and a workspace-root warning caused by multiple lockfiles; these are non-fatal.
@@ -65,7 +66,7 @@ Implemented behaviour includes:
 - Product folders with refresh-safe URLs, associated uploads, full-image previews, private folder links, and upload ZIP downloads.
 - A Gallery view reserved for approved generated outputs. Uploads remain inside product folders. Generated assets are persisted separately from source assets and can be stored in product folders and Gallery.
 - A Create view inside Studio based on the prototype, with new-product upload and existing-catalogue paths. Its typography, stacked sections, card borders, and responsive layout have been browser-verified. `/studio?view=create` opens this view directly.
-- Catalogue cards support selecting one or multiple products, then Choose outputs opens `/studio?view=create&step=outputs&product=<id>` (repeat `product` for multiple selections). Choices are resolved independently from each product's category and rendering family. Outerwear uses ten leather-jacket Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/outerwear/`, with the approved no-face model labels. Footwear uses ten white-trainer Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/footwear/`. Socks uses the eight user-approved cream ribbed crew-sock Ecommerce previews from `apps/web/public/output-examples/socks/`, in attachment order. Bottoms uses family-specific approved Ecommerce templates and local benchmark references: 9 for Structured Bottoms, 9 for Shorts, 9 for Casual Bottoms, 8 for Leggings and 6 for Skirts; the unapproved Fabric Surface Detail draft is excluded. Tops, Outerwear, Footwear, Socks and Bottoms all mirror their backend-owned Ecommerce IDs and names, while other categories retain the default catalogue choices. Reference previews are illustrative catalogue examples, not generated assets posted to a product's library. Review selection opens a centred popup with the same selected output thumbnails grouped by product; Back, Close, Escape and the backdrop dismiss it without losing choices. Product selections survive navigation in the URL; output choices remain in the current page session. For the current rollout, Continue submits one selected product/template with an idempotency key, polls the durable job, displays the signed preview URL for human review, and submits approval or rejection to the worker.
+- Catalogue cards support selecting one or multiple products, then Choose outputs opens `/studio?view=create&step=outputs&product=<id>` (repeat `product` for multiple selections). Choices are resolved independently from each product's category and rendering family. Outerwear uses nine leather-jacket Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/outerwear/`, with the approved no-face model labels. Footwear uses dedicated family packs: nine Trainers, eight Flats / Loafers and eight Heels Ecommerce reference images, each with matching backend-owned IDs, titles and descriptions. Socks uses the eight user-approved cream ribbed crew-sock Ecommerce previews from `apps/web/public/output-examples/socks/`, in attachment order. Bottoms uses family-specific approved Ecommerce templates and local benchmark references: 9 for Structured Bottoms, 9 for Shorts, 9 for Casual Bottoms, 8 for Leggings and 6 for Skirts; the unapproved Fabric Surface Detail draft is excluded. Tops, Outerwear, Footwear, Socks and Bottoms all mirror their backend-owned Ecommerce IDs and names, while other categories retain the default catalogue choices. Reference previews are illustrative catalogue examples, not generated assets posted to a product's library. Review selection opens a centred popup with the same selected output thumbnails grouped by product; Back, Close, Escape and the backdrop dismiss it without losing choices. Product selections survive navigation in the URL; output choices remain in the current page session. For the current rollout, Continue submits one selected product/template with an idempotency key, polls the durable job, displays the signed preview URL for human review, and submits approval or rejection to the worker.
 - The Outerwear, Footwear and Socks Ecommerce example images have the same conservative deterministic finishing profile applied in place: `1.055x` contrast, `1.075x` colour and an unsharp mask with radius `1.15`, strength `72%` and threshold `4`. All remain `1122x1402` PNGs. This is a presentation treatment for static template examples and does not make them generated product assets.
 
 ### Product categories and subtype routing
@@ -109,16 +110,249 @@ tops
 └── hoodies: pullover hoodie, zip-through hoodie, zip-up hoodie
 ```
 
-Tops currently have 54 family-specific Ecommerce reference templates: Shirts
-(15), T-Shirts & Casual Tops (9), Sleeveless Tops (6), Knitwear (11), and
-Hoodies (12). T-Shirt templates are version 2 and are benchmark-mapped to the
-frontend images. The duplicate straight-on front template 07 has been removed;
-template 04 specifies one hand in a trouser pocket, template 09 adds a slight
-fabric twist for texture emphasis, and templates 05, 08 and 10 use invisible-
-mannequin presentations. The backend keeps the ten generic Tops compositions as an
+Tops currently have 52 family-specific Ecommerce reference templates: Shirts
+(14), T-Shirts & Casual Tops (9), Sleeveless Tops (6), Knitwear (11), and
+Hoodies (12). The backend keeps the ten generic Tops compositions as an
 unclassified fallback. Family examples are stored under
 `apps/web/public/output-examples/tops/` and are illustrative references only;
 no images are generated at build or test time.
+
+#### Shirts prompt and template system
+
+The Shirts family is the first Tops family migrated to the structured prompt
+system. Its 14 templates are benchmark-mapped end to end: the frontend recipe,
+backend template registry, prompt compiler and worker all use the same stable
+IDs, names, evidence requirements and matching benchmark image.
+
+For every Shirts generation, the worker supplies both:
+
+```text
+1. Uploaded product reference image(s)
+2. Matching Shirts benchmark template reference image
+```
+
+The product reference controls identity: colour, material, texture, silhouette,
+construction, artwork, branding and proportions. The benchmark template controls
+composition only: camera angle, framing, pose, product position, scale, lighting,
+background and presentation structure. The model is explicitly instructed to
+replace the benchmark garment completely and never copy its product-specific
+details.
+
+The compiled Shirts prompt is generated in this order:
+
+```text
+INSTRUCTION
+PRODUCT
+FIDELITY RULES
+PRESENTATION MODE
+OUTPUT DETAILS
+NEGATIVE PROMPTS
+```
+
+`PRESENTATION MODE` is exactly one of `model`, `mannequin`,
+`invisible_mannequin` or `garment`. Model, visible headless mannequin and
+completely invisible mannequin are deliberately separate modes and are never
+combined. `OUTPUT DETAILS` contains the benchmark-reviewed camera, framing,
+pose, crop, styling, lighting, background and visible-construction requirements.
+`PROMPT FORMAT RULES` are compiler metadata and are not included in Shirts
+model-facing prompts. Confidence and uncertainty metadata remains available in
+the normal compiled product context; the isolated template-reference experiment
+omits that section for comparison.
+
+The fixed studio background used by Tops output-detail documents and Shirts
+runtime output details is:
+
+```text
+- Background: Light warm beige studio backdrop approximately #C8C1B6.
+```
+
+The Shirts template-reference experiment is isolated in
+`experiments/shirts_template_reference_ab.py`, with comparison outputs under
+`experiments/results/shirts-template-reference-ab/`. It is not part of the
+production generation route; the same reference strategy is now used by the
+production Shirts route.
+
+The T-Shirts & Casual Tops family has now been migrated using the same approach.
+Its nine active templates (01–06 and 08–10; 07 remains intentionally excluded)
+now have reviewed structured Output Details, explicit presentation modes and
+matching local benchmark references. The worker provisions the uploaded product
+reference images together with the exact matching T-Shirt benchmark image. The
+uploaded product remains authoritative for identity, while the benchmark image
+controls composition only. T-Shirt prompts therefore use the same structured
+section order and strict benchmark-garment replacement rule as Shirts.
+
+The T-Shirt presentation contracts are explicitly assigned as follows:
+
+```text
+01 garment                 02 model
+03 garment                 04 model
+05 invisible mannequin     06 model
+08 invisible mannequin     09 garment
+10 invisible mannequin
+```
+
+The reviewed T-Shirt contracts are recorded in
+`docs/tshirt-output-details-review.md`. Automated checks cover frontend/backend
+parity, evidence mapping, output-detail presence, explicit presentation modes,
+benchmark-file existence, structured prompt compilation, reference ordering and
+OpenAI provider submission. The worker's local reference resolution must use the
+repository root, not a `services/apps/...` path.
+
+Sleeveless Tops has also completed the same seven-step migration. Its six
+reviewed templates now have structured Output Details, explicit presentation
+modes and matching benchmark references. The active contracts are:
+
+```text
+01 model                   02 model
+03 invisible mannequin     04 visible headless mannequin
+05 garment / flat lay     06 model
+```
+
+The product reference remains authoritative for colour, material, construction,
+fit, artwork and proportions. The Sleeveless benchmark controls composition only,
+and the worker sends the uploaded product reference images together with the
+matching local benchmark image. The reviewed contracts are recorded in
+`docs/sleeveless-output-details-review.md`; automated parity, prompt-compilation
+and two-reference provider tests cover the implementation.
+
+Knitwear has now completed the same seven-step migration. Its 11 templates use
+reviewed structured Output Details, explicit presentation modes and matching
+local benchmark references. The active modes are:
+
+```text
+01 garment                 02 garment
+03 model                   04 model
+05 model                   06 garment
+07 model                   08 garment
+09 invisible mannequin     10 invisible mannequin
+11 model
+```
+
+Template 04 is intentionally treated as a model presentation because its
+benchmark image shows an adult model with clasped hands, despite the catalogue
+name `Front Product`. The uploaded knitwear reference remains authoritative for
+identity, material, colour, knit structure, construction and fit; the benchmark
+controls composition only. The reviewed contracts are recorded in
+`docs/knitwear-output-details-review.md`, and the implementation is covered by
+frontend/backend parity, benchmark-file, structured-prompt and two-reference
+provider tests.
+
+Hoodies have now completed the same seven-step migration. All 12 templates use
+reviewed structured Output Details, explicit presentation modes and matching
+local benchmark references. The active modes are:
+
+```text
+01 garment                 02 invisible mannequin
+03 invisible mannequin     04 invisible mannequin
+05 model                   06 model
+07 model                   08 model
+09 model                   10 model
+11 model                   12 model
+```
+
+The product reference remains authoritative for hoodie colour, material, hood
+construction, closures, pockets, fit and proportions. The benchmark controls
+composition only. Hood-adjustment poses, trouser-pocket poses, seated framing and
+full-length framing are documented individually rather than inferred from
+filenames. The reviewed contracts are recorded in
+`docs/hoodies-output-details-review.md`, with parity, benchmark-file,
+structured-prompt and two-reference provider tests covering the implementation.
+
+Structured Bottoms have now completed the same seven-step migration. All nine
+shared structured-bottom templates use reviewed structured Output Details,
+explicit presentation modes and matching local benchmark references. Their
+presentation modes are:
+
+```text
+01 garment                 02 garment
+03 model                   04 garment
+05 model                   06 model
+07 model                   08 garment
+09 garment
+```
+
+The uploaded bottoms reference remains authoritative for colour, material, rise,
+fit, leg shape, length, pockets, closures, belt loops, pleats, seams and hems.
+The benchmark controls composition only. Template 03 is documented as
+model-worn despite its catalogue name ending in `Product`, and template 08 is
+documented as a pocket/waistband macro rather than a centre-closure detail. The
+reviewed contracts are recorded in
+`docs/structured-bottoms-output-details-review.md`; evidence, benchmark-file,
+structured-prompt and two-reference provider tests cover the implementation.
+
+Shorts have now completed the same seven-step migration. All nine templates use
+reviewed structured Output Details, explicit presentation modes and matching
+local benchmark references. The active modes are:
+
+```text
+01 garment                 02 invisible mannequin
+03 invisible mannequin     04 invisible mannequin
+05 model                   06 model
+07 model                   08 model
+09 garment
+```
+
+Shorts evidence is explicitly mapped to the required front or rear product view,
+including rear evidence for templates 04 and 07. The product reference remains
+authoritative for the shorts' colour, fabric, waistband, drawcord, pockets, fit,
+leg openings and construction; benchmark images control composition only. The
+reviewed contracts are recorded in `docs/shorts-output-details-review.md`, with
+benchmark-file, evidence, structured-prompt and two-reference provider tests
+covering the implementation.
+
+Casual Bottoms / Joggers have now completed the same seven-step migration. All
+nine templates use reviewed structured Output Details, explicit presentation
+modes and matching local benchmark references. The active modes are:
+
+```text
+01 garment                 02 invisible mannequin
+03 invisible mannequin     04 invisible mannequin
+05 model                   06 model
+07 model                   08 model
+09 garment
+```
+
+Joggers evidence is explicitly mapped to front or rear views, including rear
+evidence for templates 04 and 07. The uploaded product remains authoritative
+for colour, fabric, waistband, drawcord, pockets, cuffs, fit and proportions;
+the benchmark controls composition only. The reviewed contracts are recorded
+in `docs/joggers-output-details-review.md`, with benchmark-file, evidence,
+structured-prompt and two-reference provider tests covering the implementation.
+
+Leggings have now completed the same seven-step migration. All eight templates
+use reviewed structured Output Details, explicit presentation modes and matching
+local benchmark references. The active modes are:
+
+```text
+01 model                   02 garment
+03 invisible mannequin     04 invisible mannequin
+05 invisible mannequin     06 garment
+07 model                   08 model
+```
+
+Leggings evidence is explicitly mapped to front or rear views, including rear
+evidence for templates 03 and 07. The uploaded product remains authoritative
+for colour, fabric, waistband, rise, close fit, seams and ankle hems; benchmark
+images control composition only. The reviewed contracts are recorded in
+`docs/leggings-output-details-review.md`, with benchmark-file, evidence,
+structured-prompt and two-reference provider tests covering the implementation.
+
+Skirts have now completed the same seven-step migration. All six templates use
+reviewed structured Output Details, explicit presentation modes and matching
+local benchmark references. The active modes are:
+
+```text
+01 garment                 02 garment
+03 model                   04 model
+05 model                   06 model
+```
+
+Skirts evidence is explicitly mapped to front or rear views, including rear
+evidence for templates 02 and 04. The uploaded product remains authoritative
+for colour, material, length, fit, pleats, closures, seams and hem; benchmark
+images control composition only. The reviewed contracts are recorded in
+`docs/skirts-output-details-review.md`, with benchmark-file, evidence,
+structured-prompt and two-reference provider tests covering the implementation.
 
 The current bottoms taxonomy is:
 
@@ -137,15 +371,15 @@ Back Model, Waistband & Closure Detail, Pocket Panel Detail, and Hem & Leg Detai
 Shorts now use a dedicated nine-image version-2 benchmark pack: Flat-Laid Product, Front/Three-Quarter/Rear Invisible
 Mannequin, Front-Facing Model, Three-Quarter Full-Length Model, Rear-Facing
 Model, Full-Length Front-Facing Model, and Waistband & Closure Detail. The Shorts
-pack is documented in `docs/bottoms-shorts-template-inventory.md`; the planned
+pack is documented in `docs/shorts-output-details-review.md`; the planned
 pocket/mid-front detail is intentionally not included yet. Casual bottoms (currently benchmarked with joggers) now use a
 dedicated nine-image version-2 pack documented in
-`docs/bottoms-joggers-template-inventory.md`: flat-laid, invisible mannequin
+`docs/joggers-output-details-review.md`: flat-laid, invisible mannequin
 front/three-quarter/rear, front/three-quarter/rear model, full-length front
 model and folded top-down. Leggings use the dedicated eight-template benchmark
-pack documented in `docs/bottoms-leggings-template-inventory.md`; Skirts use the
+pack documented in `docs/leggings-output-details-review.md`; Skirts use the
 dedicated six-template structured pleated-skirt pack documented in
-`docs/bottoms-skirts-template-inventory.md`. Family policies preserve the
+`docs/skirts-output-details-review.md`. Family policies preserve the
 appropriate inseam, waist, drape, stretch, drawcord, tapered-leg, ribbed-cuff,
 pleat and hem construction without copying jeans-specific assumptions.
 Bottoms require only `front_view` or `rear_view` evidence according to the
@@ -176,7 +410,7 @@ load generation job
 
 The order is deliberate. Recognition, prompt construction and generation receive no sharpened or saturation-adjusted input. Fidelity validation is disabled by default to avoid the extra vision-model request; set `OPENAI_IMAGE_FIDELITY_VALIDATION=true` to re-enable restoration and validation. The human reviewer sees the finished preview, and the approved final is the same reviewed image.
 
-Image generation supports OpenAI GPT-Image-2.5 Flare and Gemini `gemini-3.1-flash-lite-image` (Nano Banana). Small runs (fewer than 10 jobs) always use OpenAI (`gpt-image-2.5-flare`). For runs containing 10 or more jobs, assignments alternate between OpenAI and Gemini so both provider queues can process work concurrently. Provider-side failures (timeouts, transport errors, HTTP 408/409/429 or 5xx responses) trigger one failover attempt on the other provider; invalid requests, safety rejections, authentication errors and malformed responses do not. Provider, model, fallback count and request ID are persisted on each generation job. The frontend remains provider-neutral and continues polling the same generation-run endpoint.
+Image generation supports OpenAI GPT-Image-2.5 Sunburst and Gemini `gemini-3.1-flash-lite-image` (Nano Banana). Small runs (fewer than 10 jobs) always use OpenAI (`gpt-image-2.5-sunburst`). For runs containing 10 or more jobs, assignments alternate between OpenAI and Gemini so both provider queues can process work concurrently. Provider-side failures (timeouts, transport errors, HTTP 408/409/429 or 5xx responses) trigger one failover attempt on the other provider; invalid requests, safety rejections, authentication errors and malformed responses do not. Provider, model, fallback count and request ID are persisted on each generation job. The frontend remains provider-neutral and continues polling the same generation-run endpoint.
 
 Local tests showed strong reproduction for a printed navy T-shirt and an all-over patterned tunic. A difficult octopus graphic test exposed a limitation in the current colour-distance artwork mask: it correctly failed closed rather than publishing a contaminated rectangular source crop. Improve general artwork segmentation before treating that case as solved; do not add product-specific or octopus-specific schemas, prompts or scripts.
 
@@ -328,7 +562,7 @@ The worker reads `services/worker/.env`; the standalone analyser reads the `.env
 | `GEMINI_REQUESTS_PER_DAY` | `18` | Gemini daily request-attempt allowance. |
 | `ANALYSIS_QUOTA_DB` | `<repository>/.cache/analysis-quotas.sqlite3` | Optional override for the persisted Gemini daily ledger. |
 | `IMAGE_GENERATION_PROVIDER` | `openai` | Legacy setting; small runs always use OpenAI, while runs with 10 or more jobs use deterministic OpenAI/Gemini alternation. |
-| `OPENAI_IMAGE_MODEL` | `gpt-image-2.5-flare` | OpenAI image-generation model used by the worker. |
+| `OPENAI_IMAGE_MODEL` | `gpt-image-2.5-sunburst` | OpenAI image-generation model used by the worker. |
 | `OPENAI_IMAGE_TIMEOUT_SECONDS` | `300` | Per-request timeout for the OpenAI image provider. |
 | `GEMINI_IMAGE_MODEL` | `gemini-3.1-flash-lite-image` | Gemini image-generation model used for large-run assignments and failover. |
 | `GEMINI_IMAGE_TIMEOUT_SECONDS` | `300` | Per-request timeout for the Gemini image provider. |
