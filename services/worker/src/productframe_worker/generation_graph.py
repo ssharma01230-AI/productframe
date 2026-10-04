@@ -132,9 +132,7 @@ def create_persisted_generation_graph(
         assets = db.scalars(select(SourceAsset).where(SourceAsset.product_id == product.id).order_by(SourceAsset.created_at, SourceAsset.id)).all()
         template = get_generation_template(job.template_id)
         template_reference_images = ()
-        if template is not None and template.reference_object_key and job.template_id.startswith((
-                "ecommerce-tops-shirts-", "ecommerce-tops-t-shirts-casual-tops-", "ecommerce-tops-sleeveless-tops-", "ecommerce-tops-knitwear-", "ecommerce-tops-hoodies-", "ecommerce-outerwear-", "ecommerce-footwear-", "ecommerce-bottoms-",
-            )):
+        if template is not None and template.reference_object_key:
             template_path = Path(__file__).resolve().parents[4] / template.reference_object_key
             if template_path.is_file():
                 template_reference_images = (ReferenceImage(role="template_reference", object_key=f"file://{template_path}"),)

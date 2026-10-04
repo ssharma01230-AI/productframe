@@ -17,6 +17,7 @@ The benchmark supplies composition, framing and presentation. The uploaded produ
 ## OUTPUT DETAILS
 
 - Subject: Uploaded coat, using the `garment` presentation defined above.
+- Presentation: Product-only studio presentation with no human model or visible support unless the benchmark explicitly requires it.
 - Camera angle and orientation: Very close oblique macro of a supported fabric edge.
 - Framing and crop: Fabric fills every edge of frame; no whole garment, model or backdrop visible.
 - Product position and pose: Folded edge corner occupies upper-left/centre, with another diagonal edge at right.
@@ -30,6 +31,8 @@ The benchmark supplies composition, framing and presentation. The uploaded produ
 - Surface fidelity: Preserve evidenced texture scale. Several benchmark fronts show pronounced swirling surface detail; do not transfer this to a plain coat or invent fibres, ornament, weave or embroidery.
 - Secondary styling: No person, skin, underlayer, trousers, footwear, hanger or visible support.
 - Composition: One continuous portrait ecommerce photograph, approximately 4:5; one coat only. No collage, inset, duplicated view, added text, watermark or decorative accessories.
+
+- Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate view, text or watermark.
 
 ## Source evidence and uncertainty
 

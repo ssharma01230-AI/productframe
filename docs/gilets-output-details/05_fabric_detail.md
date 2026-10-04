@@ -17,6 +17,7 @@ The benchmark controls composition, camera, framing and presentation. The upload
 ## OUTPUT DETAILS
 
 - Subject: Uploaded gilet or padded vest, presented using `garment`.
+- Presentation: Product-only studio presentation with no human model or visible support unless the benchmark explicitly requires it.
 - Camera angle and orientation: Oblique macro across supported material and intersecting seams.
 - Framing and crop: Fabric fills frame with no surrounding backdrop; whole garment, collar and hem absent.
 - Product position and pose: Broad panel occupies centre; diagonal quilting lines cross frame and meet a steeper seam toward image right.

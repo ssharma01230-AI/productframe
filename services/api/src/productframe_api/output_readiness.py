@@ -11,7 +11,10 @@ def evaluate_template(template: GenerationTemplate, evidence: list[dict[str, Any
             continue
         available.update(str(value) for value in item.get("views", []) or [])
         available.update(str(value) for value in item.get("evidence", []) or [])
-    missing = [item for item in template.required_evidence if item not in available]
+    missing = [
+        item for item in template.required_evidence
+        if not any(option in available for option in item.split("|"))
+    ]
     return {
         "template_id": template.id,
         "status": "ready" if not missing else "needs_image",

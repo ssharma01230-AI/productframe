@@ -7,6 +7,8 @@ generation jobs and generated assets.
 from dataclasses import dataclass, replace
 from typing import Final, Literal
 
+from .reviewed_output_details import REVIEWED_OUTPUT_DETAILS
+
 
 @dataclass(frozen=True, slots=True)
 class GenerationTemplate:
@@ -494,8 +496,8 @@ _TRAINERS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
     'ecommerce-footwear-rear-view': replace(FOOTWEAR_ECOMMERCE_TEMPLATES[4], applicable_families=("shoes",), reference_object_key='docs/trainers-output-details/references/05-rear-view.png', presentation_mode='garment', output_presentation='product_only', output_details="- Subject: One uploaded shoe from rear. - Presentation: Upright heel facing camera. - Camera angle: Centred rear view, slightly elevated. - View orientation: Rear with no deliberate side turn. - Framing: Complete projected rear silhouette. - Crop: Retain heel base and top edge. - Product position: Heel centred. - Product scale: Moderate with clear border. - Silhouette: Actual heel profile and height. - Visible construction: Actual rear seams, heel counter/straps and sole junction. - Product volume: Natural upper depth. - Background: Light warm beige seamless studio surface/background, approximately #C8C1B6; no unrelated props. - Lighting: Soft directional studio light with gentle shadows; preserve the uploaded material's actual sheen and fine detail without exaggerated grain or sharpening. - Colour treatment: Preserve source colour, tonal variation, surface finish and artwork; do not transfer benchmark colours or add a beige cast to the product. - Composition: One shoe; do not replace its actual heel design with benchmark construction. - Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate views or added text. - Aspect ratio: Portrait, approximately 4:5. - Secondary styling: No person, feet, socks, hands, visible stand, mannequin or shoe tree. Interior appears only where this angle reveals it.", required_evidence=('rear_view',), version=2),
     'ecommerce-footwear-top-view': replace(FOOTWEAR_ECOMMERCE_TEMPLATES[5], applicable_families=("shoes",), reference_object_key='docs/trainers-output-details/references/06-top-view.png', presentation_mode='garment', output_presentation='product_only', output_details="- Subject: One uploaded shoe from above. - Presentation: Product-only overhead arrangement. - Camera angle: Direct overhead perpendicular to upper. - View orientation: Toe at top, heel at bottom. - Framing: Whole toe-to-heel outline. - Crop: Retain all edges. - Product position: Long axis vertical. - Product scale: Most of image height. - Silhouette: Actual top outline and opening. - Visible construction: Actual opening, insole and fastenings when visible. - Product volume: Natural cavity depth. - Background: Light warm beige seamless studio surface/background, approximately #C8C1B6; no unrelated props. - Lighting: Soft directional studio light with gentle shadows; preserve the uploaded material's actual sheen and fine detail without exaggerated grain or sharpening. - Colour treatment: Preserve source colour, tonal variation, surface finish and artwork; do not transfer benchmark colours or add a beige cast to the product. - Composition: One shoe, no foot. - Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate views or added text. - Aspect ratio: Portrait, approximately 4:5. - Secondary styling: No person, feet, socks, hands, visible stand, mannequin or shoe tree. Interior appears only where this angle reveals it.", required_evidence=('top_view',), version=2),
     'ecommerce-footwear-sole-view': replace(FOOTWEAR_ECOMMERCE_TEMPLATES[6], applicable_families=("shoes",), reference_object_key='docs/trainers-output-details/references/07-sole-view.png', presentation_mode='garment', output_presentation='product_only', output_details="- Subject: Underside of one uploaded shoe. - Presentation: Sole facing camera, visually upright with heel near surface. - Camera angle: Perpendicular to sole plane. - View orientation: Toe top, heel bottom. - Framing: Complete underside. - Crop: Retain sole perimeter. - Product position: Centred vertical. - Product scale: Large with narrow border. - Silhouette: Actual outsole shape and heel geometry. - Visible construction: Only supported sole/tread details; do not invent benchmark herringbone. - Product volume: Real relief, arch and heel depth. - Background: Light warm beige seamless studio surface/background, approximately #C8C1B6; no unrelated props. - Lighting: Soft directional studio light with gentle shadows; preserve the uploaded material's actual sheen and fine detail without exaggerated grain or sharpening. - Colour treatment: Preserve source colour, tonal variation, surface finish and artwork; do not transfer benchmark colours or add a beige cast to the product. - Composition: One underside, no hand or stand. - Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate views or added text. - Aspect ratio: Portrait, approximately 4:5. - Secondary styling: No person, feet, socks, hands, visible stand, mannequin or shoe tree. Interior appears only where this angle reveals it.", required_evidence=('sole_or_underside',), version=2),
-    'ecommerce-footwear-front-on-feet': replace(FOOTWEAR_ECOMMERCE_TEMPLATES[6], applicable_families=("shoes",), reference_object_key='docs/trainers-output-details/references/09-front-on-feet.png', presentation_mode='model', output_presentation='worn_product', output_details="- Subject: Uploaded footwear worn as a pair. - Presentation: Adult standing front-facing, both feet on floor, dark trouser hems above shoes. - Camera angle: Low front view. - View orientation: Both toes facing camera. - Framing: Lower legs and complete shoes. - Crop: Below knees; no clipped toes. - Product position: Pair side-by-side with small gap. - Product scale: Shoes prominent below trouser hems. - Silhouette: Actual worn shape and heel height. - Visible construction: Actual uppers and closures; trousers must not hide key footwear design. - Product volume: Natural on-foot volume. - Background: Light warm beige seamless studio surface/background, approximately #C8C1B6; no unrelated props. - Lighting: Soft directional studio light with gentle shadows; preserve the uploaded material's actual sheen and fine detail without exaggerated grain or sharpening. - Colour treatment: Preserve source colour, tonal variation, surface finish and artwork; do not transfer benchmark colours or add a beige cast to the product. - Composition: One pair on adult feet, no upper body. - Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate views or added text. - Aspect ratio: Portrait, approximately 4:5. - Secondary styling: Simple dark trouser hems above the shoes; no upper body. Keep footwear design unobscured and both feet naturally grounded. Maintain actual left/right shoe differences.", required_evidence=('front_view',), version=2),
-    'ecommerce-footwear-side-on-feet': replace(FOOTWEAR_ECOMMERCE_TEMPLATES[7], applicable_families=("shoes",), reference_object_key='docs/trainers-output-details/references/10-side-on-feet.png', presentation_mode='model', output_presentation='worn_product', output_details="- Subject: Uploaded footwear worn as a pair. - Presentation: Side stance, near foot ahead; far shoe partly behind; dark trousers. - Camera angle: Low side view. - View orientation: Toes point left; near shoe profile dominant. - Framing: Lower legs and shoes. - Crop: Below knees; keep near shoe complete. - Product position: Near shoe lower-left, far heel farther right. - Product scale: Pair prominent. - Silhouette: Actual side profile and fit. - Visible construction: Near shoe side, heel and upper details. - Product volume: Natural foot-supported volume. - Background: Light warm beige seamless studio surface/background, approximately #C8C1B6; no unrelated props. - Lighting: Soft directional studio light with gentle shadows; preserve the uploaded material's actual sheen and fine detail without exaggerated grain or sharpening. - Colour treatment: Preserve source colour, tonal variation, surface finish and artwork; do not transfer benchmark colours or add a beige cast to the product. - Composition: One pair, partial far-shoe overlap allowed. - Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate views or added text. - Aspect ratio: Portrait, approximately 4:5. - Secondary styling: Simple dark trouser hems above the shoes; no upper body. Keep footwear design unobscured and both feet naturally grounded. Maintain actual left/right shoe differences.", required_evidence=('side_view', 'rear_view'), version=2),
+    'ecommerce-footwear-front-on-feet': replace(FOOTWEAR_ECOMMERCE_TEMPLATES[6], id='ecommerce-footwear-front-on-feet', name='Front on Feet', description='A low front ecommerce view of the uploaded footwear worn as a pair.', applicable_families=("shoes",), reference_object_key='docs/trainers-output-details/references/09-front-on-feet.png', presentation_mode='model', output_presentation='worn_product', output_details="- Subject: Uploaded footwear worn as a pair. - Presentation: Adult standing front-facing, both feet on floor, dark trouser hems above shoes. - Camera angle: Low front view. - View orientation: Both toes facing camera. - Framing: Lower legs and complete shoes. - Crop: Below knees; no clipped toes. - Product position: Pair side-by-side with small gap. - Product scale: Shoes prominent below trouser hems. - Silhouette: Actual worn shape and heel height. - Visible construction: Actual uppers and closures; trousers must not hide key footwear design. - Product volume: Natural on-foot volume. - Background: Light warm beige seamless studio surface/background, approximately #C8C1B6; no unrelated props. - Lighting: Soft directional studio light with gentle shadows; preserve the uploaded material's actual sheen and fine detail without exaggerated grain or sharpening. - Colour treatment: Preserve source colour, tonal variation, surface finish and artwork; do not transfer benchmark colours or add a beige cast to the product. - Composition: One pair on adult feet, no upper body. - Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate views or added text. - Aspect ratio: Portrait, approximately 4:5. - Secondary styling: Simple dark trouser hems above the shoes; no upper body. Keep footwear design unobscured and both feet naturally grounded. Maintain actual left/right shoe differences.", required_evidence=('front_view',), version=2),
+    'ecommerce-footwear-side-on-feet': replace(FOOTWEAR_ECOMMERCE_TEMPLATES[7], id='ecommerce-footwear-side-on-feet', name='Side on Feet', description='A low side ecommerce view of the uploaded footwear worn as a pair.', applicable_families=("shoes",), reference_object_key='docs/trainers-output-details/references/10-side-on-feet.png', presentation_mode='model', output_presentation='worn_product', output_details="- Subject: Uploaded footwear worn as a pair. - Presentation: Side stance, near foot ahead; far shoe partly behind; dark trousers. - Camera angle: Low side view. - View orientation: Toes point left; near shoe profile dominant. - Framing: Lower legs and shoes. - Crop: Below knees; keep near shoe complete. - Product position: Near shoe lower-left, far heel farther right. - Product scale: Pair prominent. - Silhouette: Actual side profile and fit. - Visible construction: Near shoe side, heel and upper details. - Product volume: Natural foot-supported volume. - Background: Light warm beige seamless studio surface/background, approximately #C8C1B6; no unrelated props. - Lighting: Soft directional studio light with gentle shadows; preserve the uploaded material's actual sheen and fine detail without exaggerated grain or sharpening. - Colour treatment: Preserve source colour, tonal variation, surface finish and artwork; do not transfer benchmark colours or add a beige cast to the product. - Composition: One pair, partial far-shoe overlap allowed. - Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate views or added text. - Aspect ratio: Portrait, approximately 4:5. - Secondary styling: Simple dark trouser hems above the shoes; no upper body. Keep footwear design unobscured and both feet naturally grounded. Maintain actual left/right shoe differences.", required_evidence=('side_view', 'rear_view'), version=2),
 }
 
 
@@ -571,9 +573,20 @@ _HEELS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
 }
 
 
+_SOCKS_STRUCTURED_DETAILS = {
+    "ecommerce-socks-three-quarter-on-feet": ("model", "Uploaded socks worn as a pair by an adult with both feet flat, toes aligned, bare lower legs above cuffs, low front three-quarter framing, complete socks visible, warm beige studio background and soft contact shadows; preserve actual colour, length, cuff, heel, toe and material. One image only; no footwear, collage or text."),
+    "ecommerce-socks-rear-on-feet": ("model", "Uploaded socks worn from the rear by an adult standing on both feet, heels and cuffs visible, crop below knees, low straight rear framing, warm beige studio background and soft shadows; preserve actual heel shape, cuff height and material. One image only; no footwear, collage or text."),
+    "ecommerce-socks-folded-product": ("garment", "One folded pair of uploaded socks in a compact stacked arrangement on a neutral surface, elevated oblique framing and natural fold thickness; preserve actual colour, pattern, cuff, toe and material. One image only; no packaging, props or text."),
+    "ecommerce-socks-flat-lay": ("garment", "One complete pair of uploaded socks unfolded side-by-side in a direct overhead flat lay, both toes and cuffs visible; preserve actual length, heel shape, pattern, colour and material. Warm beige surface, soft shadows, one image only."),
+    "ecommerce-socks-heel-detail": ("garment", "Close side/rear-oblique product detail of the actual uploaded sock heel, shaped with no skin visible; show only supported heel construction and surrounding material at an appropriate scale. Warm beige surface, soft light, one image only."),
+    "ecommerce-socks-knit-texture": ("garment", "Macro product detail of the actual uploaded sock surface filling the frame; preserve real yarn, knit, pattern, colour and finish at the scale supported by the source. No whole-product silhouette, one image only."),
+    "ecommerce-socks-front-on-feet": ("model", "Uploaded socks worn by an adult facing front with feet planted, lower legs and complete socks visible, crop below knees, no footwear; preserve actual worn shape, length, cuffs, toes and material. Warm beige studio, one image only."),
+    "ecommerce-socks-heel-detail-on-foot": ("model", "Close rear three-quarter view of one uploaded sock worn on an adult foot with heel raised, cuff and toes visible, bare lower leg above cuff, no footwear; preserve actual heel curve and material. One image only."),
+}
 SOCKS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = tuple(
-    _support_template("socks", template_id, name, description, instruction, _SOCKS_SUBTYPES)
-    for template_id, name, description, instruction in (
+    replace(_support_template("socks", template_id, name, description, instruction, _SOCKS_SUBTYPES), presentation_mode=_SOCKS_STRUCTURED_DETAILS[template_id][0], output_details=_SOCKS_STRUCTURED_DETAILS[template_id][1], reference_object_key={
+        "ecommerce-socks-three-quarter-on-feet": "apps/web/public/output-examples/socks/01-three-quarter-on-feet.png", "ecommerce-socks-rear-on-feet": "apps/web/public/output-examples/socks/03-rear-on-feet.png", "ecommerce-socks-folded-product": "apps/web/public/output-examples/socks/10-folded-product.png", "ecommerce-socks-flat-lay": "apps/web/public/output-examples/socks/04-flat-lay.png", "ecommerce-socks-heel-detail": "apps/web/public/output-examples/socks/06-heel-detail.png", "ecommerce-socks-knit-texture": "apps/web/public/output-examples/socks/08-knit-texture.png", "ecommerce-socks-front-on-feet": "apps/web/public/output-examples/socks/09-front-on-feet.png", "ecommerce-socks-heel-detail-on-foot": "apps/web/public/output-examples/socks/06-heel-detail-on-foot.png",
+    }[template_id], version=2) for template_id, name, description, instruction in (
         ("ecommerce-socks-three-quarter-on-feet", "Three-Quarter on Feet", "Two socks worn side-by-side with both feet flat on the ground.", "Match the reference composition: show both socks worn by an adult standing with both feet fully flat on the ground, side-by-side and close together, toes pointing in the same direction. Keep the feet parallel and weight distributed across both feet; do not lift, cross, bend or float either foot. Show no footwear and lower legs visible above the cuffs."),
         ("ecommerce-socks-rear-on-feet", "Rear on Feet", "A rear sock view showing heel construction.", "Show the rear of the socks worn by an adult, preserving heel shape and cuff height with no footwear."),
         ("ecommerce-socks-folded-product", "Folded Product", "Socks neatly folded on a plain surface.", "Present the socks folded on a plain surface while keeping colour, pattern and distinctive construction visible."),
@@ -749,7 +762,7 @@ BOTTOMS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     ),
 )
 
-_UNDERWEAR_SUBTYPES = ("lingerie", "boxers", "briefs", "bikini briefs", "bra", "bralette", "vest", "undershirt")
+_UNDERWEAR_SUBTYPES = ("boxers", "briefs", "bikini briefs", "bra", "bralette", "vest", "undershirt")
 _UNDERWEAR_REQUIRED_FIELDS = (
     "product_type",
     "colour_details",
@@ -915,6 +928,41 @@ LEGGINGS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     _leggings_template(number=8, name="Full-Length Front Model", description="Straight front model view from neck to feet.", base_index=4, instructions="Show the exact leggings worn by an adult female model in a straight front-facing full-length ecommerce photograph from the neck to the feet, with the face excluded. The model must wear a plain white T-shirt, white footwear and both hands relaxed outside the garment. Preserve the high-rise waistband, smooth opaque cream stretch jersey, close fit, minimal seams and narrow ankle hems. One photograph only, no collage.", artwork_surface_mode="worn", output_presentation="worn_product"),
 )
 
+_BRA_COMMON_FIDELITY = (
+    "The uploaded product reference is the sole authority for bra identity: preserve colour, lace or surface pattern, cup construction, straps, band, seams, edges, hardware and proportions.",
+    "This is a physical garment reconstruction, not a 2D image-compositing task. Do not paste, flatten, texture-map or overlay the product reference.",
+    "Use the mannequin reference only for composition, curvature, framing, lighting and scale; replace its garment identity completely.",
+    "Infer hidden geometry only when required by the requested viewpoint, using the simplest continuation consistent with the observed product. Never invent branding or decorative construction.",
+)
+_BRA_LOCKED_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
+    "ecommerce-underwear-bra-front-construction-detail": replace(
+        _underwear_template(
+            template_id="ecommerce-underwear-bra-front-construction-detail", name="Front Construction Detail",
+            description="Close product-only detail of the bra cups, centre bridge and adjustable strap construction.",
+            instructions="Present a close product-only macro of the uploaded bra's front construction on a neutral studio surface. Preserve the actual cup material, centre bridge, seams, underwire edge, lace or surface texture, strap attachment and adjusters. No person, mannequin or support.",
+            required=("category_details.fit_and_silhouette",), artwork_visibility="full", artwork_surface_mode="detail",
+        ),
+        applicable_families=("bra",), applicable_subtypes=("bra", "bralette"), presentation_mode="garment",
+        output_presentation="product_only", output_details="Subject: uploaded bra front construction detail. Camera: close oblique macro matching the supplied reference. Framing: cup, centre bridge, adjacent band and strap/adjuster detail fill the frame; crop naturally at the product edges. Preserve the actual material texture, seams, underwire edge, lace or surface pattern and hardware at evidenced scale. Neutral warm-beige studio surface, soft directional light and contact shadows. No person, mannequin, props, text, collage or invented construction. " + " ".join(_BRA_COMMON_FIDELITY),
+        reference_object_key="docs/bras-output-details/references/front_construction_detail.png", required_evidence=("detail",), version=2,
+    ),
+    "ecommerce-underwear-bra-01": replace(
+        _underwear_template(
+            template_id="ecommerce-underwear-bra-01", name="Front Product Only",
+            description="Front product-only presentation of the complete bra.",
+            instructions="Present the complete uploaded bra front-up and centred on a neutral studio surface. Show no person, mannequin or support. Preserve the actual cups, bridge, band, straps, seams, edges, hardware and material.",
+            required=("category_details.fit_and_silhouette",), artwork_visibility="full", artwork_surface_mode="flat",
+        ),
+        applicable_families=("bra",), applicable_subtypes=("bra", "bralette"), presentation_mode="garment",
+        output_presentation="product_only", output_details="Subject: complete uploaded bra, product-only and front-up. Camera: direct overhead or supplied product-reference angle. Framing: entire bra, straps and band visible. Surface: neutral warm-beige studio surface with soft contact shadows. No body, mannequin, support, props, collage or text. " + " ".join(_BRA_COMMON_FIDELITY),
+        reference_object_key="docs/bras-output-details/references/01_front_product_only.png", required_evidence=("front_view",), version=2,
+    ),
+}
+_BRA_FAMILY_TEMPLATES = {key: _BRA_LOCKED_TEMPLATES[key] for key in (
+    "ecommerce-underwear-bra-01", "ecommerce-underwear-bra-front-construction-detail"
+)}
+
+# Historical Bra IDs remain resolvable through _LEGACY_TEMPLATES but are no longer active.
 UNDERWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     _underwear_template(
         template_id="ecommerce-underwear-front-model", name="Front with Model (No Face)",
@@ -958,6 +1006,27 @@ UNDERWEAR_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
     ),
 )
 
+_UNDERWEAR_STRUCTURED_DETAILS = {
+    "ecommerce-underwear-front-model": ("model", "Uploaded underwear worn by an adult in a restrained straight front-facing waist-down catalogue pose; exclude face and preserve actual coverage, rise, fit, seams, elastic, colour and fabric. Warm beige studio, one image only."),
+    "ecommerce-underwear-front-flat-lay": ("garment", "Complete uploaded underwear laid flat front-up on a neutral studio surface with waistband, rise, pouch or cup construction, seams and leg openings readable; preserve actual proportions and material. One image only."),
+    "ecommerce-underwear-rear-three-quarter": ("garment", "Uploaded underwear shown product-only in a rear three-quarter presentation with side profile, back coverage, rise, waistband and leg openings readable; do not invent hidden construction. Neutral studio, one image only."),
+    "ecommerce-underwear-front-product": ("garment", "Complete uploaded underwear in a clean front-facing product presentation showing the actual silhouette, waistband, pouch or cup construction, rise, seams and leg openings; neutral background, one image only."),
+    "ecommerce-underwear-side-profile": ("garment", "Uploaded underwear shown product-only in a side profile preserving actual rise, side seam, coverage, depth and leg silhouette; do not regularise or invent hidden construction. One image only."),
+    "ecommerce-underwear-waistband-detail": ("garment", "Close product detail of the uploaded underwear waistband, elastic, supported seams and fabric texture; show only details evidenced by the product references. One image only."),
+}
+_UNDERWEAR_REFERENCE_PATHS = {
+    "ecommerce-underwear-front-model": "apps/web/public/output-examples/underwear/01-front-model.png",
+    "ecommerce-underwear-front-flat-lay": "apps/web/public/output-examples/underwear/02-front-flat-lay.png",
+    "ecommerce-underwear-rear-three-quarter": "apps/web/public/output-examples/underwear/04-rear-three-quarter.png",
+    "ecommerce-underwear-front-product": "apps/web/public/output-examples/underwear/05-front-product.png",
+    "ecommerce-underwear-side-profile": "apps/web/public/output-examples/underwear/06-side-profile.png",
+    "ecommerce-underwear-waistband-detail": "apps/web/public/output-examples/underwear/07-waistband-detail.png",
+}
+UNDERWEAR_ECOMMERCE_TEMPLATES = tuple(
+    replace(template, presentation_mode=_UNDERWEAR_STRUCTURED_DETAILS[template.id][0], output_details=_UNDERWEAR_STRUCTURED_DETAILS[template.id][1], reference_object_key=_UNDERWEAR_REFERENCE_PATHS[template.id], version=2)
+    for template in UNDERWEAR_ECOMMERCE_TEMPLATES
+)
+
 # Minimum source-media coverage for templates whose output depends on a
 # particular product surface. These are deliberately small capture groups,
 # not one rigid upload requirement per template.
@@ -995,6 +1064,14 @@ def _evidence_for_template(template: GenerationTemplate) -> tuple[str, ...]:
         if "back" in template_id or "rear" in template_id:
             return _UNDERWEAR_REAR_EVIDENCE
         return _UNDERWEAR_FRONT_EVIDENCE
+    if template.category == "dresses":
+        if "back" in template_id:
+            return _REAR_EVIDENCE
+        if "construction" in template_id:
+            return ("detail",)
+        if "side-angle" in template_id:
+            return ("side_view",)
+        return _FRONT_EVIDENCE
     if template.category == "tops":
         if "back" in template_id or "over-the-shoulder" in template_id:
             return _REAR_EVIDENCE
@@ -1002,10 +1079,404 @@ def _evidence_for_template(template: GenerationTemplate) -> tuple[str, ...]:
     return ()
 
 
+DRESSES_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    GenerationTemplate(
+        id="ecommerce-dresses-front-product", channel="ecommerce", category="dresses",
+        name="Front Product", description="A complete front-facing product presentation of the dress.",
+        prompt_instructions="Create one clean ecommerce photograph of the complete uploaded dress, front-facing and product-focused. Show the full silhouette from neckline to hem with the actual construction, drape, closure and surface details preserved. Use a neutral studio background and soft even lighting.",
+        negative_prompt="Do not change the dress silhouette, length, neckline, sleeves, straps, colour, pattern, construction or material. Do not add a model, accessories, props, text, labels, watermarks, collage or duplicate views. Do not invent hidden construction.",
+        aspect_ratio="1:1", applicable_subtypes=("dress",), applicable_families=("dresses",),
+        required_product_fields=("product_type", "global_details.colour", "global_details.materials", "global_details.construction", "category_details.structure", "category_details.length", "category_details.silhouette"),
+        optional_product_fields=("category_details.occasion",), prompt_format_rules=("The product reference images are authoritative for identity.", "Use the template only for composition and presentation.", "Preserve uncertainty for hidden or unsupported details."),
+        reference_mode="product_only", output_presentation="product_only", presentation_mode="garment", artwork_visibility="full", artwork_surface_mode="flat", reference_object_key="docs/dresses-output-details/references/03.png", version=2,
+    ),
+    GenerationTemplate(
+        id="ecommerce-dresses-front-model", channel="ecommerce", category="dresses",
+        name="Front Model (No Face)", description="The dress worn in a restrained front-facing model presentation.",
+        prompt_instructions="Show the exact uploaded dress worn by an adult model in a clean front-facing ecommerce pose. Frame from the base of the neck through the hem or feet as supported by the product references, exclude the face, and keep the dress unobscured. Preserve its actual fit, length, drape and construction.",
+        negative_prompt="Do not change the dress identity, proportions, neckline, sleeves, straps, length, colour, pattern or construction. Do not show a face, suggestive pose, competing garment, distracting accessories, text, watermark, collage or duplicate views.",
+        aspect_ratio="1:1", applicable_subtypes=("dress",), applicable_families=("dresses",),
+        required_product_fields=("product_type", "global_details.colour", "global_details.materials", "category_details.structure", "category_details.length", "category_details.silhouette"),
+        optional_product_fields=("category_details.occasion",), prompt_format_rules=("The product reference images are authoritative for identity.", "Use the template only for composition and presentation.", "Exclude the face and preserve uncertainty for hidden details."),
+        reference_mode="product_only", output_presentation="worn_product", presentation_mode="model", artwork_visibility="full", artwork_surface_mode="worn", reference_object_key="docs/dresses-output-details/references/07.png", version=2,
+    ),
+    GenerationTemplate(
+        id="ecommerce-dresses-back-product", channel="ecommerce", category="dresses",
+        name="Back Product", description="A complete rear product presentation of the dress.",
+        prompt_instructions="Create one clean ecommerce photograph of the complete uploaded dress from the rear, product-focused and supported naturally without a visible person. Show the actual back silhouette, neckline or fastening, seams, drape and hem only where supported by the product references.",
+        negative_prompt="Do not invent or alter rear closures, seams, panels, length, colour, pattern or material. Do not add a model, accessories, props, text, watermark, collage or duplicate views.",
+        aspect_ratio="1:1", applicable_subtypes=("dress",), applicable_families=("dresses",),
+        required_product_fields=("product_type", "global_details.colour", "global_details.materials", "category_details.structure", "category_details.length", "category_details.silhouette"),
+        optional_product_fields=("category_details.occasion",), prompt_format_rules=("The product reference images are authoritative for identity.", "Do not infer unseen rear construction from conventional dress design."),
+        reference_mode="product_only", output_presentation="product_only", presentation_mode="garment", artwork_visibility="none", artwork_surface_mode="rear", reference_object_key="docs/dresses-output-details/references/02.png", version=2,
+    ),
+    GenerationTemplate(
+        id="ecommerce-dresses-side-angle-model", channel="ecommerce", category="dresses",
+        name="Side / Three-Quarter Model (No Face)", description="A side or three-quarter model view showing dress depth and drape.",
+        prompt_instructions="Show the exact uploaded dress worn by an adult model in a restrained side or front three-quarter ecommerce pose. Exclude the face and make the dress depth, silhouette, fit, hem and visible construction readable without obscuring the product.",
+        negative_prompt="Do not change the dress silhouette, length, fit, neckline, sleeves, straps, colour, pattern or construction. Do not add a face, suggestive pose, competing garments, props, text, watermark, collage or duplicate views.",
+        aspect_ratio="1:1", applicable_subtypes=("dress",), applicable_families=("dresses",),
+        required_product_fields=("product_type", "global_details.colour", "global_details.materials", "category_details.structure", "category_details.length", "category_details.silhouette"),
+        optional_product_fields=("category_details.occasion",), prompt_format_rules=("The product reference images are authoritative for identity.", "Use the template only for angle, framing and presentation."),
+        reference_mode="product_only", output_presentation="worn_product", presentation_mode="model", artwork_visibility="partial", artwork_surface_mode="angled", reference_object_key="docs/dresses-output-details/references/01.png", version=2,
+    ),
+    GenerationTemplate(
+        id="ecommerce-dresses-construction-detail", channel="ecommerce", category="dresses",
+        name="Construction Detail", description="A close-up of a supported dress construction or material detail.",
+        prompt_instructions="Create one tight ecommerce close-up of the most distinctive visible dress construction detail supported by the product references, such as neckline, seam, fastening, sleeve, strap, fabric surface or hem. Show the actual product detail at natural scale and do not invent a feature.",
+        negative_prompt="Do not invent or redraw construction, texture, pattern, branding or hardware. Do not add a model, accessories, props, text, watermark, collage or duplicate views.",
+        aspect_ratio="1:1", applicable_subtypes=("dress",), applicable_families=("dresses",),
+        required_product_fields=("product_type", "global_details.materials", "global_details.construction", "category_details.structure"),
+        optional_product_fields=("category_details.occasion",), prompt_format_rules=("Only details visible or supported by the product references may be shown.", "The product reference remains authoritative for identity."),
+        reference_mode="product_only", output_presentation="product_only", presentation_mode="garment", artwork_visibility="conditional", artwork_surface_mode="detail", reference_object_key="docs/dresses-output-details/references/04.png", version=2,
+    ),
+    GenerationTemplate(
+        id="ecommerce-dresses-flat-lay", channel="ecommerce", category="dresses",
+        name="Flat Lay", description="The complete dress arranged flat on a clean studio surface.",
+        prompt_instructions="Present the exact uploaded dress laid flat on a clean neutral studio surface, with the complete silhouette, neckline, sleeves or straps, hem, colour, material and visible construction readable. Use natural placement and soft contact shadows; do not regularise the garment.",
+        negative_prompt="Do not change the dress identity, proportions, length, colour, pattern, material or construction. Do not add a body, mannequin, accessories, props, text, watermark, collage or duplicate views.",
+        aspect_ratio="1:1", applicable_subtypes=("dress",), applicable_families=("dresses",),
+        required_product_fields=("product_type", "global_details.colour", "global_details.materials", "category_details.structure", "category_details.length", "category_details.silhouette"),
+        optional_product_fields=("category_details.occasion",), prompt_format_rules=("The product reference images are authoritative for identity.", "Use the template only for surface-supported composition."),
+        reference_mode="product_only", output_presentation="product_only", presentation_mode="garment", artwork_visibility="full", artwork_surface_mode="flat", reference_object_key="docs/dresses-output-details/references/06.png", version=2,
+    ),
+    GenerationTemplate(
+        id="ecommerce-dresses-full-front-model", channel="ecommerce", category="dresses",
+        name="Full Front Model (No Face)", description="A full-length front-facing model presentation of the dress.",
+        prompt_instructions="Show the exact uploaded dress worn by an adult model in a full-length front-facing ecommerce photograph with the face excluded. Preserve the dress identity, fit, length and visible construction while matching the supplied composition.",
+        negative_prompt="Do not change the uploaded dress or copy benchmark colour, material, branding or construction. Do not show a face, collage, duplicate view, text, watermark or unrelated props.",
+        aspect_ratio="1:1", applicable_subtypes=("dress",), applicable_families=("dresses",),
+        required_product_fields=("product_type", "global_details.colour", "global_details.materials", "category_details.structure", "category_details.length", "category_details.silhouette"),
+        optional_product_fields=("category_details.occasion",), prompt_format_rules=("The product references are authoritative for identity.", "The template reference controls composition only."),
+        reference_mode="product_only", output_presentation="worn_product", presentation_mode="model", artwork_visibility="full", artwork_surface_mode="worn", reference_object_key="docs/dresses-output-details/references/05.png", version=2,
+    ),
+    GenerationTemplate(
+        id="ecommerce-dresses-seated-model", channel="ecommerce", category="dresses",
+        name="Seated Model (No Face)", description="A seated, non-suggestive catalogue presentation showing the dress drape and fit.",
+        prompt_instructions="Show the exact uploaded dress worn by an adult model in a strictly non-suggestive seated ecommerce catalogue composition, with the face and all facial features excluded. The model sits upright with a neutral posture, knees together or naturally parallel, both legs fully covered by the dress or framed below the hem without emphasis, and hands resting neutrally away from the chest, hips and upper thighs. Use a level camera at ordinary catalogue distance; never use a low angle, voyeuristic crop or body-emphasising pose. Keep furniture secondary. Preserve the actual dress drape, hem, waist, sleeves and material.",
+        negative_prompt="Do not sexualise or eroticise the image. Do not use a suggestive pose, arched back, spread legs, crossed-leg emphasis, raised hem, exposed upper thighs, cleavage emphasis, hand on chest, hand on upper thigh, touching the body, low camera angle, voyeuristic crop, pin-up framing or intimate styling. Do not show a face or facial features. Do not change the uploaded dress or copy benchmark identity, colour, material or construction. Do not add lingerie, transparent fabric, nudity, partial nudity, fetish styling, provocative footwear, collage, duplicate view, text, watermark or distracting props.",
+        aspect_ratio="1:1", applicable_subtypes=("dress",), applicable_families=("dresses",),
+        required_product_fields=("product_type", "global_details.colour", "global_details.materials", "category_details.structure", "category_details.length", "category_details.silhouette"),
+        optional_product_fields=("category_details.occasion",), prompt_format_rules=("The product references are authoritative for identity.", "The template reference controls composition only."),
+        reference_mode="product_only", output_presentation="worn_product", presentation_mode="model", artwork_visibility="full", artwork_surface_mode="worn", reference_object_key="docs/dresses-output-details/references/09.png", output_details="Subject: uploaded dress worn by one adult model in a strictly non-suggestive seated ecommerce catalogue presentation. Presentation: upright seated pose with knees together or naturally parallel; hands resting neutrally away from the chest, hips and upper thighs; furniture remains secondary. Camera: ordinary level catalogue camera, never low angle or voyeuristic. Framing: modest product-focused crop with face, facial features and top of head excluded; do not emphasise exposed upper thighs or raise the hem. Product position and scale: dress remains the clear commercial subject, naturally supported by the seated pose. Visible construction: preserve only the uploaded dress's evidenced neckline, sleeves, waist, drape, hem, material and construction. Background and lighting: supplied warm neutral studio setting with soft even catalogue lighting. Safety: no suggestive pose, arched back, spread legs, crossed-leg emphasis, cleavage emphasis, hand on chest, hand on upper thigh, body touching, lingerie, transparent fabric, nudity, partial nudity, fetish styling, provocative footwear or sexualised presentation. Output: one continuous ecommerce image, no face, collage, duplicate view, text, watermark or distracting props.", presentation_negative_prompt="Do not sexualise or eroticise the image. Do not show a suggestive pose, arched back, spread legs, crossed-leg emphasis, raised hem, exposed upper thighs, cleavage emphasis, hand on chest, hand on upper thigh, touching the body, low camera angle, voyeuristic crop, intimate styling, lingerie, transparent fabric, nudity, partial nudity, fetish styling or provocative footwear.", version=2,
+    ),
+)
+
 # The old generic choice remains resolvable for existing saved selections.
+
+_TAILORING_RULES: tuple[str, ...] = (
+    "The uploaded product references are authoritative for the suit jacket's identity, colour, fabric, tailoring, lapels, closure, pockets, vents, lining and proportions.",
+    "Use the benchmark only for composition, camera, crop, pose and lighting; never copy its garment identity.",
+    "Preserve the distinction between a standalone suit jacket and a coordinated suit; do not add matching trousers unless the selected composition explicitly shows restrained styling below the crop.",
+    "Preserve every visible button, lapel edge, seam, pocket, cuff, vent and fabric surface detail; do not invent hidden construction.",
+    "Output one continuous ecommerce photograph with no collage, duplicate view, text or watermark.",
+)
+_TAILORING_NEGATIVE_BASE = (
+    "Do not change the jacket colour, fabric, lapel shape, closure, buttons, pockets, vents, cuffs, silhouette or proportions. "
+    "Do not turn the product into a full suit, tuxedo, coat, blazer of another cut or waistcoat. "
+    "Do not add unsupported shirt details, accessories, logos, labels, props, text, watermark, extra garments or another product. "
+    "Do not crop away identity-critical construction, invent hidden details, use a collage or duplicate view."
+)
+
+def _tailoring_negative(presentation: Literal["model", "invisible_mannequin", "garment"]) -> str:
+    if presentation == "model":
+        return _TAILORING_NEGATIVE_BASE + " Do not show the model's face or facial features. Keep one adult model in a neutral product-focused pose; do not use a mannequin, suggestive framing or distracting body emphasis."
+    if presentation == "invisible_mannequin":
+        return _TAILORING_NEGATIVE_BASE + " Do not show a human model, visible mannequin, mannequin torso, body, hanger or visible support."
+    return _TAILORING_NEGATIVE_BASE + " Do not show a human model, mannequin, body, hanger or visible support."
+
+def _tailoring_template(*, index: int, name: str, description: str, reference: str, presentation: Literal["model", "invisible_mannequin", "garment"], details: str, evidence: tuple[str, ...], negative_extra: str = "") -> GenerationTemplate:
+    return GenerationTemplate(
+        id=f"ecommerce-mens-tailoring-suit-jackets-{index:02d}",
+        channel="ecommerce", category="tailoring", name=name, description=description,
+        prompt_instructions=f"Create the requested ecommerce presentation of the uploaded suit jacket. {details}",
+        negative_prompt=_tailoring_negative(presentation) + negative_extra, aspect_ratio="4:5",
+        reference_object_key=f"docs/mens-tailoring-output-details/references/{index:02d}.png",
+        version=1, applicable_families=("suit-jackets",), required_product_fields=("product_type", "category_details"),
+        prompt_format_rules=_TAILORING_RULES, reference_mode="product_only",
+        output_presentation="worn_product" if presentation == "model" else "product_only",
+        presentation_mode=presentation,
+        output_details=(
+            f"Subject: uploaded suit jacket. "
+            f"Benchmark role: use the supplied reference only for composition, camera, framing, lighting and presentation; never copy its garment identity. "
+            f"Presentation mode: {presentation}; "
+            f"{'one adult model with face and facial features excluded' if presentation == 'model' else 'product-only detail with no person or visible support' if presentation == 'garment' else 'fully invisible mannequin with no visible body or support'}. "
+            f"Camera, framing and pose: {details} "
+            "Product position and scale: preserve the uploaded jacket's actual length, width, sleeve proportions and occupancy without stretching it to match the benchmark. "
+            "Silhouette and volume: preserve the evidenced shoulder structure, chest, waist suppression, hem, sleeves and natural drape; do not turn the jacket into a coat, tuxedo, waistcoat or full suit. "
+            "Visible construction: preserve the actual lapel or collar, gorge, closure, buttons, buttonholes, pockets, cuffs, vents, seams and lining edges only where evidenced. "
+            "Surface fidelity: preserve the uploaded colour, pattern, weave, nap, sheen, wrinkles, wear and tonal variation; do not transfer benchmark fabric or redraw texture. "
+            "Background: warm neutral seamless ecommerce studio setting with no unrelated scenery or props. "
+            "Lighting: soft even catalogue lighting with gentle directional shadows; no hard flash, colour gels, dramatic contrast or exaggerated sharpening. "
+            "Evidence and uncertainty: do not invent hidden lining, internal canvas, rear construction, vents, labels, hardware or unsupported tailoring; unseen details remain unknown. "
+            "Output: one continuous portrait ecommerce image, approximately 4:5; no collage, inset, duplicate view, text or watermark."
+        ),
+        artwork_visibility="full", artwork_surface_mode="flat", required_evidence=evidence,
+    )
+
+MENS_TAILORING_SUIT_JACKET_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _tailoring_template(index=2, name="Front Model — Cropped", description="A front-facing cropped model presentation showing the jacket worn.", reference="02.png", presentation="model", details="Adult model standing naturally, framed from the base of the neck through the upper thighs, face and facial features excluded, arms relaxed and jacket construction clearly visible.", evidence=("front_view",)),
+    _tailoring_template(index=3, name="Full Front Model", description="A full-length front-facing model presentation of the suit jacket.", reference="03.png", presentation="model", details="Adult model standing naturally in a level catalogue camera view, face and facial features excluded, with the complete jacket visible from collar through hem and restrained neutral styling below it.", evidence=("front_view",)),
+    _tailoring_template(index=4, name="Back Model", description="A rear model presentation showing the jacket back, vents and fit.", reference="04.png", presentation="model", details="Adult model standing naturally with back to camera, face excluded, complete jacket back visible from collar through hem, arms relaxed and hands away from the garment.", evidence=("rear_view",)),
+    _tailoring_template(index=5, name="Seated Model", description="A restrained seated model presentation showing jacket drape and fit.", reference="05.png", presentation="model", details="Adult model seated upright in a neutral catalogue pose, legs together or naturally parallel, hands resting neutrally away from the jacket, face excluded, with the jacket remaining the clear product subject and no suggestive framing.", evidence=("front_view",)),
+    _tailoring_template(index=6, name="Lapel, Button and Front Construction Detail", description="An extreme close-up of the lapel, button, buttonhole and nearby front tailoring construction.", reference="06.png", presentation="garment", details="Extreme close-up matching the supplied template reference: camera close to the jacket chest at an approximately perpendicular front angle; show only the central upper-front area containing the lapel points, button and corresponding buttonhole. Crop above the shoulders and collar and below the button and nearby pocket detail. The lapels and button occupy most of the frame; do not widen the crop to show the jacket silhouette or general fit. Prioritise lapel edge, gorge, button, buttonhole, stitching, welt or pocket edge and fabric texture where evidenced.", evidence=("detail", "front_view"), negative_extra=" Do not show the whole jacket, full front view, shoulders, full collar, sleeves, cuffs, hem, trousers, model, mannequin or hanger. Do not make the button a small distant element. Do not use a medium shot, product shot or complete-garment composition."),
+    _tailoring_template(index=7, name="Front Invisible Mannequin", description="A complete front product presentation on an invisible mannequin.", reference="07.png", presentation="invisible_mannequin", details="Straight-on front view of the complete jacket from collar through hem, sleeves naturally lowered, support fully invisible and all visible tailoring construction preserved.", evidence=("front_view",)),
+    _tailoring_template(index=8, name="Front Product", description="A clean product-only front presentation of the suit jacket.", reference="08.png", presentation="invisible_mannequin", details="Centred front product view with the complete jacket visible, clean neutral studio background, no person or visible support, and balanced margins around the silhouette.", evidence=("front_view",)),
+)
+
+_WAISTCOAT_RULES: tuple[str, ...] = (
+    "The uploaded product references are authoritative for the waistcoat's identity, colour, fabric, neckline, closure, pockets, seams, lining and proportions.",
+    "Use the benchmark only for composition, camera, crop, pose, secondary styling and lighting; never copy its garment identity.",
+    "Keep the product a sleeveless tailored waist garment; do not turn it into a suit jacket, gilet, padded vest, top or full suit.",
+    "Matching trousers and a neutral shirt are secondary styling only and must not be treated as evidence that the uploaded product is part of a coordinated suit.",
+    "Preserve every evidenced front point, button, buttonhole, pocket, dart, seam, armhole, neckline and lining edge; do not invent hidden back construction or an adjuster.",
+    "Output one continuous ecommerce photograph with no collage, duplicate view, text or watermark.",
+)
+_WAISTCOAT_NEGATIVE_BASE = (
+    "Do not change the waistcoat colour, pattern, weave, neckline, front points, closure, button count, pockets, darts, seams, armholes, silhouette or proportions. "
+    "Do not add sleeves, jacket lapels, a jacket collar, outerwear padding, a hood, a coordinated jacket or another product. "
+    "Do not copy benchmark fabric, buttons, pockets, shirt, trousers or model identity. "
+    "Do not invent hidden back panels, lining, adjuster, labels or construction. Do not create a collage, inset, duplicate view, text or watermark."
+)
+
+
+def _waistcoat_negative(presentation: Literal["model", "invisible_mannequin", "garment"]) -> str:
+    if presentation == "model":
+        return _WAISTCOAT_NEGATIVE_BASE + " Do not show the model's face or facial features. Use one adult model in a neutral product-focused pose; do not use a mannequin or obscure the waistcoat with hands or secondary clothing."
+    if presentation == "invisible_mannequin":
+        return _WAISTCOAT_NEGATIVE_BASE + " Do not show a human model, visible mannequin, torso, neck, head, body, hanger or support."
+    return _WAISTCOAT_NEGATIVE_BASE + " Do not show a human model, mannequin, body, hanger or visible support."
+
+
+def _waistcoat_template(*, index: int, name: str, description: str, presentation: Literal["model", "invisible_mannequin", "garment"], details: str, output_details: str, evidence: tuple[str, ...], negative_extra: str = "") -> GenerationTemplate:
+    return GenerationTemplate(
+        id=f"ecommerce-mens-tailoring-waistcoats-{index:02d}",
+        channel="ecommerce", category="tailoring", name=name, description=description,
+        prompt_instructions=f"Create the requested ecommerce presentation of the uploaded waistcoat. {details}",
+        negative_prompt=_waistcoat_negative(presentation) + negative_extra,
+        aspect_ratio="4:5",
+        reference_object_key=f"docs/waistcoats-output-details/references/{index:02d}.png",
+        version=1,
+        applicable_subtypes=("waistcoat", "waist coat", "suit vest", "tailored vest"),
+        applicable_families=("waistcoats",),
+        required_product_fields=("product_type", "global_details.colour", "global_details.materials", "category_details.lapel_or_neckline", "category_details.fit_and_silhouette"),
+        optional_product_fields=("category_details.closure_details", "category_details.pocket_details", "category_details.lining_or_structure"),
+        prompt_format_rules=_WAISTCOAT_RULES,
+        reference_mode="product_only",
+        output_presentation="worn_product" if presentation == "model" else "product_only",
+        presentation_mode=presentation,
+        output_details=output_details,
+        artwork_visibility="full" if index in (1, 2) else "partial",
+        artwork_surface_mode="worn" if presentation == "model" else ("detail" if index in (4, 5) else "flat"),
+        required_evidence=evidence,
+    )
+
+
+MENS_TAILORING_WAISTCOAT_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _waistcoat_template(
+        index=1,
+        name="Front Product",
+        description="A complete straight-on product-only front presentation of the waistcoat.",
+        presentation="invisible_mannequin",
+        details="Show the complete waistcoat straight-on from shoulder line through both front points, centred with balanced margins on the warm neutral benchmark background. The support is completely invisible.",
+        evidence=("front_view",),
+        output_details="- Subject: Uploaded waistcoat as a complete product-only front presentation. - Presentation: Waistcoat shaped with restrained natural tailored volume on a completely invisible support; no body, neck, head, hanger or mannequin visible. - Camera angle and orientation: Level, direct straight-on front view at garment mid-height with no perspective tilt. - Framing and crop: Entire waistcoat from shoulder line through both pointed front hems visible, with both armholes, full neckline, closure and pockets inside the frame and balanced margins. - Product position and scale: Centre the waistcoat and match benchmark occupancy while preserving its real width, length and proportions. - Silhouette and volume: Preserve the uploaded shoulder width, armhole shape, chest and waist suppression, neckline depth and hem points; do not add sleeves or jacket structure. - Visible construction: Preserve the actual neckline or lapel treatment, closure direction, button count and spacing, buttonholes, pockets, darts, seams, front edges, lining glimpses and hem only where evidenced. - Surface fidelity: Preserve uploaded colour, pattern alignment, weave, nap, sheen, wrinkles and tonal variation; do not copy the benchmark plaid or brown lining. - Background: Warm beige seamless studio background with a subtle controlled shadow and no props. - Lighting: Soft even catalogue lighting with gentle edge and fabric relief. - Evidence and uncertainty: Do not invent rear construction, back fabric, adjuster, lining, labels, internal canvas or hidden hardware. - Output: One continuous portrait ecommerce photograph, approximately 4:5; no person, visible support, collage, inset, duplicate view, text or watermark.",
+    ),
+    _waistcoat_template(
+        index=2,
+        name="Front Model",
+        description="A straight-on cropped model presentation showing waistcoat fit and full front construction.",
+        presentation="model",
+        details="Show one adult model straight-on, cropped from the lower neck through the upper thighs, with arms relaxed. Keep the complete waistcoat visible over a restrained shirt; matching trousers may appear only as secondary styling.",
+        evidence=("front_view",),
+        output_details="- Subject: Uploaded waistcoat worn by one adult model. - Presentation: Straight-on restrained ecommerce model view with the face and facial features excluded; a plain shirt and trousers remain secondary. - Camera angle and orientation: Level direct front camera at torso height with ordinary catalogue perspective. - Framing and crop: Lower neck through upper thighs, keeping both shoulders, armholes, the complete waistcoat neckline, closure, pockets and front points visible; exclude face, facial features, hair and top of head. - Pose: Upright symmetrical stance with shoulders level, arms naturally lowered and hands clear of the waistcoat. - Product position and scale: Centre the waistcoat and preserve its real fit, length, width and button placement. - Silhouette and volume: Preserve uploaded chest shape, waist suppression, armhole fit, neckline depth and pointed hem; do not add sleeves or jacket lapels. - Visible construction: Preserve evidenced neckline, front edges, closure, buttons, buttonholes, pockets, darts, seams and lining edges. - Surface fidelity: Preserve actual colour, pattern alignment, weave, texture, sheen, wrinkles and tonal variation; do not transfer benchmark plaid. - Secondary styling: Use one restrained plain shirt and compatible neutral trousers only; do not imply an uploaded standalone waistcoat is a verified full suit. - Background: Warm beige seamless studio background with no scenery or props. - Lighting: Soft even catalogue light with gentle shadows and readable tailoring. - Evidence and uncertainty: Do not invent hidden rear construction, adjuster, lining, labels or coordinated garments. - Output: One continuous portrait ecommerce photograph, approximately 4:5; no face, collage, inset, duplicate view, text or watermark.",
+    ),
+    _waistcoat_template(
+        index=3,
+        name="Three-Quarter Model",
+        description="A close three-quarter model view showing waistcoat depth, fit and front construction.",
+        presentation="model",
+        details="Show one adult model in a modest three-quarter torso pose, cropped from below the chin through the upper thighs. One hand may rest naturally in a trouser pocket only if it does not obscure the waistcoat.",
+        evidence=("front_view", "side_view"),
+        output_details="- Subject: Uploaded waistcoat worn by one adult model in a close three-quarter view. - Presentation: Restrained model-led ecommerce composition with a plain shirt and trousers as secondary styling; face and facial features excluded. - Camera angle and orientation: Level front three-quarter camera at torso height, revealing modest garment depth without wide-angle distortion. - Framing and crop: Below the chin through upper thighs, keeping the full waistcoat neckline, near and far armholes, closure, pockets and both front points readable; exclude face and top of head. - Pose: Natural slight torso turn with relaxed shoulders; one hand may enter a trouser pocket only when it remains clear of the waistcoat front. - Product position and scale: Waistcoat fills the central frame while retaining its actual proportions and perspective. - Silhouette and volume: Preserve uploaded chest and waist shaping, armhole fit, side depth, neckline and hem points; do not turn it into a jacket or top. - Visible construction: Preserve only evidenced neckline or lapel treatment, front edges, closure, buttons, buttonholes, pockets, darts, seams and lining edges. - Surface fidelity: Preserve actual colour, pattern scale and alignment, weave, texture, sheen, wrinkles and tonal variation; do not transfer benchmark fabric. - Secondary styling: Plain restrained shirt and compatible neutral trousers only; no tie, jacket or distracting accessories unless supported by the product source. - Background: Warm beige seamless studio setting with no props. - Lighting: Soft directional catalogue light that describes garment depth while retaining surface detail. - Evidence and uncertainty: A three-quarter view must not fabricate unseen side, rear, lining or adjuster construction; unresolved details remain unknown. - Output: One continuous portrait ecommerce photograph, approximately 4:5; no face, collage, inset, duplicate view, text or watermark.",
+    ),
+    _waistcoat_template(
+        index=4,
+        name="Neckline and Shoulder Detail",
+        description="A tight worn detail of the neckline, shoulder, armhole and upper closure.",
+        presentation="model",
+        details="Create a tight upper-torso crop matching the benchmark: show the waistcoat neckline, one complete shoulder edge, adjacent armhole, upper front panels and upper buttons over a restrained shirt. Do not widen to the full garment.",
+        evidence=("detail", "front_view"),
+        negative_extra=" Do not show the full waistcoat, complete hem, full trousers, full model, face, hands or a distant medium shot.",
+        output_details="- Subject: Uploaded waistcoat neckline, shoulder and armhole construction worn by one adult model. - Presentation: Tight product-focused worn detail over a plain shirt; model identity and body remain incidental and the face is excluded. - Camera angle and orientation: Level close front three-quarter camera, approximately perpendicular to the featured upper front panel. - Framing and crop: Crop from below the chin across the neckline and one shoulder through the upper buttons and upper pocket edge where present. Show one complete shoulder seam and adjacent armhole; exclude the full hem, full garment and face. - Pose: Neutral upright torso with shoulder relaxed and no hand touching the product. - Product position and scale: Neckline edge, shoulder construction, armhole and upper front occupy most of the frame at natural scale. - Silhouette and volume: Preserve actual neckline depth, shoulder width, armhole curve, edge thickness and chest shaping. - Visible construction: Preserve evidenced neckline or lapel edge, shoulder seam, armhole finishing, upper closure, buttonholes, darts, pocket edge, stitching and lining glimpse. - Surface fidelity: Preserve actual colour, pattern alignment across seams, weave, texture, sheen, wrinkles and tonal variation; do not copy benchmark plaid. - Secondary styling: Plain restrained shirt only where visible; it must not cover or redefine the waistcoat. - Background: Warm beige seamless studio background visible only around the torso. - Lighting: Soft even close-up light with readable edge, stitch and fabric relief. - Evidence and uncertainty: Do not invent hidden lining, rear shoulder, back panel, adjuster or internal structure. - Output: One continuous portrait ecommerce close-up, approximately 4:5; no face, full-garment view, collage, inset, duplicate view, text or watermark.",
+    ),
+    _waistcoat_template(
+        index=5,
+        name="Button and Front Construction Detail",
+        description="An oblique macro view of the button row, buttonholes, front panels and pocket edges.",
+        presentation="garment",
+        details="Create an oblique close product detail containing the button row, front overlap, buttonholes, upper and lower front panels and visible welt pocket edges. A neckline lining glimpse may appear only when evidenced. Do not show the whole waistcoat.",
+        evidence=("detail", "front_view"),
+        negative_extra=" Do not show a model, shirt, trousers, complete waistcoat, full hem, full shoulder silhouette or distant product shot.",
+        output_details="- Subject: Uploaded waistcoat button row and front tailoring construction in an extreme product-only close-up. - Presentation: Garment-only detail with no person, mannequin, shirt, hanger or visible support. - Camera angle and orientation: Close oblique front camera following the benchmark diagonal, with ordinary macro perspective and no artificial tilt beyond the product plane. - Framing and crop: Fill the frame with the central front panels, closure overlap, multiple buttons and buttonholes plus supported pocket edges; a small neckline or lining edge may appear only if evidenced. Exclude the complete garment and full hem. - Product position and scale: Buttons, buttonholes, front edge, seam relief and fabric surface must be large and legible rather than distant. - Silhouette and volume: Show credible fabric thickness, front overlap, edge roll and restrained tailored volume without inflating or flattening the garment. - Visible construction: Preserve actual closure direction, button count visible within the crop, button material and shape, spacing, buttonholes, stitching, darts, front edge, pocket welts and lining edge only where supported. - Surface fidelity: Preserve exact uploaded colour, pattern scale and alignment, weave, nap, sheen, wrinkles and tonal variation; do not copy benchmark plaid or brown lining. - Background: Warm beige studio background restricted to natural negative space around the garment. - Lighting: Soft directional macro lighting that keeps buttons, buttonholes, seam relief and fabric texture readable without glare. - Evidence and uncertainty: Do not invent off-frame buttons, unseen pockets, hidden lining, back construction, adjuster, labels or internal canvas. - Output: One continuous portrait ecommerce macro photograph, approximately 4:5; no model, full product view, collage, inset, duplicate view, text or watermark.",
+    ),
+)
+
+
+_SLEEPWEAR_RULES: tuple[str, ...] = (
+    "Uploaded pyjama product references are authoritative for set composition, colour, pattern, fabric, trim, fastening, pockets, proportions and construction.",
+    "Use the benchmark only for composition, camera, crop, pose, setting and lighting; never copy benchmark garment or model identity.",
+    "Show both pieces only when the uploads establish a coordinated set; never invent a matching top or bottom.",
+    "Preserve uncertainty for hidden construction and keep sleepwear presentation restrained, neutral and product-focused.",
+)
+_SLEEPWEAR_NEGATIVE_BASE = "Do not change the pyjama identity, set composition, colour, pattern, fabric, trim, fastening, pockets, proportions or construction. Do not invent a matching piece, logos, labels, props, text, watermark, collage or duplicate view."
+
+def _sleepwear_negative(presentation: Literal["model", "garment"]) -> str:
+    if presentation == "model":
+        return _SLEEPWEAR_NEGATIVE_BASE + " Do not show the model's face or facial features, a second person, intimate interaction, suggestive styling, low voyeuristic angle or body-focused framing. Keep one adult model in a neutral product-focused pose."
+    return _SLEEPWEAR_NEGATIVE_BASE + " Do not show a human model, mannequin, hanger, packaging or visible support."
+
+def _pyjama_template(*, index: int, name: str, description: str, presentation: Literal["model", "garment"], details: str, output_details: str, evidence: tuple[str, ...], negative_extra: str = "") -> GenerationTemplate:
+    return GenerationTemplate(
+        id=f"ecommerce-sleepwear-pyjamas-{index:02d}", channel="ecommerce", category="sleepwear_loungewear", name=name, description=description,
+        prompt_instructions=f"Create the requested ecommerce presentation of the uploaded pyjama product. {details}",
+        negative_prompt=_sleepwear_negative(presentation) + negative_extra, aspect_ratio="4:5",
+        reference_object_key=f"docs/pyjamas-output-details/references/{index:02d}.png", version=1,
+        applicable_subtypes=("pyjama set", "pyjama top", "pyjama bottom", "pyjamas"), applicable_families=("pyjamas",),
+        required_product_fields=("product_type", "category_details"), prompt_format_rules=_SLEEPWEAR_RULES,
+        reference_mode="product_only", output_presentation="worn_product" if presentation == "model" else "product_only",
+        presentation_mode=presentation, output_details=output_details, artwork_visibility="full", artwork_surface_mode="flat", required_evidence=evidence,
+    )
+
+MENS_SLEEPWEAR_PYJAMA_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _pyjama_template(index=1, name="Complete Set — Product Layout", description="A complete pyjama set arranged as a clean product-only studio layout.", presentation="garment", details="Near-overhead surface-supported arrangement with the top above and partly across the trousers; show both pieces only when the uploaded product is a confirmed set.", output_details="Subject: Uploaded pyjama product in a product-only layout. Presentation: surface-supported garment arrangement with no person, mannequin, hanger or packaging. Camera: near-overhead and substantially perpendicular to the surface. Framing: complete top and complete trousers, retaining collar or neckline, sleeves, cuffs, top hem, waistband, legs and trouser hems. Product position: top above and partly across trousers with both pieces substantially visible. Silhouette: preserve actual shoulder, sleeve, top length, trouser rise, leg width and drape. Background: warm neutral studio surface. Lighting: soft even catalogue light with shallow natural volume. Evidence: show both pieces only when the upload establishes a coordinated set. Output: one continuous 4:5 ecommerce image; no collage, inset, duplicate view, text or watermark.", evidence=("front_view|flat_lay",)),
+    _pyjama_template(index=2, name="Floor-Seated Model — Close Crop", description="A restrained close floor-seated model presentation of the pyjamas.", presentation="model", details="One adult model seated on the floor with bent overlapping legs, a raised knee and neutral hands; crop from the base of the neck through the ankles or feet, excluding the face.", output_details="Subject: uploaded pyjama product worn by one adult model. Presentation: restrained floor-seated product-focused composition with no additional person. Camera: level-to-slightly-elevated close front three-quarter view; no low or voyeuristic angle. Framing: base of neck through ankles or feet, retaining neckline, upper front, sleeves, cuffs, waist transition, both trouser legs and supported hems. Pose: neutral seated pose with hands away from defining construction and no suggestive body emphasis. Product scale: pyjamas fill most of the portrait frame. Background: warm neutral controlled studio setting. Evidence: preserve actual set relationship and do not invent a matching piece. Output: one continuous 4:5 image; no face, intimate interaction, collage, text or watermark.", evidence=("front_view|flat_lay",)),
+    _pyjama_template(index=3, name="Bed-Seated Model", description="A restrained bed-seated model presentation of the pyjamas.", presentation="model", details="One adult model seated diagonally on a simply dressed neutral bed, torso upright, with the bed used only as physical support and the pyjamas central and dominant.", output_details="Subject: uploaded pyjama product worn by one adult model on a neutral bed. Presentation: restrained ecommerce scene; bed is secondary support, not a lifestyle room. Camera: level-to-slightly-elevated front three-quarter view at bed height. Framing: base of neck or lower chin through visible feet, retaining neckline, front construction, sleeves, cuffs, waist transition, trouser legs and supported hems. Pose: neutral seated pose with no intimate interaction or suggestive styling. Product position: pyjamas central and dominant; bed must not cover identity-critical construction. Background: simple cream or warm neutral bed and controlled studio setting. Output: one continuous 4:5 image; no face, room clutter, collage, text or watermark.", evidence=("front_view|flat_lay",)),
+    _pyjama_template(index=4, name="Full Front Model", description="A complete front-facing catalogue presentation of the pyjamas worn.", presentation="model", details="One adult model standing upright and front-facing with arms relaxed, feet slightly separated, and frame from the base of the neck or lower chin through both feet; exclude the face.", output_details="Subject: uploaded pyjama product worn by one adult model. Presentation: neutral full-length catalogue view with no mannequin or second person. Camera: level direct straight-on view at mid-body height; no tilt or wide-angle distortion. Framing: base of neck or lower chin through both feet, retaining complete top, trousers, shoulders, sleeves, cuffs, waistband, legs and hems. Pose: symmetrical upright stance, arms relaxed and hands clear of the product. Styling: only restrained neutral secondary styling where visible. Background: warm neutral seamless studio. Lighting: soft even catalogue light. Output: one continuous 4:5 image; no face, suggestive pose, collage, text or watermark.", evidence=("front_view|flat_lay",)),
+    _pyjama_template(index=5, name="Fabric Surface Macro", description="An extreme macro presentation of the pyjama fabric surface.", presentation="garment", details="Material-only macro study across soft diagonal fabric folds, with the textile extending beyond all image edges; exclude garment outline and construction.", output_details="Subject: one continuous area of the uploaded pyjama fabric. Presentation: material-only macro with soft rolling folds; no person, mannequin, hand, swatch card or support. Camera: shallow oblique macro view across the fabric. Framing: fabric extends beyond all four edges; exclude collar, cuffs, waistband, pockets, fastenings, piping, seams, hems, labels and complete product outline unless explicitly supported by the selected material evidence. Surface: preserve actual weave, knit ribs, nap, sheen, wrinkles, colour and tonal variation; do not copy benchmark textile structure. Lighting: soft grazing light with restrained depth of field. Output: one continuous 4:5 macro image; no collage, inset, text or watermark.", evidence=("front_view|flat_lay",)),
+    _pyjama_template(index=6, name="Lounge-Chair Seated Model", description="A restrained lounge-chair seated model presentation of the pyjamas.", presentation="model", details="One adult model seated on a simple upholstered lounge chair with one leg extended and the other folded, chair secondary and face excluded; keep the pyjamas product-dominant.", output_details="Subject: uploaded pyjama product worn by one adult model in a restrained lounge-chair composition. Presentation: one simple upholstered chair as secondary support, no lifestyle clutter or second person. Camera: level front three-quarter view at seated torso height; no low, voyeuristic or body-focused angle. Framing: base of neck or lower chin through the extended foot, retaining neckline, sleeves, cuffs, waist transition, trouser legs and supported hems. Pose: neutral seated pose with hands away from defining construction and no suggestive emphasis. Background: warm neutral controlled studio. Lighting: soft catalogue light. Output: one continuous 4:5 image; no face, intimate interaction, collage, text or watermark.", evidence=("front_view|flat_lay",)),
+)
+
+
+def _robe_template(*, index: int, name: str, description: str, presentation: Literal["model", "garment", "invisible_mannequin"], details: str, output_details: str, evidence: tuple[str, ...] = ("front_view|flat_lay",)) -> GenerationTemplate:
+    return GenerationTemplate(
+        id=f"ecommerce-sleepwear-robes-{index:02d}", channel="ecommerce", category="sleepwear_loungewear", name=name, description=description,
+        prompt_instructions=f"Create the requested ecommerce presentation of the uploaded robe. {details}",
+        negative_prompt=_sleepwear_negative("model" if presentation == "model" else "garment") + " Do not turn the robe into a dress, coat, jacket or different sleepwear product. Preserve the actual closure, belt, collar, sleeves, pockets, length and hem.",
+        aspect_ratio="4:5", reference_object_key=f"docs/robes-output-details/references/{index:02d}.png", version=1,
+        applicable_subtypes=("robe",), applicable_families=("robes",), required_product_fields=("product_type", "category_details"),
+        prompt_format_rules=_SLEEPWEAR_RULES, reference_mode="product_only", output_presentation="worn_product" if presentation == "model" else "product_only",
+        presentation_mode="invisible_mannequin" if presentation == "invisible_mannequin" else presentation,
+        output_details=output_details, artwork_visibility="full", artwork_surface_mode="flat", required_evidence=evidence,
+    )
+
+MENS_SLEEPWEAR_ROBE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _robe_template(index=1, name="Collar and Belt Detail", description="A tight worn detail of the robe collar, belt and upper front construction.", presentation="model", details="Tight straight-on worn crop from lower neck through below the waist, showing the collar, overlap, belt and upper drape; face excluded.", output_details="Subject: uploaded robe worn by one adult model. Presentation: tight product-focused worn detail with face and facial features excluded. Camera: straight-on close view. Framing: lower neck through below waist, with collar, overlap, belt, sleeves and upper drape readable; no full garment. Pose: neutral, hands away from the robe. Preserve actual collar, closure, belt, belt loops, sleeve shape and fabric. Background: warm neutral studio and soft catalogue lighting. Evidence: accept front or flat-lay product evidence; do not invent hidden construction. Output: one continuous 4:5 image; no face, collage, text or watermark.") ,
+    _robe_template(index=2, name="Folded Product", description="A compact folded product presentation of the robe.", presentation="garment", details="Fold the robe into a compact symmetrical arrangement on a warm neutral surface, retaining the collar, upper front and belt where supported; no person or visible support.", output_details="Subject: uploaded robe folded as a product-only studio presentation. Camera: near-overhead, substantially perpendicular to the surface. Framing: compact complete folded arrangement with collar, upper front, belt and supported edges readable. Product position: centred with natural fold thickness and no rigid inflation. Preserve actual fabric, closure, belt, collar and proportions; do not copy benchmark colour or sheen. Background: warm neutral studio surface. Lighting: soft even catalogue light. Evidence: accept front or flat-lay product evidence; hidden construction remains unknown. Output: one continuous 4:5 image; no model, hanger, collage, text or watermark."),
+    _robe_template(index=3, name="Front Model — Cropped", description="A centred cropped front model presentation of the robe.", presentation="model", details="One adult model standing neutrally, cropped from lower neck through below the knee or lower robe body, arms down and face excluded; show collar, overlap, belt and sleeves.", output_details="Subject: uploaded robe worn by one adult model. Camera: level direct front catalogue view. Framing: lower neck through below knees or lower garment body, retaining collar, crossover front, belt, sleeves and readable hem direction. Pose: neutral arms down, hands not obscuring the product; face and facial features excluded. Preserve actual length, sleeve shape, closure, belt and drape. Background: warm neutral seamless studio with soft even light. Evidence: accept front or flat-lay product evidence without inventing hidden rear details. Output: one continuous 4:5 image; no face, suggestive pose, collage, text or watermark."),
+    _robe_template(index=4, name="Full Rear Model", description="A full rear model presentation showing the robe back and hem.", presentation="model", details="One adult model viewed from the rear from lower neck through feet, standing neutrally with the robe back, belt and hem readable; face excluded.", output_details="Subject: uploaded robe worn by one adult model from the rear. Camera: level straight-on rear catalogue view. Framing: lower neck through complete hem and feet where supported, preserving back silhouette, sleeves, belt and hem. Pose: neutral standing stance, no body emphasis; face excluded. Do not mirror front collar, pockets or closure onto the rear. Background: warm neutral seamless studio and soft catalogue lighting. Evidence: require a clear rear product view for rear construction and fit; front or flat-lay evidence does not prove unseen rear details. Output: one continuous 4:5 image; no face, collage, text or watermark.", evidence=("rear_view",)),
+    _robe_template(index=5, name="Front Product", description="A complete front product presentation of the robe on an invisible support.", presentation="invisible_mannequin", details="Centre the complete robe from collar through hem on a fully invisible support, with sleeves extended naturally, front overlap and belt visible; no person or support.", output_details="Subject: uploaded robe as a complete product-only front presentation. Presentation: fully invisible mannequin support with no body, torso, neck, head or hanger visible. Camera: direct straight-on front at garment height. Framing: complete collar, sleeves, overlap, belt, pockets where evidenced and hem. Preserve actual length, closure, sleeve volume, belt and fabric; do not add jacket structure. Background: warm neutral seamless studio with subtle contact shadow. Lighting: soft even catalogue light. Evidence: accept front or flat-lay product evidence; hidden rear construction remains unknown. Output: one continuous 4:5 image; no person, visible support, collage, text or watermark."),
+    _robe_template(index=6, name="Full Front Model", description="A centred full front model presentation of the complete robe.", presentation="model", details="One adult model standing neutrally from lower chin through complete hem, arms down and face excluded; keep collar, crossover front, belt, sleeves and full length readable.", output_details="Subject: uploaded robe worn by one adult model. Camera: level direct front catalogue view. Framing: lower chin through complete hem and feet where supported, retaining the full robe silhouette, collar, overlap, belt, sleeves and hem. Pose: upright neutral stance, arms down and hands clear of the robe; face and facial features excluded. Preserve actual proportions and do not regularise length or fit. Background: warm neutral seamless studio with soft even light. Evidence: accept front or flat-lay product evidence; do not invent hidden construction. Output: one continuous 4:5 image; no face, suggestive styling, collage, text or watermark."),
+)
+
+
+def _headwear_template(*, index: int, name: str, description: str, presentation: Literal["model", "garment"], details: str, output_details: str, evidence: tuple[str, ...]) -> GenerationTemplate:
+    return GenerationTemplate(
+        id=f"ecommerce-accessories-headwear-{index:02d}", channel="ecommerce", category="accessories", name=name, description=description,
+        prompt_instructions=f"Create the requested ecommerce presentation of the uploaded headwear. {details}",
+        negative_prompt="Do not change the uploaded headwear type, crown, brim or edge, proportions, colour, pattern, artwork, material, closure or hardware. Do not copy benchmark artwork or construction. Do not invent hidden side or rear details. No collage, inset, duplicate view, text overlay, watermark or unrelated accessories.",
+        aspect_ratio="4:5", reference_object_key=f"docs/headwear-output-details/references/{index:02d}.png", version=1,
+        applicable_subtypes=("headwear",), applicable_families=("headwear",), required_product_fields=("product_type", "category_details"),
+        prompt_format_rules=_SLEEPWEAR_RULES, reference_mode="product_only", output_presentation="worn_product" if presentation == "model" else "product_only",
+        presentation_mode=presentation, output_details=output_details, artwork_visibility="full", artwork_surface_mode="flat", required_evidence=evidence,
+    )
+
+ACCESSORIES_HEADWEAR_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _headwear_template(index=1, name="Front Product", description="A complete front product-only presentation of the headwear.", presentation="garment", details="Show the complete headwear alone in a straight-on front view, invisibly supported in its natural geometry with no head form, stand or styling accessory.", evidence=("front_view",), output_details="Subject: uploaded headwear shown alone. Presentation: product-only with no model, mannequin, head form, stand, packaging or accessory. Camera: level straight-on front, centred. Framing: complete crown and brim, peak or edge with comfortable warm-neutral margins. Position: true front toward camera, natural worn geometry, centred large enough to inspect construction and artwork. Preserve actual crown height, structure, panel count, seams, brim shape, edge finish, logos, artwork and hardware only where evidenced. Background: warm light beige seamless studio, approximately #C8C1B6. Lighting: soft diffuse catalogue light with a gentle grounding shadow. Evidence: front evidence establishes front details only; hidden rear closure and interior remain unknown. Output: one continuous 4:5 ecommerce image; no model, visible support, collage, inset, text or watermark."),
+    _headwear_template(index=2, name="Front Model", description="A centred front model presentation of the headwear.", presentation="model", details="One adult model faces directly forward with the headwear correctly fitted; include head and shoulders or upper chest, with plain subordinate clothing and no competing accessories.", evidence=("front_view",), output_details="Subject: uploaded headwear worn correctly by one adult model. Presentation: centred head-and-shoulders front ecommerce portrait; clothing plain and subordinate. Camera: level straight-on at eye height with minimal distortion. Framing: complete headwear with margin above and sides, model through shoulders or upper chest. Pose: head level, shoulders relaxed, neutral expression, no hand contact. Preserve actual crown height, fit, brim or edge angle, coverage and evidenced front construction or artwork. Background: warm light beige seamless studio, approximately #C8C1B6. Lighting: soft diffuse portrait catalogue light, keeping the product readable. Evidence: do not infer side, rear, closure or interior details from front evidence. Output: one continuous 4:5 image; no collage, inset, duplicate view, text or watermark."),
+    _headwear_template(index=3, name="Side Profile Model", description="A strict side-profile model presentation of the headwear.", presentation="model", details="One adult model faces in a strict 90-degree side profile, showing the complete headwear projection and fit with plain subordinate clothing; use the supported side and do not mirror asymmetry.", evidence=("side_view",), output_details="Subject: uploaded headwear worn by one adult model in strict side profile. Camera: level 90-degree side view at head height. Framing: complete headwear from front projection to rear edge, model through shoulder or upper torso, with margin beyond appendages. Pose: upright side profile, shoulders relaxed, no hand contact. Preserve actual crown contour, profile height, brim or peak length and curve, ear clearance, side artwork, rear hardware and closure only when supported by matching evidence. Background: warm light beige seamless studio, approximately #C8C1B6. Lighting: broad soft side-balanced light. Evidence: side-specific details require side evidence; do not mirror or invent them. Output: one continuous 4:5 image; no collage, inset, duplicate view, text or watermark."),
+    _headwear_template(index=4, name="Rear Model", description="A centred rear model presentation showing the back of the headwear.", presentation="model", details="One adult model faces directly away with the headwear correctly fitted; centre the rear construction and keep hair subordinate so the product edge and closure remain readable.", evidence=("rear_view",), output_details="Subject: uploaded headwear worn by one adult model from the rear. Camera: level straight-on rear at head height. Framing: complete product with margin above and sides, model through shoulders or upper chest. Pose: head upright, shoulders level, no hand contact or rotation. Preserve actual rear crown, lower edge, opening, adjustment strap, closure, hardware, labels and artwork only where evidenced. Do not extrapolate front artwork or invent a benchmark opening or buckle. Background: warm light beige seamless studio, approximately #C8C1B6. Lighting: soft diffuse catalogue light with controlled edge definition. Evidence: rear product evidence is required for definitive rear construction; otherwise keep it unknown. Output: one continuous 4:5 image; no visible face, collage, inset, front-view details, text or watermark."),
+    _headwear_template(index=5, name="Three-Quarter Model", description="A restrained front three-quarter model presentation of the headwear.", presentation="model", details="One adult model turns naturally approximately 30–45 degrees from front, with the selected supported side visible, plain subordinate clothing and no competing accessory.", evidence=("front_view", "side_view"), output_details="Subject: uploaded headwear worn by one adult model in a front three-quarter portrait. Camera: level at head height, approximately 30–45 degrees off front. Framing: complete product with margin around crown, brim or appendages, model through shoulders or upper chest. Pose: upright, shoulders relaxed, neutral expression, no hands touching the product. Preserve actual crown structure, brim projection, side depth, fit and only evidenced front/side artwork, seams, ventilation and trim. Do not combine incompatible details from opposite sides or mirror artwork. Background: warm light beige seamless studio, approximately #C8C1B6. Lighting: soft diffuse portrait catalogue light. Evidence: matching front and side evidence is required for side-specific details; hidden rear remains unknown. Output: one continuous 4:5 image; no collage, inset, duplicate view, text or watermark."),
+)
+
+
+def _tie_template(*, index: int, name: str, description: str, presentation: Literal["model", "garment"], details: str, evidence: tuple[str, ...], output_details: str, negative_extra: str = "") -> GenerationTemplate:
+    return GenerationTemplate(
+        id=f"ecommerce-accessories-ties-{index:02d}", channel="ecommerce", category="accessories", name=name, description=description,
+        prompt_instructions=f"Create the requested ecommerce presentation of the uploaded tie. {details}",
+        negative_prompt="Do not change the uploaded tie type, blade or tail widths, length, tip, colour, pattern, weave, sheen, edge construction, keeper, label or branding. Do not copy benchmark styling or product identity. No duplicate tie, collage, inset, text, watermark or unrelated accessories." + negative_extra,
+        aspect_ratio="1:1", reference_object_key=f"docs/ties-output-details/references/{index:02d}.png", version=1,
+        applicable_subtypes=("tie", "necktie"), applicable_families=("ties",), required_product_fields=("product_type", "category_details"),
+        prompt_format_rules=_SLEEPWEAR_RULES, reference_mode="product_only", output_presentation="worn_product" if presentation == "model" else "product_only",
+        presentation_mode=presentation, output_details=output_details, artwork_visibility="full", artwork_surface_mode="flat", required_evidence=evidence,
+    )
+
+
+def _belt_template(*, index: int, name: str, description: str, details: str, output_details: str, presentation: Literal["model", "garment"] = "garment", evidence: tuple[str, ...] = ()) -> GenerationTemplate:
+    return GenerationTemplate(
+        id=f"ecommerce-accessories-belts-{index:02d}", channel="ecommerce", category="accessories", name=name, description=description,
+        prompt_instructions=f"Create the requested ecommerce presentation of the uploaded belt. {details}",
+        negative_prompt="Do not change the uploaded belt type, strap width or length, material, colour, grain, edge finish, buckle, prong, hardware, keepers, holes, tip, stitching or branding. Do not copy benchmark product identity or styling. No duplicate belt, collage, inset, text, watermark, props or unrelated accessories.",
+        aspect_ratio="4:5", reference_object_key=f"docs/belts-output-details/references/{index:02d}.png", version=1,
+        applicable_subtypes=("belt", "leather belt", "dress belt", "waist belt"), applicable_families=("belts",),
+        required_product_fields=("product_type", "category_details"), prompt_format_rules=_SLEEPWEAR_RULES,
+        reference_mode="product_only", output_presentation="worn_product" if presentation == "model" else "product_only",
+        presentation_mode=presentation, output_details=output_details, artwork_visibility="full", artwork_surface_mode="flat", required_evidence=evidence,
+    )
+
+
+def _glove_template(*, index: int, name: str, description: str, presentation: Literal["model", "garment"], details: str, output_details: str) -> GenerationTemplate:
+    return GenerationTemplate(
+        id=f"ecommerce-accessories-gloves-{index:02d}", channel="ecommerce", category="accessories", name=name, description=description,
+        prompt_instructions=f"Create the requested ecommerce presentation of the uploaded gloves. {details}",
+        negative_prompt="Do not change the uploaded gloves' pair count, hand orientation, finger configuration, thumb construction, material, colour, texture, stitching, seams, cuffs, lining or branding. Do not copy template glove identity or construction. No duplicate gloves, extra fingers, collage, inset, text, watermark or unrelated accessories.",
+        aspect_ratio="4:5", reference_object_key=f"docs/gloves-output-details/references/{index:02d}.png", version=1,
+        applicable_subtypes=("glove", "gloves", "leather gloves", "winter gloves", "fingerless gloves"), applicable_families=("gloves",),
+        required_product_fields=("product_type", "category_details"), prompt_format_rules=_SLEEPWEAR_RULES,
+        reference_mode="product_only", output_presentation="worn_product" if presentation == "model" else "product_only",
+        presentation_mode=presentation, output_details=output_details, artwork_visibility="full", artwork_surface_mode="flat", required_evidence=(),
+    )
+
+
+def _scarf_template(*, index: int, name: str, description: str, presentation: Literal["model", "garment"], details: str, output_details: str) -> GenerationTemplate:
+    return GenerationTemplate(id=f"ecommerce-accessories-scarves-{index:02d}", channel="ecommerce", category="accessories", name=name, description=description, prompt_instructions=f"Create the requested ecommerce presentation of the uploaded scarf. {details}", negative_prompt="Do not change the uploaded scarf's colour, pattern, weave, dimensions, edge finish, fringe, material or drape. Do not copy template scarf identity or construction. No duplicate scarf, collage, inset, text, watermark or unrelated accessories.", aspect_ratio="4:5", reference_object_key=f"docs/scarves-output-details/references/{index:02d}.png", version=1, applicable_subtypes=("scarf", "scarves", "wool scarf", "knitted scarf"), applicable_families=("scarves",), required_product_fields=("product_type", "category_details"), prompt_format_rules=_SLEEPWEAR_RULES, reference_mode="product_only", output_presentation="worn_product" if presentation == "model" else "product_only", presentation_mode=presentation, output_details=output_details, artwork_visibility="full", artwork_surface_mode="flat", required_evidence=())
+
+
+SCARVES_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _scarf_template(index=1, name="Draped Loop Product", description="A product-only scarf arranged in a soft loop with both ends visible.", presentation="garment", details="Match the template reference exactly. Replace only the template scarf with the uploaded scarf. Preserve the reference's draped loop, end positions, visible fringe, scale, crop, framing, lighting and background. Do not add a model, clothing or props.", output_details="Match the template reference exactly. Replace only the template scarf with the uploaded scarf. Preserve the reference's draped loop, end positions, visible fringe, scale, crop, framing, lighting and background. Do not add a model, clothing or props."),
+    _scarf_template(index=2, name="Folded Flat Product", description="A product-only folded scarf showing the fabric and fringed ends.", presentation="garment", details="Match the template reference exactly. Replace only the template scarf with the uploaded scarf. Preserve the reference's folded flat arrangement, layered fold, visible fringe, orientation, scale, crop, framing, lighting and background. Do not unfold it or add a model or props.", output_details="Match the template reference exactly. Replace only the template scarf with the uploaded scarf. Preserve the reference's folded flat arrangement, layered fold, visible fringe, orientation, scale, crop, framing, lighting and background. Do not unfold it or add a model or props."),
+    _scarf_template(index=3, name="Worn Neck Drape", description="A close worn scarf presentation around the neck.", presentation="model", details="Match the template reference exactly. Replace only the template scarf with the uploaded scarf. Preserve the reference's neck wrap, loop, hanging ends, fringe, coat and sweater context, crop, framing, lighting and background. Exclude the face and do not add accessories.", output_details="Match the template reference exactly. Replace only the template scarf with the uploaded scarf. Preserve the reference's neck wrap, loop, hanging ends, fringe, coat and sweater context, crop, framing, lighting and background. Exclude the face and do not add accessories."),
+)
+
+
+GLOVES_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _glove_template(index=1, name="Palm-and-Back Flat Lay", description="A product-only flat lay showing palm and back glove surfaces.", presentation="garment", details="Match the template reference exactly. Replace only the template gloves with the uploaded gloves. Preserve the reference's side-by-side flat-lay orientation, palm/back arrangement, spacing, scale, crop, framing, lighting and background. Do not add clothing, props or unsupported construction.", output_details="Match the template reference exactly. Replace only the template gloves with the uploaded gloves. Preserve the reference's side-by-side flat-lay orientation, palm/back arrangement, spacing, scale, crop, framing, lighting and background. Do not add clothing, props or unsupported construction."),
+    _glove_template(index=2, name="Overlapping Product Pair", description="An overlapping product-only presentation of the glove pair.", presentation="garment", details="Match the template reference exactly. Replace only the template gloves with the uploaded gloves. Preserve the reference's overlapping pair arrangement, diagonal orientation, overlap order, visible cuffs, finger arrangement, scale, crop, framing, lighting and background. Do not separate the gloves or add hands, arms or props.", output_details="Match the template reference exactly. Replace only the template gloves with the uploaded gloves. Preserve the reference's overlapping pair arrangement, diagonal orientation, overlap order, visible cuffs, finger arrangement, scale, crop, framing, lighting and background. Do not separate the gloves or add hands, arms or props."),
+    _glove_template(index=3, name="Artfully Posed Glove Detail", description="A close worn detail showing overlapping gloved hands.", presentation="model", details="Match the template reference exactly. Replace only the template gloves with the uploaded gloves. Preserve the reference's palm-up hand, crossing glove, hand pose, overlap, wrist angle, sleeve edge, crop, framing, lighting and background. Do not change the pose or add a face, body or accessories.", output_details="Match the template reference exactly. Replace only the template gloves with the uploaded gloves. Preserve the reference's palm-up hand, crossing glove, hand pose, overlap, wrist angle, sleeve edge, crop, framing, lighting and background. Do not change the pose or add a face, body or accessories."),
+    _glove_template(index=4, name="Worn Gloves Close-Up", description="A close worn presentation of gloves on crossed or clasped hands.", presentation="model", details="Match the template reference exactly. Replace only the template gloves with the uploaded gloves. Preserve the reference's worn hand interaction, crossed or clasped pose, glove overlap, sleeve context, crop, framing, lighting and background. Do not show the face or add a lifestyle setting.", output_details="Match the template reference exactly. Replace only the template gloves with the uploaded gloves. Preserve the reference's worn hand interaction, crossed or clasped pose, glove overlap, sleeve context, crop, framing, lighting and background. Do not show the face or add a lifestyle setting."),
+)
+
+_TIE_OUTPUT_BASE = "Preserve only evidenced tie type, blade and tail widths, length, tip shape, interlining and body, colour, pattern, weave, sheen, edge construction, keeper loop, label and branding. Preserve exact uploaded colour, pattern scale and material surface; never transfer benchmark navy tie, white shirt or dark suit styling. Background: clean warm-neutral studio. Lighting: soft diffuse ecommerce light. "
+ACCESSORIES_TIE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _tie_template(index=1, name="Tying Demonstration", description="A close worn demonstration of tying the uploaded tie.", presentation="model", details="One adult model in a tight upper-torso crop from lower collar through mid-chest, with both hands and crossed tie sections visible in a neutral in-progress tying action; head and lower torso excluded.", evidence=("front_view",), output_details=_TIE_OUTPUT_BASE + "Camera: front close-up at upper-torso height. Keep both hands, crossing tie sections and product dominant; preserve natural blade/tail relationship without implying a finished knot. Hidden finished knot and full length remain unknown. Output: one continuous square 1:1 image; no collage, inset, duplicate view, text or watermark."),
+    _tie_template(index=2, name="Knot and Collar Detail", description="A close worn detail of the tie knot and collar.", presentation="model", details="Match the supplied template reference's tight diagonal close-up: one adult model, with only the collar, completed knot and upper blade visible; exclude the suit jacket, lapels, shoulders, waist, belt, lower torso and full tie.", evidence=("front_view",), negative_extra=" Do not show a suit jacket, lapels, shoulders, waist, belt, lower torso, full tie blade, centred full-torso framing or the Full Torso Model composition.", output_details=_TIE_OUTPUT_BASE + "Match the template reference's tight diagonal close-up. Frame only the complete collar, finished knot and upper blade; do not use centred full-torso framing or show the suit jacket, lapels, shoulders, waist, belt or full tie. Use a physically plausible knot compatible with the uploaded width and material; full length and lower pattern remain unknown. Output: one continuous square 1:1 image; no collage, inset, duplicate view, text or watermark."),
+    _tie_template(index=3, name="Looped Product Arrangement", description="A near-overhead looped product arrangement of the tie.", presentation="garment", details="Show one tie product only in a relaxed broad upright loop with the blade crossing over the narrow tail near the base; no knot, person or support visible.", evidence=("front_view",), output_details=_TIE_OUTPUT_BASE + "Camera: near-overhead product view. Include the complete loop, crossing blade, tail and outer edges with natural fabric curvature; reverse face, keeper and label remain unknown unless visible. Output: one continuous square 1:1 image; no model, collage, inset, duplicate view, text or watermark."),
+    _tie_template(index=4, name="Folded Product", description="A compact folded product presentation of the tie.", presentation="garment", details="Show one tie folded into a compact layered shape, with broad pointed blade on top and narrow tail separately readable; no hard creases or added products.", evidence=("front_view",), output_details=_TIE_OUTPUT_BASE + "Camera: slightly elevated three-quarter product view. Retain the complete compact fold and both visible ends; most length and reverse construction are concealed and must not be invented. Output: one continuous square 1:1 image; no model, collage, inset, duplicate view, text or watermark."),
+    _tie_template(index=5, name="Rolled Product", description="A compact rolled product presentation of the tie.", presentation="garment", details="Roll one tie from the narrow end into an even natural spiral, leaving the broad blade extended face-up; no duplicate product or props.", evidence=("front_view",), output_details=_TIE_OUTPUT_BASE + "Camera: low elevated three-quarter product view. Show the complete spiral and visible blade tip with surrounding margin; interior layers, keeper and label remain unconfirmed unless evidenced. Output: one continuous square 1:1 image; no model, collage, inset, duplicate view, text or watermark."),
+    _tie_template(index=6, name="Front Knot Detail", description="A symmetrical straight-on front detail of the finished tie knot.", presentation="model", details="One adult model in a straight-on macro crop from collar points through the upper blade, with a clean finished knot centred under a plain white collar used only as fit context.", evidence=("front_view",), output_details=_TIE_OUTPUT_BASE + "Camera: straight-on macro portrait. Centre the complete knot and preserve pattern continuity through knot and blade; full length, lower tip and jacket styling remain outside evidence. Output: one continuous square 1:1 image; no collage, inset, duplicate view, text or watermark."),
+    _tie_template(index=7, name="Full Torso Model", description="A full torso model presentation showing the complete visible tie.", presentation="model", details="One adult model in a level front portrait cropped from lower face or neck through waist, wearing the finished tie with plain shirt and suit context; show knot, full blade, tip and beltline, face mostly excluded.", evidence=("front_view",), output_details=_TIE_OUTPUT_BASE + "Camera: level front portrait. Use a neutral standing pose with arms relaxed or near pockets; tie remains dominant and reaches a plausible length without arbitrary alteration. Do not infer details hidden under collar or jacket. Output: one continuous square 1:1 image; no collage, inset, duplicate view, text or watermark."),
+)
+
+BELTS_ECOMMERCE_TEMPLATES: Final[tuple[GenerationTemplate, ...]] = (
+    _belt_template(index=1, name="Buckle Detail", description="A tight product-only macro of the belt buckle and attachment construction.", details="Match the template reference exactly. Replace only the template belt with the uploaded belt. Preserve the reference's vertical buckle placement, crop, scale, framing, lighting and background. Preserve the uploaded belt's buckle, prong, keeper, material, colour and construction. Do not add clothing, props, duplicate hardware, extra belt sections or unsupported details.", output_details="Match the template reference exactly. Replace only the template belt with the uploaded belt. Preserve the reference's vertical buckle placement, crop, scale, framing, lighting and background. Preserve the uploaded belt's buckle, prong, keeper, material, colour and construction. Do not add clothing, props, duplicate hardware, extra belt sections or unsupported details."),
+    _belt_template(index=3, name="Coiled Product", description="A coiled product presentation showing the belt buckle, keeper, holes and tip.", details="Match the template reference exactly. Replace only the template belt with the uploaded belt. Preserve the reference's loose two-loop coil, buckle position, visible keeper, holes, rounded tip, crop, scale, framing, lighting and background. Do not create extra belts, duplicated hardware, duplicated holes, tight spirals, knots or unsupported construction.", output_details="Match the template reference exactly. Replace only the template belt with the uploaded belt. Preserve the reference's loose two-loop coil, buckle position, visible keeper, holes, rounded tip, crop, scale, framing, lighting and background. Do not create extra belts, duplicated hardware, duplicated holes, tight spirals, knots or unsupported construction."),
+    _belt_template(index=4, name="Full Flat Layout", description="A complete diagonal flat-lay presentation showing the belt from buckle through tip.", details="Match the template reference exactly. Replace only the template belt with the uploaded belt. Preserve the reference's complete diagonal layout, buckle-end position, rounded-tip position, visible strap separation, crop, scale, framing, lighting and background. Do not create a loop, coil, fastening, crossing, overlap, duplicate belt or cropped endpoint.", output_details="Match the template reference exactly. Replace only the template belt with the uploaded belt. Preserve the reference's complete diagonal layout, buckle-end position, rounded-tip position, visible strap separation, crop, scale, framing, lighting and background. Do not create a loop, coil, fastening, crossing, overlap, duplicate belt or cropped endpoint."),
+    _belt_template(index=5, name="Worn Waistband Detail", description="A close worn detail showing the fastened belt around a neutral waistband.", presentation="model", details="Match the template reference exactly. Replace only the template belt with the uploaded belt. Preserve the reference's worn waistband position, buckle placement, crop, scale, framing, clothing context, lighting and background. Preserve the uploaded belt's identity and construction. Do not add a face, torso, lifestyle setting, props, duplicate belt or unsupported details.", output_details="Match the template reference exactly. Replace only the template belt with the uploaded belt. Preserve the reference's worn waistband position, buckle placement, crop, scale, framing, clothing context, lighting and background. Preserve the uploaded belt's identity and construction. Do not add a face, torso, lifestyle setting, props, duplicate belt or unsupported details."),
+)
+
 _BASE_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
     template.id: replace(template, required_evidence=_evidence_for_template(template))
-    for template in TOPS_ECOMMERCE_TEMPLATES + OUTERWEAR_ECOMMERCE_TEMPLATES + FOOTWEAR_ECOMMERCE_TEMPLATES + SOCKS_ECOMMERCE_TEMPLATES + BOTTOMS_ECOMMERCE_TEMPLATES + UNDERWEAR_ECOMMERCE_TEMPLATES
+    for template in TOPS_ECOMMERCE_TEMPLATES + OUTERWEAR_ECOMMERCE_TEMPLATES + FOOTWEAR_ECOMMERCE_TEMPLATES + SOCKS_ECOMMERCE_TEMPLATES + BOTTOMS_ECOMMERCE_TEMPLATES + UNDERWEAR_ECOMMERCE_TEMPLATES + DRESSES_ECOMMERCE_TEMPLATES + MENS_TAILORING_SUIT_JACKET_TEMPLATES + MENS_TAILORING_WAISTCOAT_TEMPLATES + MENS_SLEEPWEAR_PYJAMA_TEMPLATES + MENS_SLEEPWEAR_ROBE_TEMPLATES + ACCESSORIES_HEADWEAR_TEMPLATES + ACCESSORIES_TIE_TEMPLATES + BELTS_ECOMMERCE_TEMPLATES + GLOVES_ECOMMERCE_TEMPLATES + SCARVES_ECOMMERCE_TEMPLATES
 }
 
 # Family packs are explicit compositions. The numeric suffix identifies the
@@ -1562,8 +2033,23 @@ _BOOTS_FAMILY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
     ) for index in range(9)
 }
 
-_TEMPLATES: Final[dict[str, GenerationTemplate]] = {**_BASE_TEMPLATES, **_TOPS_FAMILY_TEMPLATES, **_JACKETS_FAMILY_TEMPLATES, **_COATS_FAMILY_TEMPLATES, **_GILETS_FAMILY_TEMPLATES, **_TRAINERS_FAMILY_TEMPLATES, **_FLATS_LOAFERS_FAMILY_TEMPLATES, **_HEELS_FAMILY_TEMPLATES, **_BOOTS_FAMILY_TEMPLATES, **_STRUCTURED_BOTTOMS_FAMILY_TEMPLATES, **_SHORTS_FAMILY_TEMPLATES, **_JOGGERS_FAMILY_TEMPLATES, **_LEGGINGS_FAMILY_TEMPLATES, **_SKIRTS_FAMILY_TEMPLATES}
-_LEGACY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {TOPS_CLEAN_PRODUCT_SHOT.id: TOPS_CLEAN_PRODUCT_SHOT}
+_TEMPLATES: Final[dict[str, GenerationTemplate]] = {**_BASE_TEMPLATES, **_TOPS_FAMILY_TEMPLATES, **_JACKETS_FAMILY_TEMPLATES, **_COATS_FAMILY_TEMPLATES, **_GILETS_FAMILY_TEMPLATES, **_TRAINERS_FAMILY_TEMPLATES, **_FLATS_LOAFERS_FAMILY_TEMPLATES, **_HEELS_FAMILY_TEMPLATES, **_BOOTS_FAMILY_TEMPLATES, **_BRA_FAMILY_TEMPLATES, **_STRUCTURED_BOTTOMS_FAMILY_TEMPLATES, **_SHORTS_FAMILY_TEMPLATES, **_JOGGERS_FAMILY_TEMPLATES, **_LEGGINGS_FAMILY_TEMPLATES, **_SKIRTS_FAMILY_TEMPLATES, **{template.id: template for template in MENS_TAILORING_SUIT_JACKET_TEMPLATES}, **{template.id: template for template in MENS_TAILORING_WAISTCOAT_TEMPLATES}, **{template.id: template for template in MENS_SLEEPWEAR_PYJAMA_TEMPLATES}, **{template.id: template for template in MENS_SLEEPWEAR_ROBE_TEMPLATES}, **{template.id: template for template in ACCESSORIES_HEADWEAR_TEMPLATES}, **{template.id: template for template in ACCESSORIES_TIE_TEMPLATES}, **{template.id: template for template in BELTS_ECOMMERCE_TEMPLATES}, **{template.id: template for template in GLOVES_ECOMMERCE_TEMPLATES}, **{template.id: template for template in SCARVES_ECOMMERCE_TEMPLATES}}
+_TEMPLATES = {
+    template_id: replace(
+        template,
+        output_details=REVIEWED_OUTPUT_DETAILS.get(template_id, template.output_details),
+    )
+    for template_id, template in _TEMPLATES.items()
+}
+_LEGACY_TEMPLATES: Final[dict[str, GenerationTemplate]] = {
+    TOPS_CLEAN_PRODUCT_SHOT.id: TOPS_CLEAN_PRODUCT_SHOT,
+    **{
+        f"ecommerce-underwear-bra-{index:02d}": replace(
+            _BRA_LOCKED_TEMPLATES["ecommerce-underwear-bra-01"],
+            id=f"ecommerce-underwear-bra-{index:02d}",
+        ) for index in range(2, 9)
+    },
+}
 
 
 def get_generation_template(template_id: str) -> GenerationTemplate | None:
@@ -1575,6 +2061,14 @@ def _canonical_family(category: str, family: str | None) -> str | None:
     if not family:
         return None
     value = family.strip().lower()
+    if value in {"unclassified", "unknown", "none", "null"}:
+        return None
+    if value in {"", "unclassified", "unknown", "none", "null"}:
+        return None
+    if value == "belt":
+        return "belts"
+    if value == "glove":
+        return "gloves"
     if category.strip().lower() == "footwear" and value in {"trainers", "flats-loafers", "sandals-open-shoes"}:
         return "shoes"
     return value
@@ -1585,11 +2079,43 @@ def validate_generation_template(template_id: str, *, category: str, channel: st
     template = get_generation_template(template_id)
     if template is None:
         raise ValueError(f"Unknown generation template: {template_id}")
-    if template.category != category.strip().lower():
+    requested_category = category.strip().lower()
+    product_family = _canonical_family(category, product_family)
+    # Belt is a supported leaf category as well as a legacy accessories family.
+    # Its category is authoritative even when older records have no family.
+    if requested_category in {"belt", "belts"} and template.category == "accessories" and "belts" in template.applicable_families:
+        product_family = "belts"
+    legacy_headwear_alias = requested_category == "headwear" and template.category == "accessories" and "headwear" in template.applicable_families
+    legacy_ties_alias = requested_category == "neckwear" and template.category == "accessories" and "ties" in template.applicable_families
+    normalized_subtype = (subtype or "").strip().lower()
+    belt_subtype_alias = normalized_subtype in {"belt", "leather belt", "dress belt", "waist belt"}
+    belt_template_alias = (
+        requested_category == "accessories"
+        and template.category == "accessories"
+        and "belts" in template.applicable_families
+        and product_family is None
+    )
+    legacy_belts_alias = (
+        template.category == "accessories"
+        and "belts" in template.applicable_families
+        and (requested_category in {"belt", "belts"} or belt_subtype_alias or belt_template_alias)
+    )
+    glove_subtype_alias = normalized_subtype in {"glove", "gloves", "leather gloves", "winter gloves", "fingerless gloves"}
+    glove_template_alias = requested_category in {"accessories", "glove", "gloves"} and template.category == "accessories" and "gloves" in template.applicable_families and product_family is None
+    legacy_gloves_alias = template.category == "accessories" and "gloves" in template.applicable_families and (requested_category in {"glove", "gloves"} or glove_subtype_alias or glove_template_alias)
+    scarf_subtype_alias = normalized_subtype in {"scarf", "scarves", "wool scarf", "knitted scarf"}
+    scarf_template_alias = requested_category in {"accessories", "scarf", "scarves"} and template.category == "accessories" and "scarves" in template.applicable_families and product_family is None
+    legacy_scarves_alias = template.category == "accessories" and "scarves" in template.applicable_families and (requested_category in {"scarf", "scarves"} or scarf_subtype_alias or scarf_template_alias)
+    if template.category != requested_category and not (legacy_headwear_alias or legacy_ties_alias or legacy_belts_alias or legacy_gloves_alias or legacy_scarves_alias):
         raise ValueError(f"Template {template_id} is not available for category {category}")
     if template.channel != channel.strip().lower():
         raise ValueError(f"Template {template_id} is not available for channel {channel}")
-    product_family = _canonical_family(category, product_family)
+    if product_family is None and (belt_subtype_alias or belt_template_alias) and template.category == "accessories" and "belts" in template.applicable_families:
+        product_family = "belts"
+    if product_family is None and (requested_category in {"glove", "gloves"} or glove_subtype_alias or glove_template_alias) and template.category == "accessories" and "gloves" in template.applicable_families:
+        product_family = "gloves"
+    if product_family is None and (requested_category in {"scarf", "scarves"} or scarf_subtype_alias or scarf_template_alias) and template.category == "accessories" and "scarves" in template.applicable_families:
+        product_family = "scarves"
     if template.applicable_families:
         # Bottoms templates are shared composition primitives, so an unknown
         # bottoms family may use the conservative generic policy. A known
@@ -1616,7 +2142,13 @@ def list_generation_templates(*, category: str | None = None, channel: str | Non
     """List active templates, optionally filtered by category, channel, and family."""
     templates = list(_TEMPLATES.values())
     if category is not None:
-        templates = [template for template in templates if template.category == category.strip().lower()]
+        requested_category = category.strip().lower()
+        templates = [
+            template for template in templates
+            if template.category == requested_category
+            or (requested_category == "headwear" and template.category == "accessories" and "headwear" in template.applicable_families)
+            or (requested_category == "neckwear" and template.category == "accessories" and "ties" in template.applicable_families)
+        ]
     if channel is not None:
         templates = [template for template in templates if template.channel == channel.strip().lower()]
     if product_family is not None:

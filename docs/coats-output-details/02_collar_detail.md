@@ -17,6 +17,7 @@ The benchmark supplies composition, framing and presentation. The uploaded produ
 ## OUTPUT DETAILS
 
 - Subject: Uploaded coat, using the `invisible_mannequin` presentation defined above.
+- Presentation: Product shaped by a completely invisible mannequin; no body, torso, neck, head or support visible.
 - Camera angle and orientation: Straight-on front close-up.
 - Framing and crop: Collar, shoulder roots and upper front; sleeves and lower coat clipped. Benchmark includes top buttons and partially clipped lower buttons/pocket edges.
 - Product position and pose: Neck opening centred high in frame; lapel overlap extends diagonally downward.
@@ -30,6 +31,8 @@ The benchmark supplies composition, framing and presentation. The uploaded produ
 - Surface fidelity: Preserve evidenced texture scale. Several benchmark fronts show pronounced swirling surface detail; do not transfer this to a plain coat or invent fibres, ornament, weave or embroidery.
 - Secondary styling: No person, skin, underlayer, trousers, footwear, hanger or visible support.
 - Composition: One continuous portrait ecommerce photograph, approximately 4:5; one coat only. No collage, inset, duplicated view, added text, watermark or decorative accessories.
+
+- Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate view, text or watermark.
 
 ## Source evidence and uncertainty
 

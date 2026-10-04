@@ -35,7 +35,8 @@ GENERATION_QUEUE = "productframe:generation"
 CONSUMER_GROUP = "productframe-workers"
 MAX_GENERATION_ATTEMPTS = 3
 GENERATION_RECOVERY_LEASE_SECONDS = 600
-_RECOVERY_DONE = False
+RECOVERY_CHECK_INTERVAL_SECONDS = 30.0
+_LAST_RECOVERY_CHECK = 0.0
 logger = logging.getLogger(__name__)
 
 
@@ -420,16 +421,19 @@ def _ensure_groups(redis: Redis) -> None:
 
 
 def _recover_jobs(redis: Redis) -> None:
-    global _RECOVERY_DONE
-    if _RECOVERY_DONE:
+    global _LAST_RECOVERY_CHECK
+    now = time.monotonic()
+    if now - _LAST_RECOVERY_CHECK < RECOVERY_CHECK_INTERVAL_SECONDS:
         return
+    startup_check = _LAST_RECOVERY_CHECK == 0.0
+    _LAST_RECOVERY_CHECK = now
     lease_seconds = _positive_int_env("GENERATION_RECOVERY_LEASE_SECONDS", GENERATION_RECOVERY_LEASE_SECONDS)
     cutoff = _now() - timedelta(seconds=lease_seconds)
     with SessionLocal() as db:
-        # Redis retains the original stream message. Only reset jobs that have
-        # been generating longer than the provider lease; blindly adding every
-        # pending/generating job here creates duplicate provider requests on
-        # every worker restart.
+        # Redis retains the original stream message. Reset only jobs that have
+        # been generating longer than the provider lease. Pending jobs are
+        # requeued on startup, while periodic checks enqueue only jobs recovered
+        # by that check; this avoids duplicate pending messages every 30 seconds.
         jobs = db.scalars(select(GenerationJob).where(
             GenerationJob.status == "generating",
             GenerationJob.started_at.is_not(None),
@@ -443,7 +447,7 @@ def _recover_jobs(redis: Redis) -> None:
             recovered_runs.add(job.generation_run_id)
         for run_id in recovered_runs:
             recalculate_generation_run(db, run_id)
-        pending_jobs = db.scalars(select(GenerationJob).where(GenerationJob.status == "pending")).all()
+        pending_jobs = db.scalars(select(GenerationJob).where(GenerationJob.status == "pending")).all() if startup_check else jobs
         for job in pending_jobs:
             redis.xadd(GENERATION_QUEUE, {"type": "generate", "job_id": job.id}, maxlen=10000, approximate=True)
         if jobs or pending_jobs:
@@ -452,7 +456,6 @@ def _recover_jobs(redis: Redis) -> None:
                 logger.warning("Recovered %d stale generation job(s) after a %ss lease.", len(jobs), lease_seconds)
             if pending_jobs:
                 logger.info("Requeued %d pending generation job(s) during worker recovery.", len(pending_jobs))
-    _RECOVERY_DONE = True
 
 
 def _positive_int_env(name: str, default: int) -> int:

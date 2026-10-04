@@ -9,14 +9,14 @@ TopsFamily = Literal[
 ]
 OuterwearFamily = Literal["jackets", "coats", "gilets-padded-vests"]
 DressFamily = Literal["dresses"]
-TailoringFamily = Literal["tailored-jackets", "waistcoats", "suits", "tuxedos"]
-SleepwearFamily = Literal["pyjamas", "nightwear", "robes"]
+TailoringFamily = Literal["suit-jackets", "waistcoats"]
+SleepwearFamily = Literal["pyjamas", "robes"]
 SocksFamily = Literal["socks"]
 # Canonical families are shoes, heels and boots. Legacy values remain accepted
 # while persisted analyses and generation runs are migrated.
 FootwearFamily = Literal["shoes", "boots", "heels", "trainers", "flats-loafers", "sandals-open-shoes"]
 JewelleryFamily = Literal["rings", "bracelets", "earrings", "necklaces", "watches"]
-AccessoriesFamily = Literal["headwear", "scarves", "gloves", "belts", "ties-neckwear", "veils"]
+AccessoriesFamily = Literal["headwear", "scarves", "gloves", "belts", "ties", "ties-neckwear"]
 
 
 class TopsDetails(BaseModel):
@@ -113,9 +113,7 @@ class BottomsDetails(BaseModel):
     shorts_length: str = "not_visible"
 
 
-UnderwearFamily = Literal[
-    "lower_body_underwear", "bra", "lingerie", "base_layer", "underwear_set"
-]
+UnderwearFamily = Literal["lower_body_underwear", "bra"]
 
 
 class LowerBodyUnderwearDetails(BaseModel):
@@ -132,26 +130,6 @@ class BraDetails(BaseModel):
     band_construction: str = "not_applicable"
     support_structure: str = "not_applicable"
     fastening_details: list[str] = Field(default_factory=list)
-
-
-class LingerieDetails(BaseModel):
-    lace_or_mesh_details: str = "not_applicable"
-    panel_details: list[str] = Field(default_factory=list)
-    decorative_trim_details: list[str] = Field(default_factory=list)
-    shaping_or_boning_details: str = "not_applicable"
-
-
-class BaseLayerDetails(BaseModel):
-    neckline_or_opening: str = "not_applicable"
-    strap_or_sleeve_details: str = "not_applicable"
-    hem_details: str = "not_applicable"
-    layering_fit: str = "not_applicable"
-
-
-class UnderwearSetDetails(BaseModel):
-    piece_count: str = "not_applicable"
-    coordinated_piece_details: list[str] = Field(default_factory=list)
-    matching_features: list[str] = Field(default_factory=list)
 
 
 class UnderwearDetails(BaseModel):
@@ -176,9 +154,6 @@ class UnderwearDetails(BaseModel):
     seam_details: list[str] = Field(default_factory=list)
     lower_body: LowerBodyUnderwearDetails | None = None
     bra: BraDetails | None = None
-    lingerie: LingerieDetails | None = None
-    base_layer: BaseLayerDetails | None = None
-    set_details: UnderwearSetDetails | None = None
 
 
 class SocksDetails(BaseModel):
@@ -372,6 +347,7 @@ class NecklacesDetails(BaseModel):
 
 
 class HeadwearDetails(BaseModel):
+    family: AccessoriesFamily | None = None
     subtype: str
     crown_shape: str
     brim_or_peak_shape: str

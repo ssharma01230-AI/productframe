@@ -1,6 +1,6 @@
 # Underwear / Lower-Body Underwear — visually reviewed Output Details
 
-Draft documentation only. All 7 currently wired Ecommerce benchmark images were opened and visually inspected. Source mapping: `apps/web/app/studio/output-recipes.ts`, `UNDERWEAR_ECOMMERCE_RECIPES` and `getOutputRecipes`. No application prompts, schemas, assets or runtime behaviour changed.
+Draft documentation only. All 7 currently wired Ecommerce benchmark images were opened and visually inspected. Source mapping: `apps/web/app/studio/output-recipes.ts`, `UNDERWEAR_ECOMMERCE_RECIPES` and `getOutputRecipes`. The reviewed output details now back the structured backend prompt contracts and worker reference wiring.
 
 Global category: `underwear`; eligible family: `lower_body_underwear` only. This Ecommerce set applies to lower-body underwear and does not apply to Bras, Lingerie, Base Layers or Underwear Sets. Benchmark observation: grey boxer-brief style garment; do not impose boxer legs, heather fabric, fly seams or a particular waistband on other lower-body underwear products. Slots 02–03 are flat lays; slots 04–06 are volumetrically shaped with no body visible. These assets are small (roughly 170–227 pixels wide); use them for composition, not as evidence of fine textile detail.
 
@@ -8,7 +8,7 @@ Global category: `underwear`; eligible family: `lower_body_underwear` only. This
 
 The benchmark controls composition, camera angle, framing and presentation—not product identity. Preserve the uploaded product's exact material appearance, texture scale, construction, colour, artwork and proportions. Only describe visible supported construction; do not invent hidden details or create synthetic microtexture to satisfy a macro crop. If the source cannot resolve the requested detail, a close-up source reference is needed for reliable fidelity. Background direction follows the existing review documents: light warm beige approximately #C8C1B6 wherever exposed; a material-only macro retains the product colour, not beige.
 
-Numbered sections below are current frontend display slots. IDs and asset paths are retained exactly, even when filename numbers differ. This is an image-based review, not backend-generation verification.
+Numbered sections below are current frontend display slots. IDs and asset paths are retained exactly, even when filename numbers differ. This review supplies the structured backend output-details contracts and local worker benchmark references for the lower-body Underwear templates.
 
 ## 01 — Front with Model (No Face)
 

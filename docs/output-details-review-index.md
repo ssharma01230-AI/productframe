@@ -18,6 +18,13 @@ The source of eligibility is `apps/web/app/studio/output-recipes.ts`: dedicated 
 | Footwear | Category-wide shared set — 9 images | [Footwear](footwear-output-details-review.md) |
 | Socks | Category-wide shared set — 8 images | [Socks](socks-output-details-review.md) |
 | Underwear | `lower_body_underwear` only — 7 images | [Underwear](underwear-output-details-review.md) |
+| Dresses | `dresses` — 8 supplied benchmark templates | [Dresses](dresses-output-details/README.md) |
+| Mens Tailoring | `suit-jackets` — 7 supplied benchmark templates | [Mens tailoring](mens-tailoring-output-details/README.md) |
+| Mens Tailoring | `waistcoats` — 5 supplied benchmark templates | [Waistcoats](waistcoats-output-details/README.md) |
+| Sleepwear / Loungewear | `pyjamas` — 6 supplied benchmark templates | [Pyjamas](pyjamas-output-details/README.md) |
+| Sleepwear / Loungewear | `robes` — 6 supplied benchmark templates | [Robes](robes-output-details/README.md) |
+| Accessories | `headwear` — 5 supplied benchmark templates | [Headwear](headwear-output-details/README.md) |
+| Accessories | `ties` — 7 supplied benchmark templates | [Ties](ties-output-details/README.md) |
 
 ## Scope and exclusions
 

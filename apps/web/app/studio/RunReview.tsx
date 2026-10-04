@@ -292,13 +292,13 @@ function displaySubtype(product: Product) {
   const category = product.category.trim().toLowerCase();
   const familyNames: Record<string, string> = {
     't-shirts-casual-tops': 't-shirt', 'sleeveless-tops': 'sleeveless top', shirts: 'shirt', knitwear: 'knitwear', hoodies: 'hoodie',
-    tailored_jackets: 'tailored jacket', waistcoats: 'waistcoat', suits: 'suit', tuxedos: 'tuxedo',
+    suit_jackets: 'suit jacket', waistcoats: 'waistcoat',
     jackets: 'jacket', coats: 'coat', 'gilets-padded-vests': 'gilet',
     structured_bottoms: 'trousers', shorts: 'shorts', casual_bottoms: 'joggers', leggings: 'leggings', skirts: 'skirt',
-    dresses: 'dress', pyjamas: 'pyjamas', nightwear: 'nightwear', robes: 'robe',
-    lower_body_underwear: 'lower-body underwear', bra: 'bra', lingerie: 'lingerie', base_layer: 'base layer', underwear_set: 'underwear set',
+    dresses: 'dress', pyjamas: 'pyjamas', robes: 'robe',
+    lower_body_underwear: 'lower-body underwear', bra: 'bra',
     socks: 'socks', shoes: 'shoes', boots: 'boots', heels: 'heels',
-    headwear: 'headwear', scarves: 'scarf', gloves: 'gloves', belts: 'belt', 'ties-neckwear': 'neckwear', veils: 'veil',
+    headwear: 'headwear', scarves: 'scarf', gloves: 'gloves', belts: 'belt', 'ties-neckwear': 'neckwear',
     rings: 'rings', bracelets: 'bracelets', earrings: 'earrings', necklaces: 'necklace', watches: 'watches',
   };
   if (family && familyNames[family]) return familyNames[family];

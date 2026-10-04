@@ -17,6 +17,7 @@ The benchmark controls composition, camera, framing and presentation. The upload
 ## OUTPUT DETAILS
 
 - Subject: Uploaded gilet or padded vest, presented using `invisible_mannequin`.
+- Presentation: Product shaped by a completely invisible mannequin; no body, torso, neck, head or support visible.
 - Camera angle and orientation: Straight-on rear at garment level.
 - Framing and crop: Whole rear including raised collar, both armhole outlines and hem with clear margins.
 - Product position and pose: Centred vertical garment, shoulders balanced and back unobstructed.

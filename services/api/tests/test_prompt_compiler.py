@@ -38,13 +38,14 @@ def request(**changes):
     return GenerationRequest(**values)
 
 
-def test_compiler_puts_product_identity_before_template_and_keeps_reference_only():
+def test_compiler_uses_canonical_sections_and_keeps_reference_only():
     compiled = compile_generation_prompt(request())
 
-    assert compiled.prompt.index("PRODUCT IDENTITY") < compiled.prompt.index("TEMPLATE PRESENTATION")
+    assert compiled.prompt.index("REFERENCE-FIRST RULES") < compiled.prompt.index("PRODUCT FIDELITY PRESERVATION") < compiled.prompt.index("TEMPLATE PRESENTATION") < compiled.prompt.index("PRODUCT IDENTITY") < compiled.prompt.index("NEGATIVE PROMPT")
     assert "V-neck" in compiled.prompt
     assert "white background" in compiled.prompt
     assert "template reference" not in compiled.prompt.lower()
+    assert "CONFIDENCE AND UNCERTAINTY" not in compiled.prompt
     assert len(compiled.reference_images) == 1
 
 

@@ -13,9 +13,9 @@ The current application builds successfully as of the latest handover:
 ```text
 pnpm typecheck:web   PASS
 pnpm build:web      PASS
-backend tests                287 PASS
-worker tests                 21 PASS
-frontend tests               27 PASS
+backend tests                340 PASS
+worker tests                 22 PASS
+frontend tests               42 PASS
 ```
 
 The Next.js build completes for `/`, `/studio`, and `/products`. Build output contains existing Autoprefixer warnings about `start`/`end` flex values and a workspace-root warning caused by multiple lockfiles; these are non-fatal.
@@ -66,7 +66,7 @@ Implemented behaviour includes:
 - Product folders with refresh-safe URLs, associated uploads, full-image previews, private folder links, and upload ZIP downloads.
 - A Gallery view reserved for approved generated outputs. Uploads remain inside product folders. Generated assets are persisted separately from source assets and can be stored in product folders and Gallery.
 - A Create view inside Studio based on the prototype, with new-product upload and existing-catalogue paths. Its typography, stacked sections, card borders, and responsive layout have been browser-verified. `/studio?view=create` opens this view directly.
-- Catalogue cards support selecting one or multiple products, then Choose outputs opens `/studio?view=create&step=outputs&product=<id>` (repeat `product` for multiple selections). Choices are resolved independently from each product's category and rendering family. Outerwear uses nine leather-jacket Ecommerce reference images and matching titles/descriptions from `apps/web/public/output-examples/outerwear/`, with the approved no-face model labels. Footwear uses dedicated family packs: nine Trainers, eight Flats / Loafers and eight Heels Ecommerce reference images, each with matching backend-owned IDs, titles and descriptions. Socks uses the eight user-approved cream ribbed crew-sock Ecommerce previews from `apps/web/public/output-examples/socks/`, in attachment order. Bottoms uses family-specific approved Ecommerce templates and local benchmark references: 9 for Structured Bottoms, 9 for Shorts, 9 for Casual Bottoms, 8 for Leggings and 6 for Skirts; the unapproved Fabric Surface Detail draft is excluded. Tops, Outerwear, Footwear, Socks and Bottoms all mirror their backend-owned Ecommerce IDs and names, while other categories retain the default catalogue choices. Reference previews are illustrative catalogue examples, not generated assets posted to a product's library. Review selection opens a centred popup with the same selected output thumbnails grouped by product; Back, Close, Escape and the backdrop dismiss it without losing choices. Product selections survive navigation in the URL; output choices remain in the current page session. For the current rollout, Continue submits one selected product/template with an idempotency key, polls the durable job, displays the signed preview URL for human review, and submits approval or rejection to the worker.
+- Catalogue cards support selecting one or multiple products, then Choose outputs opens `/studio?view=create&step=outputs&product=<id>` (repeat `product` for multiple selections). Choices are resolved independently from each product's category and rendering family. Dedicated frontend/backend Ecommerce packs are wired for Tops, Outerwear, Footwear, Socks, Bottoms, Dresses, Tailoring, Sleepwear/Loungewear, Headwear, Ties, Belts, Gloves and Scarves. Belts expose four active templates; the former Extended Buckle View is removed. Gloves expose four templates, and Scarves expose three templates: Draped Loop Product, Folded Flat Product and Worn Neck Drape. Jewellery remains the only family without dedicated frontend output templates. Reference previews are illustrative catalogue examples, not generated assets posted to a product's library. Review selection opens a centred popup with the same selected output thumbnails grouped by product; Back, Close, Escape and the backdrop dismiss it without losing choices. Product selections survive navigation in the URL; output choices remain in the current page session. For the current rollout, Continue submits one selected product/template with an idempotency key, polls the durable job, displays the signed preview URL for human review, and submits approval or rejection to the worker.
 - The Outerwear, Footwear and Socks Ecommerce example images have the same conservative deterministic finishing profile applied in place: `1.055x` contrast, `1.075x` colour and an unsharp mask with radius `1.15`, strength `72%` and threshold `4`. All remain `1122x1402` PNGs. This is a presentation treatment for static template examples and does not make them generated product assets.
 
 ### Product categories and subtype routing
@@ -85,7 +85,7 @@ The registry also retains compatibility definitions for legacy leaf categories
 `accessories` or `jewellery` categories. Bags, backpacks, luggage and purses
 remain intentionally unsupported.
 
-Accessories is now a canonical global category containing headwear, scarves, gloves, belts, ties and veils. Jewellery contains rings, bracelets, earrings, necklaces and watches. Bags, backpacks, luggage and purses are intentionally rejected as outside the supported clothing scope. Unknown subtypes should preserve their raw recognised product type and fall back to a category-compatible route rather than being forced into an incorrect subtype.
+Accessories is now a canonical global category containing headwear, scarves, gloves, belts and ties. Jewellery contains rings, bracelets, earrings, necklaces and watches. Bags, backpacks, luggage and purses are intentionally rejected as outside the supported clothing scope. Unknown subtypes should preserve their raw recognised product type and fall back to a category-compatible route rather than being forced into an incorrect subtype.
 
 ### Rendering families and output routing
 
@@ -97,7 +97,24 @@ category → family → subtype → product
 
 The category is system-controlled, the raw subtype is preserved for product identity, and the family is system-controlled as the rendering-routing layer. Families select compatible output policies while composition primitives remain reusable across related garments.
 
-Current canonical family values are: Tops (`shirts`, `t-shirts-casual-tops`, `sleeveless-tops`, `knitwear`, `hoodies`); Outerwear (`jackets`, `coats`, `gilets-padded-vests`); Bottoms (`structured_bottoms`, `shorts`, `casual_bottoms`, `leggings`, `skirts`); Dresses (`dresses`); Tailoring (`tailored-jackets`, `waistcoats`, `suits`, `tuxedos`); Sleepwear/Loungewear (`pyjamas`, `nightwear`, `robes`); Underwear (`lower_body_underwear`, `bra`, `lingerie`, `base_layer`, `underwear_set`); Socks (`socks`); Footwear (`trainers`, `flats-loafers`, `sandals-open-shoes`, `boots`, `heels`); Jewellery (`rings`, `bracelets`, `earrings`, `necklaces`, `watches`); and Accessories (`headwear`, `scarves`, `gloves`, `belts`, `ties-neckwear`, `veils`).
+Current canonical family values are: Tops (`shirts`, `t-shirts-casual-tops`, `sleeveless-tops`, `knitwear`, `hoodies`); Outerwear (`jackets`, `coats`, `gilets-padded-vests`); Bottoms (`structured_bottoms`, `shorts`, `casual_bottoms`, `leggings`, `skirts`); Dresses (`dresses`); Tailoring (`suit-jackets`, `waistcoats`); Sleepwear/Loungewear (`pyjamas`, `robes`); Underwear (`lower_body_underwear`, `bra`); Socks (`socks`); Footwear (`shoes`, `boots`, `heels`); Jewellery (`rings`, `bracelets`, `earrings`, `necklaces`, `watches`); and Accessories (`headwear`, `scarves`, `gloves`, `belts`, `ties-neckwear`).
+
+The families currently runnable end to end through the frontend output-selection and generation flow are:
+
+```text
+Tops: shirts, t-shirts-casual-tops, sleeveless-tops, knitwear, hoodies
+Outerwear: jackets, coats, gilets-padded-vests
+Bottoms: structured_bottoms, shorts, casual_bottoms, leggings, skirts
+Dresses: dresses
+Underwear: lower_body_underwear, bra
+Socks: socks
+Footwear: shoes, boots, heels
+Tailoring: suit-jackets, waistcoats
+Sleepwear/Loungewear: pyjamas, robes
+Accessories: headwear, scarves, gloves, belts, ties-neckwear
+```
+
+Jewellery is the remaining category requiring dedicated family-specific output templates. Its recognised families are rings, bracelets, earrings, necklaces and watches. Accessories families—headwear, scarves, gloves, belts and ties-neckwear—are now routed to dedicated frontend/backend packs, with scarves, gloves and belts recently added and validated end to end.
 
 The current Tops taxonomy is:
 
@@ -138,26 +155,45 @@ background and presentation structure. The model is explicitly instructed to
 replace the benchmark garment completely and never copy its product-specific
 details.
 
-The compiled Shirts prompt is generated in this order:
+All product families use the canonical prompt compiler in
+`services/api/src/productframe_api/generation_prompts.py`. The model-facing
+prompt is generated in this order:
 
 ```text
-INSTRUCTION
-PRODUCT
-FIDELITY RULES
+CORE INSTRUCTION
+REFERENCE-FIRST RULES
+IDENTITY RULES
+PRODUCT FIDELITY PRESERVATION
+TEMPLATE REFERENCE              (when a benchmark reference is supplied)
 PRESENTATION MODE
-OUTPUT DETAILS
-NEGATIVE PROMPTS
+OUTPUT DETAILS                  (when defined by the selected template)
+PRODUCT IDENTITY
+COLOUR DATA
+MATERIAL, CONSTRUCTION AND CATEGORY DATA
+ADDITIONAL PRODUCT DATA
+NEGATIVE PROMPT
 ```
 
 `PRESENTATION MODE` is exactly one of `model`, `mannequin`,
 `invisible_mannequin` or `garment`. Model, visible headless mannequin and
 completely invisible mannequin are deliberately separate modes and are never
-combined. `OUTPUT DETAILS` contains the benchmark-reviewed camera, framing,
-pose, crop, styling, lighting, background and visible-construction requirements.
-`PROMPT FORMAT RULES` are compiler metadata and are not included in Shirts
-model-facing prompts. Confidence and uncertainty metadata remains available in
-the normal compiled product context; the isolated template-reference experiment
-omits that section for comparison.
+combined. `OUTPUT DETAILS` controls composition only: camera angle, framing,
+pose, crop, styling, lighting, background and presentation structure. It must
+never override product identity.
+
+The uploaded product reference is authoritative for colour, material, texture,
+shape, proportions, construction, artwork, branding, hardware and visible
+surface details. A benchmark/template reference controls composition only and
+must never contribute product identity. If a requested view contains hidden,
+cropped or obstructed construction, the compiler instructs the model to treat it
+as uncertain rather than inventing a category default.
+
+Recognition data remains intact in `PRODUCT IDENTITY`, `COLOUR DATA`,
+`MATERIAL, CONSTRUCTION AND CATEGORY DATA` and `ADDITIONAL PRODUCT DATA`.
+Analysis-only fields remain internal and are not emitted to the model-facing
+prompt, including confidence scores, internal evidence metadata, source
+rotation metadata and analysis bookkeeping. `PROMPT FORMAT RULES` are compiler
+metadata and are not included in structured model-facing prompts.
 
 The fixed studio background used by Tops output-detail documents and Shirts
 runtime output details is:
@@ -400,7 +436,7 @@ load generation job
   -> on approval, copy the reviewed preview to final storage
 ```
 
-`services/api/src/productframe_api/generation_prompts.py` assembles product context, references, template instructions, family policies, negative constraints, source rotation and artwork policy. `services/api/src/productframe_api/generation_templates.py` defines category-compatible templates, family compatibility, composition policies, evidence rules, and whether source artwork should be fully, partially, conditionally or never visible.
+`services/api/src/productframe_api/generation_prompts.py` assembles the canonical provider-neutral prompt for every supported family. It preserves recognised product identity while keeping analysis-only metadata internal, and adds family fidelity policies, template composition details, presentation constraints, negative constraints, source rotation and artwork policy. `services/api/src/productframe_api/generation_templates.py` defines category-compatible templates, family compatibility, composition policies, evidence rules, and whether source artwork should be fully, partially, conditionally or never visible.
 
 `services/worker/src/productframe_worker/fidelity_validator.py` has three separate responsibilities that must remain ordered when fidelity validation is enabled:
 

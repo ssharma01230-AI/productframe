@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import io
+import logging
 import os
 from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
@@ -19,10 +20,10 @@ from typing import Annotated, Callable, Literal
 
 from openai import OpenAI
 from PIL import Image, UnidentifiedImageError
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, create_model, field_validator
 
 from .analysis_limits import AnalysisBudgetError, AnalysisLimits, RateLimiter, estimate_request_tokens, retry_delay
-from .category_registry import get_bottoms_family_for_subtype, get_footwear_family_for_subtype, get_outerwear_family_for_subtype, get_tops_family_for_subtype
+from .category_registry import get_accessories_family_for_subtype, get_bottoms_family_for_subtype, get_footwear_family_for_subtype, get_outerwear_family_for_subtype, get_sleepwear_family_for_subtype, get_tailoring_family_for_subtype, get_tops_family_for_subtype
 from .description_utils import concise_product_description
 from .category_schemas import (
     AccessoriesFamily, BottomsFamily, CATEGORY_DETAIL_MODELS, CategoryDetails, DressFamily, FootwearFamily,
@@ -31,6 +32,8 @@ from .category_schemas import (
 )
 from .analysis_router import AnalysisRouter, AnalysisSafetyError
 from .image_processing import normalize_image_orientation
+
+logger = logging.getLogger(__name__)
 
 MAX_INPUT_BYTES = 20 * 1024 * 1024
 MAX_DIMENSION = 10_000
@@ -495,6 +498,26 @@ Do not return detailed colours, materials, features or a catalogue description."
         categorization.product_family = get_tops_family_for_subtype(categorization.subtype)
         if categorization.product_family is None:
             categorization.subtype = None
+    elif categorization.category == ProductCategory.TAILORING:
+        # Tailoring family is backend-controlled so a sleeveless tailored
+        # waistcoat cannot drift into the suit-jacket or outerwear packs.
+        categorization.product_family = get_tailoring_family_for_subtype(
+            categorization.subtype or categorization.product_type
+        )
+        if categorization.product_family is None:
+            categorization.subtype = None
+    elif categorization.category == ProductCategory.SLEEPWEAR_LOUNGEWEAR:
+        categorization.product_family = get_sleepwear_family_for_subtype(
+            categorization.subtype or categorization.product_type
+        )
+        if categorization.product_family is None:
+            categorization.subtype = None
+    elif categorization.category in {ProductCategory.ACCESSORIES, ProductCategory.HEADWEAR, ProductCategory.NECKWEAR}:
+        categorization.product_family = get_accessories_family_for_subtype(
+            categorization.subtype or categorization.product_type
+        ) or ("headwear" if categorization.category == ProductCategory.HEADWEAR else "ties" if categorization.category == ProductCategory.NECKWEAR else None)
+        if categorization.product_family is None:
+            categorization.subtype = None
     else:
         # Canonical categories carry their family through to detailed analysis;
         # legacy leaf categories remain accepted for old callers but do not
@@ -941,20 +964,39 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
     - Confidence must reflect how clearly the image supports the result, from 0 to 1.
     """
         content = [{"type": "input_text", "text": instructions}, _image_input(data_url, detail="high")]
+        # Bind the response schema to the already-known category. A broad union
+        # is ambiguous to structured-output models and can parse belt details as
+        # an unrelated schema such as sleepwear.
+        response_model = ProductAnalysis
+        routed_category_model = None
+        if categorization.category in {
+            ProductCategory.SCARVES, ProductCategory.GLOVES,
+            ProductCategory.RINGS, ProductCategory.BRACELETS,
+            ProductCategory.EARRINGS, ProductCategory.WATCHES,
+            ProductCategory.BELTS, ProductCategory.HEADWEAR,
+            ProductCategory.NECKWEAR,
+        }:
+            routed_category_model = CATEGORY_DETAIL_MODELS.get(categorization.category.value)
+        if categorization.category == ProductCategory.ACCESSORIES and categorization.product_family == "headwear":
+            routed_category_model = CATEGORY_DETAIL_MODELS["headwear"]
+        if routed_category_model is not None:
+            response_model = create_model(
+                f"{ProductAnalysis.__name__}_{categorization.category.value}",
+                __base__=ProductAnalysis,
+                category_details=(routed_category_model | None, None),
+            )
         last_error: Exception | None = None
         for attempt in range(3):
             try:
-                response = _parse_response(client, model=_vision_model(), input=[{"role": "user", "content": content}], text_format=ProductAnalysis)
+                response = _parse_response(client, model=_vision_model(), input=[{"role": "user", "content": content}], text_format=response_model)
                 if response.output_parsed is None:
                     raise ValueError("AI returned no structured product analysis")
                 analysis = response.output_parsed
-                canonical_categories = {
-                    ProductCategory.TOPS, ProductCategory.OUTERWEAR, ProductCategory.BOTTOMS,
-                    ProductCategory.DRESSES, ProductCategory.TAILORING,
-                    ProductCategory.SLEEPWEAR_LOUNGEWEAR, ProductCategory.UNDERWEAR,
-                    ProductCategory.SOCKS, ProductCategory.FOOTWEAR,
-                    ProductCategory.JEWELLERY, ProductCategory.ACCESSORIES,
-                }
+                # Every supported ProductCategory is canonical. Leaf categories
+                # such as belts and scarves still have dedicated detail schemas;
+                # excluding them here incorrectly rejects valid analyses when the
+                # model returns their family value.
+                canonical_categories = set(ProductCategory)
                 if analysis.category not in canonical_categories and analysis.product_family is not None:
                     raise ValueError("product_family is only valid for canonical categories")
                 if analysis.category in canonical_categories:
@@ -973,12 +1015,24 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
                             analysis.product_family = get_bottoms_family_for_subtype(detail_subtype)
                         elif analysis.category == ProductCategory.TOPS:
                             analysis.product_family = get_tops_family_for_subtype(detail_subtype)
+                        elif analysis.category == ProductCategory.TAILORING:
+                            analysis.product_family = get_tailoring_family_for_subtype(detail_subtype)
+                        elif analysis.category == ProductCategory.SLEEPWEAR_LOUNGEWEAR:
+                            analysis.product_family = get_sleepwear_family_for_subtype(detail_subtype)
+                        elif analysis.category in {ProductCategory.ACCESSORIES, ProductCategory.HEADWEAR, ProductCategory.NECKWEAR}:
+                            analysis.product_family = get_accessories_family_for_subtype(detail_subtype) or ("headwear" if analysis.category == ProductCategory.HEADWEAR else "ties" if analysis.category == ProductCategory.NECKWEAR else None)
 
                 if analysis.colour_details is None or analysis.global_details is None:
                     raise ValueError("colour_details and global_details are required for product analysis")
                 if analysis.confidence_details is not None and analysis.confidence_details.gender.source == "user" and analysis.global_details.gender.user_confirmed is None:
                     raise ValueError("user-sourced gender confidence requires a user_confirmed value")
                 category_model = CATEGORY_DETAIL_MODELS.get(analysis.category.value)
+                if analysis.category == ProductCategory.ACCESSORIES and analysis.product_family == "headwear":
+                    # Accessories is the canonical category, but Headwear has a
+                    # dedicated detail contract. Validating it as generic
+                    # AccessoriesDetails rejects otherwise valid beanie/cap
+                    # analyses during synthesis.
+                    category_model = CATEGORY_DETAIL_MODELS["headwear"]
                 if category_model is not None:
                     if analysis.category_details is None:
                         raise ValueError("category_details are required for product analysis")
@@ -992,6 +1046,13 @@ def _analyze_product_image(image_bytes: bytes, *, api_key: str | None = None, mo
             except (ValidationError, ValueError) as exc:
                 last_error = exc
                 content[0]["text"] = instructions + "\nYour previous answer failed validation. Include every colour_details field and, for tops, every tops_details field. The description must contain 45–60 factual words. Retry using only visible product evidence."
+        logger.error(
+            "Product analysis validation failed category=%s product_family=%s error_type=%s error=%s",
+            getattr(categorization, "category", None),
+            getattr(categorization, "product_family", None),
+            type(last_error).__name__ if last_error else "unknown",
+            str(last_error)[:1000] if last_error else "unknown",
+        )
         raise ValueError("AI returned product details that did not meet the required format") from last_error
 
 

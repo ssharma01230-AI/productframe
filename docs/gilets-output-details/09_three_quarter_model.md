@@ -17,6 +17,7 @@ The benchmark controls composition, camera, framing and presentation. The upload
 ## OUTPUT DETAILS
 
 - Subject: Uploaded gilet or padded vest, presented using `model`.
+- Presentation: One adult model following the benchmark pose and crop; face and facial features excluded.
 - Camera angle and orientation: Front three-quarter, near shoulder/arm at image right, body turned slightly toward image left.
 - Framing and crop: Neck base through upper thighs; complete garment and both hands visible, face and feet excluded.
 - Product position and pose: Standing adult with arms relaxed and hands outside pockets; front fastening partly open at neckline.

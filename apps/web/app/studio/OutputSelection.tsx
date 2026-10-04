@@ -10,7 +10,7 @@ import type { GenerationPresentation, GenerationRunRequest, GenerationRunRespons
 import './output-selection.css';
 
 type MediaEvidence = { views?: string[]; evidence?: string[] };
-export type OutputProduct = { id: string; name: string; category: string | null; product_type?: string | null; product_family?: string | null; gender?: GenerationPresentation; image_url: string | null; media_evidence?: MediaEvidence[]; media_evidence_pending?: boolean };
+export type OutputProduct = { id: string; name: string; category: string | null; product_type?: string | null; product_family?: string | null; category_details?: Record<string, unknown> | null; gender?: GenerationPresentation; image_url: string | null; media_evidence?: MediaEvidence[]; media_evidence_pending?: boolean };
 
 const generationSliceEnabled = process.env.NEXT_PUBLIC_ENABLE_GENERATION_SLICE !== 'false';
 
@@ -59,7 +59,7 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
   const [submissionKey, setSubmissionKey] = useState<string | null>(null);
   const activeProduct = products.find(product => product.id === activeProductId) ?? products[0];
   const activeCategory = activeProduct?.category?.trim().toLowerCase();
-  const recipesByProduct = new Map(products.map(product => [product.id, getOutputRecipes(product.category, product.product_family, product.product_type)]));
+  const recipesByProduct = new Map(products.map(product => [product.id, getOutputRecipes(product.category, product.product_family, product.product_type, product.category_details)]));
   const activeRecipes = activeProduct ? recipesByProduct.get(activeProduct.id) ?? [] : [];
   const availableEvidence = new Set((activeProduct?.media_evidence ?? []).flatMap(item => [...(item.views ?? []), ...(item.evidence ?? [])]));
   const evidencePending = Boolean(activeProduct?.media_evidence_pending);
@@ -67,7 +67,7 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
     if (!generationSliceEnabled || evidencePending) return false;
     if (activeProduct && evidenceOverrides[activeProduct.id]?.includes(recipe.id)) return false;
     const required = recipeEvidence(recipe, activeProduct?.category, activeProduct?.product_family);
-    return required.length > 0 && !required.every(item => availableEvidence.has(item));
+    return required.length > 0 && !required.every(item => item.split('|').some(option => availableEvidence.has(option)));
   };
   const hasEvidence = (recipe: Pick<OutputRecipe, 'id' | 'requiredEvidence'>) => {
     if (evidencePending) return false;
@@ -79,7 +79,7 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
     // recommended supporting view is unavailable.
     if (activeProduct && evidenceOverrides[activeProduct.id]?.includes(recipe.id)) return true;
     // Socks intentionally has no additional media gate.
-    return required.length === 0 || required.every(item => availableEvidence.has(item));
+    return required.length === 0 || required.every(item => item.split('|').some(option => availableEvidence.has(option)));
   };
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
       setUploadMessage('Analysing product image… please wait.');
       return;
     }
-    const missing = recipeEvidence(recipe, activeProduct?.category, activeProduct?.product_family)[0]?.replaceAll('_', ' ') ?? 'product angle';
+    const missing = (recipeEvidence(recipe, activeProduct?.category, activeProduct?.product_family)[0] ?? 'product angle').split('|').join(' or ').replaceAll('_', ' ');
     setUploadMessage(`We recommend a clear ${missing} for this output. Add one now, or continue using your current references.`);
     setPendingEvidenceRecipe(recipe.id);
     setUploadOpen(true);
@@ -324,9 +324,11 @@ export default function OutputSelection({ products, onBack, selection, onSelecti
 function formatCategory(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(); }
 
 function recipeEvidence(recipe: Pick<OutputRecipe, 'id' | 'requiredEvidence'>, category?: string | null, family?: string | null): string[] {
-  if (recipe.requiredEvidence) return [...recipe.requiredEvidence];
   const id = recipe.id;
   const normalized = category?.trim().toLowerCase();
+  const normalizedFamily = family?.trim().toLowerCase();
+  if (normalized === 'belt' || normalized === 'belts' || normalizedFamily === 'belt' || normalizedFamily === 'belts' || id.startsWith('ecommerce-accessories-belts-')) return [];
+  if (recipe.requiredEvidence) return [...recipe.requiredEvidence];
   if (normalized === 'socks') return [];
   if (normalized === 'underwear' && family?.trim().toLowerCase() !== 'lower_body_underwear') return [];
   if (normalized === 'footwear') {

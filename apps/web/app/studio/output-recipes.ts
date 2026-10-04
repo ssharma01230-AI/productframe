@@ -461,6 +461,49 @@ export const BOOTS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
   { id: 'ecommerce-footwear-boots-09', category: 'Ecommerce', name: 'Side Profile — Product Only', description: 'One complete boot upright in straight side profile on a warm studio floor.', exampleImage: '/output-examples/footwear/boots/09_side_profile_product_only.png', showProductThumbnail: true, requiredEvidence: ['side_view'], presentation: 'product_only' },
 ];
 
+export const HEADWEAR_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-accessories-headwear-01', category: 'Ecommerce', name: 'Front Product', description: 'A complete front product-only presentation of the headwear.', exampleImage: '/output-examples/accessories/headwear/01.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+  { id: 'ecommerce-accessories-headwear-02', category: 'Ecommerce', name: 'Front Model', description: 'A centred front model presentation of the headwear.', exampleImage: '/output-examples/accessories/headwear/02.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-accessories-headwear-03', category: 'Ecommerce', name: 'Side Profile Model', description: 'A strict side-profile model presentation of the headwear.', exampleImage: '/output-examples/accessories/headwear/03.png', showProductThumbnail: true, requiredEvidence: ['side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-accessories-headwear-04', category: 'Ecommerce', name: 'Rear Model', description: 'A centred rear model presentation showing the back of the headwear.', exampleImage: '/output-examples/accessories/headwear/04.png', showProductThumbnail: true, requiredEvidence: ['rear_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-accessories-headwear-05', category: 'Ecommerce', name: 'Three-Quarter Model', description: 'A restrained front three-quarter model presentation of the headwear.', exampleImage: '/output-examples/accessories/headwear/05.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'worn_product' },
+];
+
+export const TIES_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-accessories-ties-01', category: 'Ecommerce', name: 'Tying Demonstration', description: 'A close worn demonstration of tying the uploaded tie.', exampleImage: '/output-examples/accessories/ties/01.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-accessories-ties-02', category: 'Ecommerce', name: 'Knot and Collar Detail', description: 'A close worn detail of the tie knot and collar.', exampleImage: '/output-examples/accessories/ties/02.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-accessories-ties-03', category: 'Ecommerce', name: 'Looped Product Arrangement', description: 'A near-overhead looped product arrangement of the tie.', exampleImage: '/output-examples/accessories/ties/03.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+  { id: 'ecommerce-accessories-ties-04', category: 'Ecommerce', name: 'Folded Product', description: 'A compact folded product presentation of the tie.', exampleImage: '/output-examples/accessories/ties/04.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+  { id: 'ecommerce-accessories-ties-05', category: 'Ecommerce', name: 'Rolled Product', description: 'A compact rolled product presentation of the tie.', exampleImage: '/output-examples/accessories/ties/05.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+  { id: 'ecommerce-accessories-ties-06', category: 'Ecommerce', name: 'Front Knot Detail', description: 'A symmetrical straight-on front detail of the finished tie knot.', exampleImage: '/output-examples/accessories/ties/06.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-accessories-ties-07', category: 'Ecommerce', name: 'Full Torso Model', description: 'A full torso model presentation showing the complete visible tie.', exampleImage: '/output-examples/accessories/ties/07.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+];
+
+export const BELTS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-accessories-belts-01', category: 'Ecommerce', name: 'Buckle Detail', description: 'A tight product-only macro of the belt buckle and attachment construction.', exampleImage: '/output-examples/accessories/belts/01.png', showProductThumbnail: true, requiredEvidence: [] },
+  { id: 'ecommerce-accessories-belts-03', category: 'Ecommerce', name: 'Coiled Product', description: 'A coiled product presentation showing the belt buckle, keeper, holes and tip.', exampleImage: '/output-examples/accessories/belts/03.png', showProductThumbnail: true, requiredEvidence: [] },
+  { id: 'ecommerce-accessories-belts-04', category: 'Ecommerce', name: 'Full Flat Layout', description: 'A complete diagonal flat-lay presentation showing the belt from buckle through tip.', exampleImage: '/output-examples/accessories/belts/04.png', showProductThumbnail: true, requiredEvidence: [] },
+  { id: 'ecommerce-accessories-belts-05', category: 'Ecommerce', name: 'Worn Waistband Detail', description: 'A close worn detail showing the fastened belt around a neutral waistband.', exampleImage: '/output-examples/accessories/belts/05.png', showProductThumbnail: true, requiredEvidence: [], presentation: 'worn_product' },
+];
+
+export const GLOVES_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-accessories-gloves-01', category: 'Ecommerce', name: 'Palm-and-Back Flat Lay', description: 'A product-only flat lay showing palm and back glove surfaces.', exampleImage: '/output-examples/accessories/gloves/01.png', showProductThumbnail: true, requiredEvidence: [] },
+  { id: 'ecommerce-accessories-gloves-02', category: 'Ecommerce', name: 'Overlapping Product Pair', description: 'An overlapping product-only presentation of the glove pair.', exampleImage: '/output-examples/accessories/gloves/02.png', showProductThumbnail: true, requiredEvidence: [] },
+  { id: 'ecommerce-accessories-gloves-03', category: 'Ecommerce', name: 'Artfully Posed Glove Detail', description: 'A close worn detail showing overlapping gloved hands.', exampleImage: '/output-examples/accessories/gloves/03.png', showProductThumbnail: true, requiredEvidence: [], presentation: 'worn_product' },
+  { id: 'ecommerce-accessories-gloves-04', category: 'Ecommerce', name: 'Worn Gloves Close-Up', description: 'A close worn presentation of gloves on crossed or clasped hands.', exampleImage: '/output-examples/accessories/gloves/04.png', showProductThumbnail: true, requiredEvidence: [], presentation: 'worn_product' },
+];
+
+export const SCARVES_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-accessories-scarves-01', category: 'Ecommerce', name: 'Draped Loop Product', description: 'A product-only scarf arranged in a soft loop with both ends visible.', exampleImage: '/output-examples/accessories/scarves/01.png', showProductThumbnail: true, requiredEvidence: [] },
+  { id: 'ecommerce-accessories-scarves-02', category: 'Ecommerce', name: 'Folded Flat Product', description: 'A product-only folded scarf showing the fabric and fringed ends.', exampleImage: '/output-examples/accessories/scarves/02.png', showProductThumbnail: true, requiredEvidence: [] },
+  { id: 'ecommerce-accessories-scarves-03', category: 'Ecommerce', name: 'Worn Neck Drape', description: 'A close worn scarf presentation around the neck.', exampleImage: '/output-examples/accessories/scarves/03.png', showProductThumbnail: true, requiredEvidence: [], presentation: 'worn_product' },
+];
+
+export const BRA_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-underwear-bra-01', category: 'Ecommerce', name: 'Front Product Only', description: 'A complete front-up product-only presentation of the bra.', exampleImage: '/output-examples/underwear/bras/01_front_product_only.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'product_only' },
+  { id: 'ecommerce-underwear-bra-front-construction-detail', category: 'Ecommerce', name: 'Front Construction Detail', description: 'A close product-only detail of the cups, bridge, seams and strap construction.', exampleImage: '/output-examples/underwear/bras/front_construction_detail.png', showProductThumbnail: true, requiredEvidence: ['detail'], presentation: 'product_only' },
+];
+
 export const SOCKS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
   {
     id: 'ecommerce-socks-three-quarter-on-feet',
@@ -703,6 +746,58 @@ const underwearOutputRecipes: readonly OutputRecipe[] = [
   ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
 ];
 
+const SLEEPWEAR_PYJAMA_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-sleepwear-pyjamas-01', category: 'Ecommerce', name: 'Complete Set — Product Layout', description: 'A complete pyjama set arranged as a clean product-only studio layout.', exampleImage: '/output-examples/sleepwear/pyjamas/01.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'] },
+  { id: 'ecommerce-sleepwear-pyjamas-02', category: 'Ecommerce', name: 'Floor-Seated Model — Close Crop', description: 'A restrained close floor-seated model presentation of the pyjamas.', exampleImage: '/output-examples/sleepwear/pyjamas/02.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'], presentation: 'worn_product' },
+  { id: 'ecommerce-sleepwear-pyjamas-03', category: 'Ecommerce', name: 'Bed-Seated Model', description: 'A restrained bed-seated model presentation of the pyjamas.', exampleImage: '/output-examples/sleepwear/pyjamas/03.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'], presentation: 'worn_product' },
+  { id: 'ecommerce-sleepwear-pyjamas-04', category: 'Ecommerce', name: 'Full Front Model', description: 'A complete front-facing catalogue presentation of the pyjamas worn.', exampleImage: '/output-examples/sleepwear/pyjamas/04.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'], presentation: 'worn_product' },
+  { id: 'ecommerce-sleepwear-pyjamas-05', category: 'Ecommerce', name: 'Fabric Surface Macro', description: 'An extreme macro presentation of the pyjama fabric surface.', exampleImage: '/output-examples/sleepwear/pyjamas/05.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'] },
+  { id: 'ecommerce-sleepwear-pyjamas-06', category: 'Ecommerce', name: 'Lounge-Chair Seated Model', description: 'A restrained lounge-chair seated model presentation of the pyjamas.', exampleImage: '/output-examples/sleepwear/pyjamas/06.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'], presentation: 'worn_product' },
+];
+
+const SLEEPWEAR_ROBE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-sleepwear-robes-01', category: 'Ecommerce', name: 'Collar and Belt Detail', description: 'A tight worn detail of the robe collar, belt and upper front construction.', exampleImage: '/output-examples/sleepwear/robes/01.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'], presentation: 'worn_product' },
+  { id: 'ecommerce-sleepwear-robes-02', category: 'Ecommerce', name: 'Folded Product', description: 'A compact folded product presentation of the robe.', exampleImage: '/output-examples/sleepwear/robes/02.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'] },
+  { id: 'ecommerce-sleepwear-robes-03', category: 'Ecommerce', name: 'Front Model — Cropped', description: 'A centred cropped front model presentation of the robe.', exampleImage: '/output-examples/sleepwear/robes/03.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'], presentation: 'worn_product' },
+  { id: 'ecommerce-sleepwear-robes-04', category: 'Ecommerce', name: 'Full Rear Model', description: 'A full rear model presentation showing the robe back and hem.', exampleImage: '/output-examples/sleepwear/robes/04.png', showProductThumbnail: true, requiredEvidence: ['rear_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-sleepwear-robes-05', category: 'Ecommerce', name: 'Front Product', description: 'A complete front product presentation of the robe on an invisible support.', exampleImage: '/output-examples/sleepwear/robes/05.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'] },
+  { id: 'ecommerce-sleepwear-robes-06', category: 'Ecommerce', name: 'Full Front Model', description: 'A centred full front model presentation of the complete robe.', exampleImage: '/output-examples/sleepwear/robes/06.png', showProductThumbnail: true, requiredEvidence: ['front_view|flat_lay'], presentation: 'worn_product' },
+];
+
+const MENS_TAILORING_SUIT_JACKET_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-mens-tailoring-suit-jackets-02', category: 'Ecommerce', name: 'Front Model — Cropped', description: 'A front-facing cropped model presentation showing the jacket worn.', exampleImage: '/output-examples/mens-tailoring/suit-jackets/02.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-mens-tailoring-suit-jackets-03', category: 'Ecommerce', name: 'Full Front Model', description: 'A full-length front-facing model presentation of the suit jacket.', exampleImage: '/output-examples/mens-tailoring/suit-jackets/03.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-mens-tailoring-suit-jackets-04', category: 'Ecommerce', name: 'Back Model', description: 'A rear model presentation showing the jacket back, vents and fit.', exampleImage: '/output-examples/mens-tailoring/suit-jackets/04.png', showProductThumbnail: true, requiredEvidence: ['rear_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-mens-tailoring-suit-jackets-05', category: 'Ecommerce', name: 'Seated Model', description: 'A restrained seated model presentation showing jacket drape and fit.', exampleImage: '/output-examples/mens-tailoring/suit-jackets/05.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-mens-tailoring-suit-jackets-06', category: 'Ecommerce', name: 'Lapel, Button and Front Construction Detail', description: 'An extreme close-up of the lapel, button, buttonhole and nearby front tailoring construction.', exampleImage: '/output-examples/mens-tailoring/suit-jackets/06.png', showProductThumbnail: true, requiredEvidence: ['detail', 'front_view'] },
+  { id: 'ecommerce-mens-tailoring-suit-jackets-07', category: 'Ecommerce', name: 'Front Invisible Mannequin', description: 'A complete front product presentation on an invisible mannequin.', exampleImage: '/output-examples/mens-tailoring/suit-jackets/07.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+  { id: 'ecommerce-mens-tailoring-suit-jackets-08', category: 'Ecommerce', name: 'Front Product', description: 'A clean product-only front presentation of the suit jacket.', exampleImage: '/output-examples/mens-tailoring/suit-jackets/08.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+];
+
+const MENS_TAILORING_WAISTCOAT_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-mens-tailoring-waistcoats-01', category: 'Ecommerce', name: 'Front Product', description: 'A complete straight-on product-only front presentation of the waistcoat.', exampleImage: '/output-examples/mens-tailoring/waistcoats/01.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+  { id: 'ecommerce-mens-tailoring-waistcoats-02', category: 'Ecommerce', name: 'Front Model', description: 'A straight-on cropped model presentation showing waistcoat fit and full front construction.', exampleImage: '/output-examples/mens-tailoring/waistcoats/02.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-mens-tailoring-waistcoats-03', category: 'Ecommerce', name: 'Three-Quarter Model', description: 'A close three-quarter model view showing waistcoat depth, fit and front construction.', exampleImage: '/output-examples/mens-tailoring/waistcoats/03.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-mens-tailoring-waistcoats-04', category: 'Ecommerce', name: 'Neckline and Shoulder Detail', description: 'A tight worn detail of the neckline, shoulder, armhole and upper closure.', exampleImage: '/output-examples/mens-tailoring/waistcoats/04.png', showProductThumbnail: true, requiredEvidence: ['detail', 'front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-mens-tailoring-waistcoats-05', category: 'Ecommerce', name: 'Button and Front Construction Detail', description: 'An oblique macro view of the button row, buttonholes, front panels and pocket edges.', exampleImage: '/output-examples/mens-tailoring/waistcoats/05.png', showProductThumbnail: true, requiredEvidence: ['detail', 'front_view'] },
+];
+
+const DRESSES_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
+  { id: 'ecommerce-dresses-front-product', category: 'Ecommerce', name: 'Front Product', description: 'A complete front-facing product presentation of the dress.', exampleImage: '/output-examples/dresses/03.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+  { id: 'ecommerce-dresses-back-product', category: 'Ecommerce', name: 'Back Product', description: 'A complete rear product presentation of the dress.', exampleImage: '/output-examples/dresses/02.png', showProductThumbnail: true, requiredEvidence: ['rear_view'] },
+  { id: 'ecommerce-dresses-front-model', category: 'Ecommerce', name: 'Front Model (No Face)', description: 'The dress worn in a restrained front-facing model presentation.', exampleImage: '/output-examples/dresses/07.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-dresses-side-angle-model', category: 'Ecommerce', name: 'Side / Three-Quarter Model (No Face)', description: 'A side or three-quarter model view showing dress depth and drape.', exampleImage: '/output-examples/dresses/01.png', showProductThumbnail: true, requiredEvidence: ['side_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-dresses-construction-detail', category: 'Ecommerce', name: 'Construction Detail', description: 'A close-up of a supported dress construction or material detail.', exampleImage: '/output-examples/dresses/04.png', showProductThumbnail: true, requiredEvidence: ['detail'] },
+  { id: 'ecommerce-dresses-flat-lay', category: 'Ecommerce', name: 'Flat Lay', description: 'The complete dress arranged flat on a clean studio surface.', exampleImage: '/output-examples/dresses/06.png', showProductThumbnail: true, requiredEvidence: ['front_view'] },
+  { id: 'ecommerce-dresses-full-front-model', category: 'Ecommerce', name: 'Full Front Model (No Face)', description: 'A full-length front-facing model presentation of the dress.', exampleImage: '/output-examples/dresses/05.png', showProductThumbnail: true, requiredEvidence: ['front_view'], presentation: 'worn_product' },
+  { id: 'ecommerce-dresses-seated-model', category: 'Ecommerce', name: 'Seated Model (No Face)', description: 'A seated model presentation showing the dress drape and fit.', exampleImage: '/output-examples/dresses/09.png', showProductThumbnail: true, requiredEvidence: ['front_view', 'detail'], presentation: 'worn_product' },
+];
+
+const dressesOutputRecipes: readonly OutputRecipe[] = [
+  ...DRESSES_ECOMMERCE_RECIPES,
+  ...OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce'),
+];
+
 const TOPS_ECOMMERCE_RECIPES: readonly OutputRecipe[] = [
   {
     id: 'ecommerce-tops-folded-view',
@@ -901,6 +996,14 @@ export function getEcommerceTemplateRecipes(): readonly OutputRecipe[] {
     ...FOOTWEAR_ECOMMERCE_RECIPES,
     ...HEELS_ECOMMERCE_RECIPES,
     ...BOOTS_ECOMMERCE_RECIPES,
+    ...BRA_ECOMMERCE_RECIPES,
+    ...HEADWEAR_ECOMMERCE_RECIPES,
+    ...TIES_ECOMMERCE_RECIPES,
+    ...DRESSES_ECOMMERCE_RECIPES,
+    ...MENS_TAILORING_SUIT_JACKET_RECIPES,
+    ...MENS_TAILORING_WAISTCOAT_RECIPES,
+    ...SLEEPWEAR_PYJAMA_RECIPES,
+    ...SLEEPWEAR_ROBE_RECIPES,
     ...SOCKS_ECOMMERCE_RECIPES,
     ...BOTTOMS_ECOMMERCE_RECIPES,
     ...UNDERWEAR_ECOMMERCE_RECIPES,
@@ -910,14 +1013,23 @@ export function getEcommerceTemplateRecipes(): readonly OutputRecipe[] {
   return [...new Map(all.filter(recipe => recipe.category === 'Ecommerce').map(recipe => [recipe.id, recipe])).values()];
 }
 
-export function getOutputRecipes(productCategory?: string | null, productFamily?: string | null, productType?: string | null): readonly OutputRecipe[] {
+export function getOutputRecipes(productCategory?: string | null, productFamily?: string | null, productType?: string | null, categoryDetails?: Record<string, unknown> | null): readonly OutputRecipe[] {
   const category = productCategory?.trim().toLowerCase();
-  const type = productType?.trim().toLowerCase() ?? '';
+  const derivedFamily = typeof categoryDetails?.family === 'string' ? categoryDetails.family : '';
+  const derivedSubtype = typeof categoryDetails?.subtype === 'string' ? categoryDetails.subtype : '';
+  const beltType = typeof categoryDetails?.belt_type === 'string' ? categoryDetails.belt_type : '';
+  const type = [productType, derivedSubtype, beltType].filter(Boolean).join(' ').trim().toLowerCase();
+  const detectedLength = typeof categoryDetails?.length === 'string' ? categoryDetails.length.trim().toLowerCase() : '';
+  const shortDress = category === 'dresses' && /\b(?:mini|short|above[- ]the[- ]knee|mid[- ]thigh|thigh[- ]length)\b/.test(`${detectedLength} ${type}`);
   // Older product records may not have product_family populated. Derive the
   // Shorts route from the canonical subtype so the UI cannot fall back to
   // trousers/jeans recipes while the API record is being upgraded.
-  const rawFamily = productFamily?.trim().toLowerCase();
-  const family = category === 'footwear' && ['trainers', 'flats-loafers', 'sandals-open-shoes'].includes(rawFamily ?? '') ? 'shoes'
+  const rawFamilyValue = (productFamily || derivedFamily).trim().toLowerCase();
+  const normalizedFamilyValue = ['unclassified', 'unknown', 'none', 'null'].includes(rawFamilyValue) ? '' : rawFamilyValue;
+  const rawFamily = normalizedFamilyValue === 'belt' ? 'belts' : normalizedFamilyValue === 'glove' ? 'gloves' : normalizedFamilyValue === 'scarf' ? 'scarves' : normalizedFamilyValue;
+  const family = category === 'scarves' || category === 'scarf' ? 'scarves'
+    : category === 'gloves' || category === 'glove' ? 'gloves'
+    : category === 'footwear' && ['trainers', 'flats-loafers', 'sandals-open-shoes'].includes(rawFamily ?? '') ? 'shoes'
     : category === 'bottoms' && type === 'shorts' ? 'shorts' : rawFamily;
   if (category === 'tops') {
     const familyRecipes = family ? topsFamilyOutputRecipes[family] : undefined;
@@ -950,7 +1062,22 @@ export function getOutputRecipes(productCategory?: string | null, productFamily?
     return OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce');
   }
   if (category === 'socks') return socksOutputRecipes;
+  if (category === 'tailoring' && family === 'suit-jackets') return MENS_TAILORING_SUIT_JACKET_RECIPES;
+  if (category === 'tailoring' && family === 'waistcoats') return MENS_TAILORING_WAISTCOAT_RECIPES;
+  if (category === 'sleepwear_loungewear' && family === 'pyjamas') return SLEEPWEAR_PYJAMA_RECIPES;
+  if (category === 'sleepwear_loungewear' && family === 'robes') return SLEEPWEAR_ROBE_RECIPES;
+  if (category === 'dresses' && family === 'dresses') {
+    return shortDress
+      ? dressesOutputRecipes.filter(recipe => recipe.id !== 'ecommerce-dresses-seated-model')
+      : dressesOutputRecipes;
+  }
+  if ((category === 'accessories' || category === 'headwear') && (family === 'headwear' || /\b(?:cap|beanie|bucket hat|fedora|sun hat|visor|beret|fascinator|headband)\b/.test(type))) return HEADWEAR_ECOMMERCE_RECIPES;
+  if ((category === 'accessories' || category === 'neckwear') && (family === 'ties' || /\b(?:necktie|neck tie|tie)\b/.test(type)) && !/\b(?:bow tie|bowtie|cravat|ascot)\b/.test(type)) return TIES_ECOMMERCE_RECIPES;
+  if ((category === 'accessories' || category === 'belt' || category === 'belts') && (family === 'belts' || /\bbelt\b/.test(type))) return BELTS_ECOMMERCE_RECIPES;
+  if ((category === 'accessories' || category === 'glove' || category === 'gloves') && (family === 'gloves' || /\bgloves?\b/.test(type))) return GLOVES_ECOMMERCE_RECIPES;
+  if ((category === 'accessories' || category === 'scarf' || category === 'scarves') && (family === 'scarves' || /\bscarves?\b/.test(type))) return SCARVES_ECOMMERCE_RECIPES;
   if (category === 'underwear') {
+    if (family === 'bra') return BRA_ECOMMERCE_RECIPES;
     return family === 'lower_body_underwear'
       ? underwearOutputRecipes
       : OUTPUT_RECIPES.filter(recipe => recipe.category !== 'Ecommerce');

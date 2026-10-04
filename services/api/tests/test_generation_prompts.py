@@ -47,6 +47,112 @@ def test_prompt_combines_product_and_template_references(tops_request):
     assert "watermarks" in result.negative_prompt
 
 
+def test_tie_prompts_use_reference_authoritative_compact_format_for_all_templates():
+    for index in range(1, 8):
+        result = build_generation_prompt(GenerationRequest(
+            template_id=f"ecommerce-accessories-ties-{index:02d}", channel="ecommerce",
+            product=ProductContext(
+                name="Paisley tie", category="accessories", product_type="Tie neckwear",
+                colours="Dark brown with blue, green, and orange paisley motifs",
+                materials="Smooth woven fabric", features=("Pointed tip", "All-over paisley pattern"),
+                description="Dark brown woven tie with an all-over paisley pattern.",
+                colour_details={"primary_colour": "dark brown", "secondary_colours": ["blue", "green", "orange"], "pattern": "paisley", "colour_distribution": "all over", "colour_finish": "matte", "tonal_variation": "low"},
+                global_details={
+                    "materials": {"appearance": "woven fabric", "texture": "smooth", "weight": "medium", "thickness": "medium", "finish": "matte", "stretch_or_flexibility": "none visible", "drape_or_rigidity": "moderate drape"},
+                    "construction": {"silhouette": "pointed tip", "shape": "classic tie shape", "proportions": "standard width and length", "construction_details": ["woven fabric with pattern"], "functional_details": [], "visible_uncertainties": []},
+                    "branding": {"logos": []}, "gender": {"assumed": "unisex"},
+                },
+                category_details={"family": "ties", "subtype": "tie_neckwear", "shape": "classic tie shape", "length_and_width": "standard length and width", "edge_finish": "not visible", "pattern_or_print": "paisley pattern", "visible_uncertainties": ["knot or fastening details not visible"]},
+            ),
+            product_reference_images=(ReferenceImage(role="product_reference", object_key="tie.webp"),),
+            template_reference_images=(ReferenceImage(role="template_reference", object_key="template.png"),),
+        ))
+        assert "PRODUCT FACTS" in result.prompt
+        assert "COMPOSITION LOCK" in result.prompt
+        assert "Match the template reference exactly." in result.prompt
+        assert "NEGATIVE PROMPT" not in result.prompt
+        assert "Colour summary:" not in result.prompt
+        assert "ADDITIONAL PRODUCT DATA" not in result.prompt
+        assert result.prompt.count("Use the template reference only for composition and presentation structure.") == 1
+        assert result.negative_prompt.count("Do not copy the template tie’s identity") == 1
+        assert result.template_id == f"ecommerce-accessories-ties-{index:02d}"
+
+
+def test_legacy_neckwear_category_also_uses_tie_prompt_format():
+    result = build_generation_prompt(GenerationRequest(
+        template_id="ecommerce-accessories-ties-06", channel="ecommerce",
+        product=ProductContext(
+            name="Paisley tie", category="neckwear", product_type="Tie neckwear",
+            colours="Dark brown with paisley motifs", materials="Woven fabric",
+            features=("Pointed tip",), description="Dark brown woven tie with paisley pattern.",
+            category_details={"family": "ties", "subtype": "tie_neckwear", "shape": "classic tie shape"},
+        ),
+        product_reference_images=(ReferenceImage(role="product_reference", object_key="tie.webp"),),
+        template_reference_images=(ReferenceImage(role="template_reference", object_key="template.png"),),
+    ))
+    assert "PRODUCT FACTS" in result.prompt
+    assert "Match the template reference exactly." in result.prompt
+    assert "NEGATIVE PROMPT" not in result.prompt
+
+
+def test_belt_prompts_use_reference_authoritative_format_for_all_templates():
+    for index in (1, 3, 4, 5):
+        result = build_generation_prompt(GenerationRequest(
+            template_id=f"ecommerce-accessories-belts-{index:02d}", channel="ecommerce",
+            product=ProductContext(
+                name="Brown leather belt", category="accessories", product_type="Leather belt",
+                colours="Dark brown", materials="Leather", features=("Gold buckle", "Keeper loop"),
+                description="Dark brown leather belt with a gold buckle.",
+                colour_details={"primary_colour": "dark brown", "secondary_colours": ["gold"], "pattern": "plain", "colour_distribution": "uniform", "colour_finish": "matte", "tonal_variation": "low"},
+                global_details={"materials": {"appearance": "leather", "texture": "fine grain", "weight": "medium", "thickness": "medium", "finish": "matte", "drape_or_rigidity": "rigid"}, "construction": {"silhouette": "straight strap", "shape": "belt", "proportions": "standard", "construction_details": ["stitched edges"], "visible_uncertainties": []}, "branding": {"logos": []}},
+                category_details={"family": "belts", "subtype": "leather belt", "belt_type": "dress belt", "strap_width": "medium", "strap_length_appearance": "not fully visible", "strap_shape": "straight", "material_appearance": "leather", "surface_texture": "fine grain", "surface_finish": "matte", "buckle_type": "pin buckle", "buckle_shape": "rectangular", "buckle_material_appearance": "gold-tone metal", "closure_type": "prong", "hole_details": "round holes", "belt_loop_details": "one keeper", "tip_details": "rounded tip", "hardware_details": ["gold buckle"], "pattern_or_print": "plain", "branding_or_graphics": [], "fit_or_wear_position": "not visible", "visible_uncertainties": []},
+            ),
+            product_reference_images=(ReferenceImage(role="product_reference", object_key="belt.webp"),),
+            template_reference_images=(ReferenceImage(role="template_reference", object_key="template.png"),),
+        ))
+        assert "PRODUCT FACTS" in result.prompt
+        assert "BELT FIDELITY" in result.prompt
+        assert "COMPOSITION LOCK" in result.prompt
+        assert "Match the template reference exactly." in result.prompt
+        assert "NEGATIVE PROMPT" not in result.prompt
+        assert result.aspect_ratio == "4:5"
+
+
+def test_glove_prompts_use_product_facts_without_uncertainty_section():
+    for index in range(1, 5):
+        result = build_generation_prompt(GenerationRequest(
+            template_id=f"ecommerce-accessories-gloves-{index:02d}", channel="ecommerce",
+            product=ProductContext(
+                name="Brown leather gloves", category="accessories", product_type="Leather gloves",
+                colours="Brown", materials="Leather", features=("Ribbed cuff", "Decorative stitching"),
+                description="Brown leather gloves with cream ribbed cuffs.",
+                colour_details={"primary_colour": "brown", "secondary_colours": ["cream"], "pattern": "plain", "colour_distribution": "uniform", "colour_finish": "low sheen", "tonal_variation": "low"},
+                global_details={"materials": {"appearance": "leather", "texture": "fine grain", "finish": "low sheen"}},
+                category_details={"family": "gloves", "subtype": "leather gloves", "glove_type": "full-finger gloves", "finger_configuration": "five fingers", "finger_length": "full length", "cuff_length": "short", "cuff_details": "cream ribbed cuff", "closure_details": [], "palm_details": [], "grip_features": [], "seam_details": ["decorative stitching"], "lining_or_insulation": "not visible"},
+            ),
+            product_reference_images=(ReferenceImage(role="product_reference", object_key="gloves.webp"),),
+            template_reference_images=(ReferenceImage(role="template_reference", object_key="template.png"),),
+        ))
+        assert "PRODUCT FACTS" in result.prompt
+        assert "GLOVE FIDELITY" in result.prompt
+        assert "Match the template reference exactly." in result.prompt
+        assert "UNCERTAINTY" not in result.prompt
+        assert result.aspect_ratio == "4:5"
+
+
+def test_scarf_prompts_use_product_facts_without_uncertainty_section():
+    for index in range(1, 4):
+        result = build_generation_prompt(GenerationRequest(
+            template_id=f"ecommerce-accessories-scarves-{index:02d}", channel="ecommerce",
+            product=ProductContext(name="Slate herringbone scarf", category="accessories", product_type="Wool scarf", colours="Slate blue", materials="Wool", features=("Cream tassels", "Herringbone weave"), description="Slate herringbone scarf with cream tassels.", colour_details={"primary_colour": "slate blue", "secondary_colours": ["cream"]}, category_details={"family": "scarves", "subtype": "wool scarf", "scarf_shape": "rectangular", "scarf_length": "long", "scarf_width": "medium", "edge_finish": "woven edge", "fringe_details": "cream tassels", "fabric_appearance": "wool", "thickness": "medium", "pattern": "herringbone", "print": "none", "drape": "soft", "fastening_or_wear_details": []}),
+            product_reference_images=(ReferenceImage(role="product_reference", object_key="scarf.webp"),), template_reference_images=(ReferenceImage(role="template_reference", object_key="template.png"),)))
+        assert "PRODUCT FACTS" in result.prompt
+        assert "SCARF FIDELITY" in result.prompt
+        assert "Match the template reference exactly." in result.prompt
+        assert "UNCERTAINTY" not in result.prompt
+        assert result.aspect_ratio == "4:5"
+
+
 def test_tshirt_family_prompt_uses_structured_sections_and_template_reference():
     result = build_generation_prompt(GenerationRequest(
         template_id="ecommerce-tops-t-shirts-casual-tops-05", channel="ecommerce",
@@ -65,7 +171,7 @@ def test_tshirt_family_prompt_uses_structured_sections_and_template_reference():
     assert "Replace the template garment completely" in result.prompt
     assert "PRESENTATION MODE" in result.prompt
     assert "OUTPUT DETAILS" in result.prompt
-    assert result.prompt.index("PRODUCT") < result.prompt.index("PRESENTATION MODE") < result.prompt.index("OUTPUT DETAILS") < result.prompt.index("NEGATIVE PROMPTS")
+    assert result.prompt.index("REFERENCE-FIRST RULES") < result.prompt.index("PRODUCT FIDELITY PRESERVATION") < result.prompt.index("PRESENTATION MODE") < result.prompt.index("PRODUCT IDENTITY") < result.prompt.index("NEGATIVE PROMPT")
 
 
 def test_skirts_prompt_uses_structured_sections_and_template_reference():
@@ -257,7 +363,7 @@ def test_shirts_family_prompt_uses_structured_presentation_sections():
     assert "MODEL AND MANNEQUIN PRESENTATION" not in result.prompt
     assert "PROMPT FORMAT RULES" not in result.prompt
     assert "headless mannequin torso" in result.negative_prompt
-    assert result.prompt.index("PRODUCT") < result.prompt.index("PRODUCT FIDELITY PRESERVATION") < result.prompt.index("PRESENTATION MODE") < result.prompt.index("OUTPUT DETAILS") < result.prompt.index("NEGATIVE PROMPTS")
+    assert result.prompt.index("REFERENCE-FIRST RULES") < result.prompt.index("PRODUCT FIDELITY PRESERVATION") < result.prompt.index("PRESENTATION MODE") < result.prompt.index("PRODUCT IDENTITY") < result.prompt.index("NEGATIVE PROMPT")
 
 
 def test_prompt_strengthens_material_fidelity_and_adaptive_styling():
@@ -298,7 +404,7 @@ def test_heels_prompt_uses_product_and_matching_template_reference():
     assert [image.role for image in result.reference_images] == ["product_reference", "template_reference"]
     assert "Low side view" in result.prompt
     assert "Do not infer numeric heel height" in result.prompt
-    assert result.prompt.index("PRODUCT") < result.prompt.index("PRESENTATION MODE") < result.prompt.index("OUTPUT DETAILS") < result.prompt.index("NEGATIVE PROMPTS")
+    assert result.prompt.index("REFERENCE-FIRST RULES") < result.prompt.index("PRESENTATION MODE") < result.prompt.index("PRODUCT IDENTITY") < result.prompt.index("NEGATIVE PROMPT")
 
 
 def test_flats_loafers_prompt_uses_product_and_matching_template_reference():
@@ -317,7 +423,7 @@ def test_flats_loafers_prompt_uses_product_and_matching_template_reference():
     assert "PRESENTATION MODE" in result.prompt and "OUTPUT DETAILS" in result.prompt
     assert "Low side view" in result.prompt
     assert "Do not add tassels" in result.prompt
-    assert result.prompt.index("PRODUCT") < result.prompt.index("PRESENTATION MODE") < result.prompt.index("OUTPUT DETAILS") < result.prompt.index("NEGATIVE PROMPTS")
+    assert result.prompt.index("REFERENCE-FIRST RULES") < result.prompt.index("PRESENTATION MODE") < result.prompt.index("PRODUCT IDENTITY") < result.prompt.index("NEGATIVE PROMPT")
 
 
 @pytest.mark.parametrize(
@@ -468,6 +574,35 @@ def test_selected_presentation_applies_to_models_and_mannequins_across_families(
         assert expected_mode in result.prompt
         assert "OUTPUT DETAILS" in result.prompt
         assert "selected user presentation overrides" not in result.prompt
+
+
+def test_waistcoat_prompt_receives_full_output_details_and_family_fidelity_rules():
+    result = build_generation_prompt(GenerationRequest(
+        template_id="ecommerce-mens-tailoring-waistcoats-04", channel="ecommerce",
+        product=ProductContext(
+            name="Grey checked waistcoat", category="tailoring", product_type="Single-breasted waistcoat",
+            colours="Grey and taupe check", materials="Woven tailoring fabric",
+            features=("Deep V neckline", "Five-button front", "Welt pockets"),
+            description="A grey checked single-breasted tailored waistcoat.",
+            category_details={
+                "family": "waistcoats", "subtype": "waistcoat", "product_unit": "standalone",
+                "lapel_or_neckline": "deep V neckline", "closure_details": ["five buttons"],
+                "pocket_details": ["two welt pockets"], "lining_or_structure": "partially visible lining",
+                "fit_and_silhouette": "tailored", "fabric_appearance": "checked woven fabric",
+                "visible_uncertainties": ["rear construction"],
+            },
+            presentation="male",
+        ),
+        product_reference_images=(ReferenceImage(role="product_reference", object_key="waistcoat.png"),),
+        template_reference_images=(ReferenceImage(role="template_reference", object_key="file:///repo/waistcoat-04.png"),),
+    ))
+
+    assert [image.role for image in result.reference_images] == ["product_reference", "template_reference"]
+    assert "OUTPUT DETAILS" in result.prompt
+    assert "Uploaded waistcoat neckline, shoulder and armhole construction" in result.prompt
+    assert "Preserve the waistcoat as a sleeveless tailored waist garment" in result.prompt
+    assert "exclude the full hem, full garment and face" in result.prompt
+    assert "Never show a face" in result.negative_prompt
 
 
 def test_prompt_rejects_wrong_category(tops_request):

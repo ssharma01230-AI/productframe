@@ -93,6 +93,59 @@ def test_persisted_graph_saves_prompt_asset_and_statuses():
     engine.dispose()
 
 
+def test_waistcoat_worker_loads_product_and_exact_template_reference_without_generating_remotely():
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    provider = FakeImageGenerationProvider()
+    storage = FakeGeneratedImageStorage()
+
+    with Session(engine) as db:
+        db.add(Workspace(id="workspace", name="Studio"))
+        db.add(Product(
+            id="waistcoat", workspace_id="workspace", name="Checked waistcoat",
+            category="tailoring", product_type="Single-breasted waistcoat",
+            colours="Grey check", materials="Woven tailoring fabric",
+            features=["Deep V neckline", "Five-button front", "Welt pockets"],
+            description="A grey checked single-breasted tailored waistcoat.",
+            global_details={"colour": {"primary": "grey"}, "materials": ["woven tailoring fabric"]},
+            category_details={
+                "family": "waistcoats", "subtype": "waistcoat", "product_unit": "standalone",
+                "lapel_or_neckline": "deep V neckline", "closure_details": ["five buttons"],
+                "pocket_details": ["two welt pockets"], "lining_or_structure": "partially visible lining",
+                "fit_and_silhouette": "tailored", "fabric_appearance": "checked woven fabric",
+                "visible_uncertainties": ["rear construction"],
+            },
+        ))
+        db.add(SourceAsset(
+            id="waistcoat-source", product_id="waistcoat", filename="source.png",
+            content_type="image/png", object_key="products/waistcoat/source.png",
+        ))
+        db.commit()
+        _, job = create_single_generation_run(
+            db, workspace_id="workspace", product_id="waistcoat",
+            template_id="ecommerce-mens-tailoring-waistcoats-04",
+        )
+
+        result = run_persisted_generation(
+            db, job.id, provider=provider, storage=storage, checkpointer=InMemorySaver(),
+        )
+
+        assert result["status"] == "completed"
+        assert len(provider.requests) == 1
+        request = provider.requests[0]
+        assert [reference.role for reference in request.reference_images] == [
+            "product_reference", "template_reference",
+        ]
+        assert request.reference_images[0].object_key == "products/waistcoat/source.png"
+        assert request.reference_images[1].object_key.endswith(
+            "/docs/waistcoats-output-details/references/04.png"
+        )
+        assert "OUTPUT DETAILS" in request.prompt
+        assert "Uploaded waistcoat neckline, shoulder and armhole construction" in request.prompt
+
+    engine.dispose()
+
+
 def test_persisted_graph_does_not_store_preview_when_fidelity_fails():
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine)

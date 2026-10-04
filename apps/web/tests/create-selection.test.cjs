@@ -949,15 +949,15 @@ test('underwear uses six ordered local Ecommerce examples and category-specific 
   assert.equal(outputCards(ui).length, 30);
 });
 
-test('underwear templates are limited to lower-body family products', () => {
+test('underwear templates route separately for lower-body and Bra families', () => {
   const lower = { id: 'catalogue-lower-underwear', name: 'Boxer briefs', category: 'underwear', product_family: 'lower_body_underwear', image_url: null };
   const bra = { id: 'catalogue-bra', name: 'Soft bralette', category: 'underwear', product_family: 'bra', image_url: null };
   const lowerUi = outputUi([lower]).ui;
   assert.equal(outputCards(lowerUi, categorySection(lowerUi, 'Ecommerce')).length, 6);
   assert.equal(textContent(categorySection(lowerUi, 'Ecommerce')).includes('6 templates'), true);
   const braUi = outputUi([bra]).ui;
-  assert.equal(outputCards(braUi, categorySection(braUi, 'Ecommerce')).length, 0);
-  assert.equal(textContent(categorySection(braUi, 'Ecommerce')).includes('0 templates'), true);
+  assert.equal(outputCards(braUi, categorySection(braUi, 'Ecommerce')).length, 2);
+  assert.equal(textContent(categorySection(braUi, 'Ecommerce')).includes('2 templates'), true);
 });
 
 test('bottoms selection uses category-specific IDs and approved detail thumbnails', () => {
@@ -977,4 +977,164 @@ test('bottoms selection uses category-specific IDs and approved detail thumbnail
     '/output-examples/bottoms/01-front-view.png',
     '/output-examples/bottoms/08-pocket-panel-detail.png',
   ]);
+});
+
+test('ties route to seven family-specific Ecommerce templates and exact local references', () => {
+  const product = { id: 'catalogue-tie', name: 'Silk necktie', category: 'neckwear', product_family: 'ties', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), [
+    'Tying Demonstration', 'Knot and Collar Detail', 'Looped Product Arrangement', 'Folded Product',
+    'Rolled Product', 'Front Knot Detail', 'Full Torso Model',
+  ]);
+  assert.match(textContent(ecommerce), /7 templates/);
+  cards.forEach((card, index) => {
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = `/output-examples/accessories/ties/0${index + 1}.png`;
+    assert.equal(image.props.src, expected);
+    assert.ok(fs.statSync(path.resolve(__dirname, `../public${expected}`)).isFile());
+  });
+});
+
+test('belts route to four family-specific Ecommerce templates and exact local references', () => {
+  const product = { id: 'catalogue-belt', name: 'Leather belt', category: 'accessories', product_family: 'belts', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), [
+    'Buckle Detail', 'Coiled Product', 'Full Flat Layout', 'Worn Waistband Detail',
+  ]);
+  assert.match(textContent(ecommerce), /4 templates/);
+  cards.forEach((card, index) => {
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = `/output-examples/accessories/belts/${[1, 3, 4, 5][index].toString().padStart(2, '0')}.png`;
+    assert.equal(image.props.src, expected);
+    assert.ok(fs.statSync(path.resolve(__dirname, `../public${expected}`)).isFile());
+  });
+});
+
+test('belts also route from category_details when legacy records lack product_family', () => {
+  const product = { id: 'legacy-belt', name: 'Red leather belt', category: 'accessories', product_family: null, product_type: null, category_details: { family: 'belts', subtype: 'belt', belt_type: 'leather belt' }, image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  assert.match(textContent(ecommerce), /4 templates/);
+  assert.equal(outputCards(ui, ecommerce)[0].props['aria-label'], 'Buckle Detail');
+});
+
+test('belt category aliases and singular family normalize to the belt pack', () => {
+  const product = { id: 'alias-belt', name: 'Red leather belt', category: 'belt', product_family: 'belt', image_url: null };
+  const { ui } = outputUi([product]);
+  assert.match(textContent(categorySection(ui, 'Ecommerce')), /4 templates/);
+});
+
+test('gloves route to four family-specific Ecommerce templates and exact local references', () => {
+  const product = { id: 'catalogue-gloves', name: 'Leather gloves', category: 'accessories', product_family: 'gloves', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), ['Palm-and-Back Flat Lay', 'Overlapping Product Pair', 'Artfully Posed Glove Detail', 'Worn Gloves Close-Up']);
+  assert.match(textContent(ecommerce), /4 templates/);
+  cards.forEach((card, index) => {
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = `/output-examples/accessories/gloves/0${index + 1}.png`;
+    assert.equal(image.props.src, expected);
+    assert.ok(fs.statSync(path.resolve(__dirname, `../public${expected}`)).isFile());
+  });
+});
+
+test('scarves route to three family-specific Ecommerce templates and exact local references', () => {
+  const product = { id: 'catalogue-scarf', name: 'Wool scarf', category: 'accessories', product_family: 'scarves', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), ['Draped Loop Product', 'Folded Flat Product', 'Worn Neck Drape']);
+  assert.match(textContent(ecommerce), /3 templates/);
+  cards.forEach((card, index) => {
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = `/output-examples/accessories/scarves/0${index + 1}.png`;
+    assert.equal(image.props.src, expected);
+    assert.ok(fs.statSync(path.resolve(__dirname, `../public${expected}`)).isFile());
+  });
+});
+
+test('scarves category aliases and unclassified family normalize to the scarf pack', () => {
+  const product = { id: 'legacy-scarf', name: 'Dark green and navy tartan', category: 'scarves', product_family: 'unclassified', image_url: null };
+  const { ui } = outputUi([product]);
+  assert.match(textContent(categorySection(ui, 'Ecommerce')), /3 templates/);
+});
+
+test('headwear routes to five family-specific Ecommerce templates and exact local references', () => {
+  const product = { id: 'catalogue-headwear', name: 'Cotton baseball cap', category: 'headwear', product_family: 'headwear', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), [
+    'Front Product', 'Front Model', 'Side Profile Model', 'Rear Model', 'Three-Quarter Model',
+  ]);
+  assert.match(textContent(ecommerce), /5 templates/);
+  cards.forEach((card, index) => {
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = `/output-examples/accessories/headwear/0${index + 1}.png`;
+    assert.equal(image.props.src, expected);
+    assert.ok(fs.statSync(path.resolve(__dirname, `../public${expected}`)).isFile());
+  });
+});
+
+test('robes route to six family-specific Ecommerce templates and exact local references', () => {
+  const product = { id: 'catalogue-robe', name: 'Cotton robe', category: 'sleepwear_loungewear', product_family: 'robes', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), [
+    'Collar and Belt Detail', 'Folded Product', 'Front Model — Cropped',
+    'Full Rear Model', 'Front Product', 'Full Front Model',
+  ]);
+  assert.match(textContent(ecommerce), /6 templates/);
+  cards.forEach((card, index) => {
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = `/output-examples/sleepwear/robes/0${index + 1}.png`;
+    assert.equal(image.props.src, expected);
+    assert.ok(fs.statSync(path.resolve(__dirname, `../public${expected}`)).isFile());
+  });
+});
+
+test('pyjamas route to six family-specific Ecommerce templates and exact local references', () => {
+  const product = { id: 'catalogue-pyjamas', name: 'Cotton pyjama set', category: 'sleepwear_loungewear', product_family: 'pyjamas', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), [
+    'Complete Set — Product Layout', 'Floor-Seated Model — Close Crop', 'Bed-Seated Model',
+    'Full Front Model', 'Fabric Surface Macro', 'Lounge-Chair Seated Model',
+  ]);
+  assert.match(textContent(ecommerce), /6 templates/);
+  cards.forEach((card, index) => {
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = `/output-examples/sleepwear/pyjamas/0${index + 1}.png`;
+    assert.equal(image.props.src, expected);
+    const asset = path.resolve(__dirname, `../public${expected}`);
+    assert.ok(fs.statSync(asset).isFile(), `Missing local example: ${expected}`);
+    assert.ok(fs.statSync(asset).size > 0);
+  });
+});
+
+test('waistcoats route to five family-specific Ecommerce templates and exact local references', () => {
+  const product = { id: 'catalogue-waistcoat', name: 'Checked tailored waistcoat', category: 'tailoring', product_family: 'waistcoats', image_url: null };
+  const { ui } = outputUi([product]);
+  const ecommerce = categorySection(ui, 'Ecommerce');
+  const cards = outputCards(ui, ecommerce);
+  assert.deepEqual(cards.map(card => card.props['aria-label']), [
+    'Front Product', 'Front Model', 'Three-Quarter Model',
+    'Neckline and Shoulder Detail', 'Button and Front Construction Detail',
+  ]);
+  assert.match(textContent(ecommerce), /5 templates/);
+  cards.forEach((card, index) => {
+    const image = ui.nodes(node => typeof node.props.src === 'string', card)[0];
+    const expected = `/output-examples/mens-tailoring/waistcoats/0${index + 1}.png`;
+    assert.equal(image.props.src, expected);
+    const asset = path.resolve(__dirname, `../public${expected}`);
+    assert.ok(fs.statSync(asset).isFile(), `Missing local example: ${expected}`);
+    assert.ok(fs.statSync(asset).size > 0);
+  });
 });

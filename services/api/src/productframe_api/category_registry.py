@@ -71,16 +71,30 @@ BOTTOMS_FAMILY_SUBTYPE_MAP: Final[dict[str, str]] = {
 }
 
 
+TAILORING_FAMILY_SUBTYPE_MAP: Final[dict[str, str]] = {
+    "suit jacket": "suit-jackets",
+    "blazer": "suit-jackets",
+    "sport coat": "suit-jackets",
+    "sports coat": "suit-jackets",
+    "dinner jacket": "suit-jackets",
+    "tuxedo jacket": "suit-jackets",
+    "waistcoat": "waistcoats",
+    "waist coat": "waistcoats",
+    "suit vest": "waistcoats",
+    "tailored vest": "waistcoats",
+}
+
+
 CONTROLLED_FAMILY_LABELS: Final[dict[str, str]] = {
     "shirts": "Shirt", "t-shirts-casual-tops": "T-Shirt", "sleeveless-tops": "Sleeveless Top", "knitwear": "Knitwear", "hoodies": "Hoodie",
     "jackets": "Jacket", "coats": "Coat", "gilets-padded-vests": "Gilet",
     "structured_bottoms": "Trousers", "shorts": "Shorts", "casual_bottoms": "Joggers", "leggings": "Leggings", "skirts": "Skirt",
-    "dresses": "Dress", "tailored-jackets": "Tailored Jacket", "waistcoats": "Waistcoat", "suits": "Suit", "tuxedos": "Tuxedo",
-    "pyjamas": "Pyjamas", "nightwear": "Nightwear", "robes": "Robe",
-    "lower_body_underwear": "Lower-Body Underwear", "bra": "Bra", "lingerie": "Lingerie", "base_layer": "Base Layer", "underwear_set": "Underwear Set",
+    "dresses": "Dress", "suit-jackets": "Suit Jacket", "waistcoats": "Waistcoat",
+    "pyjamas": "Pyjamas", "robes": "Robe",
+    "lower_body_underwear": "Lower-Body Underwear", "bra": "Bra",
     "socks": "Socks", "shoes": "Shoes", "trainers": "Shoes", "flats-loafers": "Shoes", "sandals-open-shoes": "Shoes", "boots": "Boots", "heels": "Heels",
     "rings": "Rings", "bracelets": "Bracelets", "earrings": "Earrings", "necklaces": "Necklace", "watches": "Watches",
-    "headwear": "Headwear", "scarves": "Scarf", "gloves": "Gloves", "belts": "Belt", "ties-neckwear": "Neckwear", "veils": "Veil",
+    "headwear": "Headwear", "scarves": "Scarf", "gloves": "Gloves", "belts": "Belt", "ties-neckwear": "Neckwear",
 }
 
 
@@ -173,6 +187,64 @@ def get_bottoms_family_for_subtype(subtype: str | None) -> str | None:
         return "casual_bottoms"
     if re.search(r"\bskirt\b", normalized):
         return "skirts"
+    return None
+
+
+SLEEPWEAR_FAMILY_SUBTYPE_MAP: Final[dict[str, str]] = {
+    "pyjama set": "pyjamas",
+    "pyjamas": "pyjamas",
+    "pajamas": "pyjamas",
+    "pyjama top": "pyjamas",
+    "pyjama bottom": "pyjamas",
+    "robe": "robes",
+}
+
+
+def get_sleepwear_family_for_subtype(subtype: str | None) -> str | None:
+    """Return the controlled Sleepwear/Loungewear family."""
+    if not subtype or not isinstance(subtype, str):
+        return None
+    normalized = " ".join(subtype.strip().lower().replace("_", " ").replace("-", " ").split())
+    exact = SLEEPWEAR_FAMILY_SUBTYPE_MAP.get(normalized)
+    if exact:
+        return exact
+    if re.search(r"\b(?:pyjama|pajama)\b", normalized):
+        return "pyjamas"
+    if re.search(r"\b(?:bathrobe|dressing gown|robe)\b", normalized):
+        return "robes"
+    return None
+
+
+def get_accessories_family_for_subtype(subtype: str | None) -> str | None:
+    """Return the controlled Accessories family for a descriptive subtype."""
+    if not subtype or not isinstance(subtype, str):
+        return None
+    normalized = " ".join(subtype.strip().lower().replace("_", " ").replace("-", " ").split())
+    if re.search(r"\b(?:cap|baseball cap|beanie|bucket hat|fedora|sun hat|visor|beret|fascinator|headband|headwear)\b", normalized):
+        return "headwear"
+    if re.search(r"\b(?:necktie|neck tie|tie)\b", normalized) and not re.search(r"\b(?:bow tie|bowtie|cravat|ascot)\b", normalized):
+        return "ties"
+    if re.search(r"\b(?:belt|waist belt|dress belt|leather belt|webbing belt)\b", normalized):
+        return "belts"
+    if re.search(r"\b(?:scarf|scarves|stole|wrap)\b", normalized):
+        return "scarves"
+    if re.search(r"\b(?:glove|gloves|mittens?)\b", normalized):
+        return "gloves"
+    return None
+
+
+def get_tailoring_family_for_subtype(subtype: str | None) -> str | None:
+    """Return the controlled Mens Tailoring family for a descriptive subtype."""
+    if not subtype or not isinstance(subtype, str):
+        return None
+    normalized = " ".join(subtype.strip().lower().replace("_", " ").replace("-", " ").split())
+    exact = TAILORING_FAMILY_SUBTYPE_MAP.get(normalized)
+    if exact:
+        return exact
+    if re.search(r"\b(?:waistcoat|waist coat|suit vest|tailored vest)\b", normalized):
+        return "waistcoats"
+    if re.search(r"\b(?:suit jacket|blazer|sport(?:s)? coat|dinner jacket|tuxedo jacket)\b", normalized):
+        return "suit-jackets"
     return None
 
 
@@ -295,7 +367,7 @@ CATEGORIES: Final[dict[str, CategoryDefinition]] = {
     ),
     "underwear": CategoryDefinition(
         id="underwear", name="Underwear",
-        subtypes=("lingerie", "boxers", "briefs", "bikini briefs", "bra", "bralette", "vest", "undershirt"),
+        subtypes=("boxers", "briefs", "bikini briefs", "bra", "bralette", "vest", "undershirt"),
         required_analysis_fields=_COMMON_REQUIRED + ("category_details", "category_details.coverage", "category_details.fit_and_silhouette"),
         optional_analysis_fields=_COMMON_OPTIONAL + ("category_details.support_details", "category_details.cup_shape"),
         prompt_rules=("Do not infer body measurements, size or support level.",),
@@ -333,10 +405,14 @@ CATEGORIES: Final[dict[str, CategoryDefinition]] = {
         ("Preserve the dress silhouette, length, structure, drape and visible construction.",), tuple(CHANNELS),
     ),
     "tailoring": CategoryDefinition(
-        "tailoring", "Tailoring", ("blazer", "sport coat", "dinner jacket", "waistcoat", "suit", "tuxedo"),
-        _COMMON_REQUIRED + ("category_details", "category_details.product_unit", "category_details.fit_and_silhouette"),
-        _COMMON_OPTIONAL + ("category_details.lapel_or_neckline",),
-        ("Distinguish standalone tailored garments from coordinated suit products; preserve structure and fit.",), tuple(CHANNELS),
+        "tailoring", "Mens Tailoring", ("suit jacket", "blazer", "sport coat", "dinner jacket", "waistcoat", "suit vest", "tailored vest"),
+        _COMMON_REQUIRED + ("category_details", "category_details.product_unit", "category_details.fit_and_silhouette", "category_details.lapel_or_neckline"),
+        _COMMON_OPTIONAL + ("category_details.closure_details", "category_details.pocket_details", "category_details.lining_or_structure"),
+        (
+            "Classify a sleeveless tailored waist garment as family waistcoats, not outerwear gilets or tops sleeveless-tops.",
+            "Classify a tailored garment with sleeves and jacket lapels as family suit-jackets.",
+            "Distinguish standalone tailored garments from coordinated suit products; preserve structure and fit.",
+        ), tuple(CHANNELS),
     ),
     "sleepwear_loungewear": CategoryDefinition(
         "sleepwear_loungewear", "Sleepwear and Loungewear", ("pyjama set", "pyjama top", "pyjama bottom", "nightshirt", "nightgown", "robe"),
@@ -351,7 +427,7 @@ CATEGORIES: Final[dict[str, CategoryDefinition]] = {
         ("Preserve visible jewellery form, setting, stones, finish and hardware without inferring exact materials or carat.",), tuple(CHANNELS),
     ),
     "accessories": CategoryDefinition(
-        "accessories", "Accessories", ("cap", "baseball cap", "beanie", "bucket hat", "fedora", "sun hat", "visor", "beret", "fascinator", "headband", "scarf", "shawl", "stole", "wrap", "snood", "glove", "mitten", "fingerless glove", "belt", "tie", "bow tie", "cravat", "ascot", "veil"),
+        "accessories", "Accessories", ("cap", "baseball cap", "beanie", "bucket hat", "fedora", "sun hat", "visor", "beret", "fascinator", "headband", "scarf", "shawl", "stole", "wrap", "snood", "glove", "mitten", "fingerless glove", "belt", "tie", "bow tie", "cravat", "ascot"),
         _COMMON_REQUIRED + ("category_details", "category_details.form"),
         _COMMON_OPTIONAL + ("category_details.occasion",),
         ("Preserve the accessory form, proportions, material, fastening and visible finish.",), tuple(CHANNELS),

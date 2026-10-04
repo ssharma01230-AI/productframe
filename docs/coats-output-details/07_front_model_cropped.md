@@ -17,6 +17,7 @@ The benchmark supplies composition, framing and presentation. The uploaded produ
 ## OUTPUT DETAILS
 
 - Subject: Uploaded coat, using the `model` presentation defined above.
+- Presentation: One adult model following the benchmark pose and crop; face and facial features excluded.
 - Camera angle and orientation: Straight-on front at torso height.
 - Framing and crop: Base of neck through hands and lower torso; coat continues beyond bottom edge. Exclude face, feet and hem.
 - Product position and pose: Centred torso, arms relaxed down, hands visible outside pockets.
@@ -30,6 +31,8 @@ The benchmark supplies composition, framing and presentation. The uploaded produ
 - Surface fidelity: Preserve evidenced texture scale. Several benchmark fronts show pronounced swirling surface detail; do not transfer this to a plain coat or invent fibres, ornament, weave or embroidery.
 - Secondary styling: Use a restrained light neutral underlayer and simple trousers; where shoes are in frame, use understated footwear consistent with the selected styling. Match framing and pose, not benchmark model identity. Hands stay outside pockets.
 - Composition: One continuous portrait ecommerce photograph, approximately 4:5; one coat only. No collage, inset, duplicated view, added text, watermark or decorative accessories.
+
+- Output: One continuous high-fidelity ecommerce photograph; no collage, inset, duplicate view, text or watermark.
 
 ## Source evidence and uncertainty
 

@@ -1,6 +1,6 @@
 # Socks — visually reviewed Output Details
 
-Draft documentation only. All 8 currently wired Ecommerce benchmark images were opened and visually inspected. Source mapping: `apps/web/app/studio/output-recipes.ts`, `SOCKS_ECOMMERCE_RECIPES` and `getOutputRecipes`. No application prompts, schemas, assets or runtime behaviour changed.
+Draft documentation only. All 8 currently wired Ecommerce benchmark images were opened and visually inspected. Source mapping: `apps/web/app/studio/output-recipes.ts`, `SOCKS_ECOMMERCE_RECIPES` and `getOutputRecipes`. The reviewed output details now back the structured backend prompt contracts and worker reference wiring.
 
 Global category: `socks`. Socks has no rendering family, so this Ecommerce set applies directly to the Socks category. Benchmark observation: cream ribbed crew socks; do not impose that colour, length or rib pattern on uploads. UI numbering follows array order, not asset filename numbers. Slot 05 shows a shaped heel with no visible skin or cuff; it cannot establish whether a hidden foot or invisible support is inside. Slot 08 explicitly shows a worn sock with exposed lower-leg skin. These are not interchangeable crops.
 
@@ -8,7 +8,7 @@ Global category: `socks`. Socks has no rendering family, so this Ecommerce set a
 
 The benchmark controls composition, camera angle, framing and presentation—not product identity. Preserve the uploaded product's exact material appearance, texture scale, construction, colour, artwork and proportions. Only describe visible supported construction; do not invent hidden details or create synthetic microtexture to satisfy a macro crop. If the source cannot resolve the requested detail, a close-up source reference is needed for reliable fidelity. Background direction follows the existing review documents: light warm beige approximately #C8C1B6 wherever exposed; a material-only macro retains the product colour, not beige.
 
-Numbered sections below are current frontend display slots. IDs and asset paths are retained exactly, even when filename numbers differ. This is an image-based review, not backend-generation verification.
+Numbered sections below are current frontend display slots. IDs and asset paths are retained exactly, even when filename numbers differ. This review now supplies the structured backend output-details contracts and local worker benchmark references for the Socks templates.
 
 ## 01 — Three-Quarter on Feet
 

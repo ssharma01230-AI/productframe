@@ -5,12 +5,21 @@ from productframe_api.category_registry import (
     CATEGORIES,
     CHANNELS,
     controlled_subtype_label,
+    get_accessories_family_for_subtype,
     get_bottoms_family_for_subtype,
     get_category_definition,
+    get_sleepwear_family_for_subtype,
+    get_tailoring_family_for_subtype,
     get_tops_family_for_subtype,
     validate_category_channel,
     validate_category_details,
 )
+
+
+def test_headwear_family_routes_descriptive_subtypes():
+    assert get_accessories_family_for_subtype("baseball cap") == "headwear"
+    assert get_accessories_family_for_subtype("wool beanie") == "headwear"
+    assert get_accessories_family_for_subtype("silk necktie") == "ties"
 
 
 def test_controlled_subtype_labels_never_use_long_product_type():
@@ -162,6 +171,23 @@ def test_bottoms_subtypes_have_one_controlled_rendering_family():
     assert get_bottoms_family_for_subtype("pleated_mini_skirt") == "skirts"
     assert get_bottoms_family_for_subtype("unknown lower-body garment") is None
     assert get_bottoms_family_for_subtype(None) is None
+
+
+def test_tailoring_family_mapping_separates_waistcoats_from_jackets():
+    assert get_tailoring_family_for_subtype("single-breasted waistcoat") == "waistcoats"
+    assert get_tailoring_family_for_subtype("tailored suit vest") == "waistcoats"
+    assert get_tailoring_family_for_subtype("linen sport coat") == "suit-jackets"
+    assert get_tailoring_family_for_subtype("dinner jacket") == "suit-jackets"
+    assert get_tailoring_family_for_subtype("tailored garment") is None
+
+
+def test_sleepwear_family_mapping_routes_supported_sleepwear_families():
+    assert get_sleepwear_family_for_subtype("pyjama set") == "pyjamas"
+    assert get_sleepwear_family_for_subtype("cotton pajama top") == "pyjamas"
+    assert get_sleepwear_family_for_subtype("nightshirt") is None
+    assert get_sleepwear_family_for_subtype("robe") == "robes"
+    assert get_sleepwear_family_for_subtype("blue cotton bathrobe with belt") == "robes"
+    assert get_sleepwear_family_for_subtype("unknown sleep garment") is None
 
 
 def test_unknown_category_or_channel_is_rejected():

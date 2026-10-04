@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .category_registry import get_bottoms_family_for_subtype, get_footwear_family_for_subtype, get_outerwear_family_for_subtype, get_tops_family_for_subtype
+from .category_registry import get_accessories_family_for_subtype, get_bottoms_family_for_subtype, get_footwear_family_for_subtype, get_outerwear_family_for_subtype, get_sleepwear_family_for_subtype, get_tops_family_for_subtype
 from .generation_templates import validate_generation_template
 from .output_readiness import evaluate_template
 from .models import (
@@ -83,8 +83,22 @@ def _resolved_generation_family(product: Product, category_details: dict[str, ob
         "bottoms": get_bottoms_family_for_subtype,
         "outerwear": get_outerwear_family_for_subtype,
         "footwear": get_footwear_family_for_subtype,
+        "sleepwear_loungewear": get_sleepwear_family_for_subtype,
+        "accessories": get_accessories_family_for_subtype,
+        "headwear": get_accessories_family_for_subtype,
+        "neckwear": get_accessories_family_for_subtype,
     }.get(product.category)
-    return (resolver(subtype) if resolver else None) or (str(category_details["family"]) if category_details.get("family") else None)
+    resolved = resolver(subtype) if resolver else None
+    if resolved:
+        return resolved
+    if product.category in {"belt", "belts"}:
+        return "belts"
+    if product.category == "headwear":
+        return "headwear"
+    if product.category == "neckwear":
+        return "ties"
+    persisted = str(category_details.get("family") or "").strip().lower()
+    return None if persisted in {"", "unclassified", "unknown", "none", "null"} else persisted
 
 
 def create_generation_run(
